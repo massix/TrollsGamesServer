@@ -1,16 +1,17 @@
 package rocks.massi.connector;
 
-import lombok.extern.log4j.Log4j;
 import org.skife.jdbi.v2.DBI;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
-@Log4j
+@Component
 public class SQLiteConnector {
     public GameSelector gameSelector;
     public UserSelector userSelector;
     private DBI dbi;
 
-    public SQLiteConnector() {
-        dbi = new DBI("jdbc:sqlite:trolls.db");
+    public SQLiteConnector(@Value("${db.fileLocation}") final String fileLocation) {
+        dbi = new DBI(fileLocation);
         gameSelector = dbi.open(GameSelector.class);
         userSelector = dbi.open(UserSelector.class);
     }

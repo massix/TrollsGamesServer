@@ -10,7 +10,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class SQLiteConnectorTest {
-    private final SQLiteConnector connector = new SQLiteConnector();
+    private final SQLiteConnector connector = new SQLiteConnector("jdbc:sqlite:trolls.db");
 
     @Test
     public void testGetAllGames() {

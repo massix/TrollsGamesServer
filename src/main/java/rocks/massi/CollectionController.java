@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import rocks.massi.connector.SQLiteConnector;
 import rocks.massi.data.Game;
-import rocks.massi.data.User;
 
 import java.util.LinkedList;
 import java.util.List;
