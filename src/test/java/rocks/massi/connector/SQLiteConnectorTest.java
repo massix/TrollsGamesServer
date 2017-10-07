@@ -6,7 +6,6 @@ import org.junit.Test;
 import rocks.massi.data.Game;
 import rocks.massi.data.User;
 
-import javax.jws.soap.SOAPBinding;
 import java.util.List;
 
 public class SQLiteConnectorTest {
@@ -38,5 +37,26 @@ public class SQLiteConnectorTest {
     public void testGetAllUsers() {
         List<User> users = connector.userSelector.getUsers();
         Assert.assertFalse(users.isEmpty());
+    }
+
+    @Test
+    public void testAddGame() {
+        val g = new Game(
+                666,
+                "Cyclades 2",
+                "New Version of Cyclades!",
+                1,
+                2,
+                40,
+                2008,
+                666,
+                false,
+                "",
+                "",
+                "");
+
+        connector.gameSelector.insertGame(g);
+        Assert.assertEquals("Game does not match", connector.gameSelector.findById(666).getName(), "Cyclades 2");
+        connector.gameSelector.removeGameById(666);
     }
 }

@@ -2,7 +2,9 @@ package rocks.massi.connector;
 
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
+import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 import rocks.massi.data.Game;
@@ -39,4 +41,14 @@ public interface GameSelector {
 
     @SqlQuery("select * from games")
     List<Game> getGames();
+
+    @SqlUpdate("insert into games values (:id, :name, :description, :minPlayers, :maxPlayers, " +
+            ":playingTime, :yearPublished, :rank, :extension, :expands, :thumbnail, :authors)")
+    void insertGame(@BindBean Game g);
+
+    @SqlUpdate("delete from games where id = :id")
+    void removeGame(@BindBean Game g);
+
+    @SqlUpdate("delete from games where id = :id")
+    void removeGameById(@Bind("id") final int id);
 }
