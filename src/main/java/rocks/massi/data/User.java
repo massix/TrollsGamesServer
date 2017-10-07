@@ -1,6 +1,8 @@
 package rocks.massi.data;
 
-import lombok.*;
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
+import lombok.val;
 
 import java.util.LinkedList;
 import java.util.List;

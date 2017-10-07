@@ -62,6 +62,28 @@ public class SQLiteConnectorTest {
     }
 
     @Test
+    public void testRemoveGame() {
+        val g = new Game(
+                666,
+                "Cyclades 2",
+                "New Version of Cyclades!",
+                1,
+                2,
+                40,
+                2008,
+                666,
+                false,
+                "",
+                "",
+                "");
+
+        connector.gameSelector.insertGame(g);
+        connector.gameSelector.removeGame(g);
+
+        Assert.assertNull(connector.gameSelector.findById(666));
+    }
+
+    @Test
     public void getUserCollection() {
         val u = connector.userSelector.findByBggNick("massi_x");
         u.buildCollection();
