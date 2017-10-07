@@ -30,6 +30,9 @@ public interface UserSelector {
     @SqlQuery("select * from users where bggnick = :nick")
     User findByBggNick(@Bind("nick") final String nick);
 
+    @SqlQuery("select * from users where forumnick = :nick")
+    User findByForumNick(@Bind("nick") final String nick);
+
     @SqlQuery("select * from users")
     List<User> getUsers();
 }

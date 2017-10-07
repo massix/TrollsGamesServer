@@ -31,7 +31,9 @@ public class SQLiteConnectorTest {
     @Test
     public void testGetUser() {
         User u = connector.userSelector.findByBggNick("massi_x");
+        User k = connector.userSelector.findByForumNick("massi_x");
         Assert.assertTrue(u.getForumNick().equals("massi_x"));
+        Assert.assertEquals("Users are not the same?", u, k);
     }
 
     @Test
