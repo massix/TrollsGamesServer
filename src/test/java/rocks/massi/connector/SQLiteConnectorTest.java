@@ -6,6 +6,7 @@ import org.junit.Test;
 import rocks.massi.data.Game;
 import rocks.massi.data.User;
 
+import java.util.LinkedList;
 import java.util.List;
 
 public class SQLiteConnectorTest {
@@ -58,5 +59,20 @@ public class SQLiteConnectorTest {
         connector.gameSelector.insertGame(g);
         Assert.assertEquals("Game does not match", connector.gameSelector.findById(666).getName(), "Cyclades 2");
         connector.gameSelector.removeGameById(666);
+    }
+
+    @Test
+    public void getUserCollection() {
+        val u = connector.userSelector.findByBggNick("massi_x");
+        u.buildCollection();
+
+        Assert.assertFalse(u.getCollection().isEmpty());
+        LinkedList<Game> gamesInCollection = new LinkedList<>();
+
+        for (val i : u.getCollection()) {
+            gamesInCollection.add(connector.gameSelector.findById(i));
+        }
+
+        Assert.assertFalse(gamesInCollection.isEmpty());
     }
 }

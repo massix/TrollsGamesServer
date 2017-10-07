@@ -2,6 +2,7 @@ package rocks.massi.data;
 
 import lombok.*;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -24,19 +25,9 @@ public class Game {
     private List<String> authorsList;
     private List<String> expandsList;
 
-    public void buildAuthorsList() {
-        List<String> ret = new LinkedList<>();
-        String[] list = authors.split(" ");
-        for (val author : list) {
-            ret.add(author);
-        }
-    }
-
     public void buildExpandsList() {
-        List<String> ret = new LinkedList<>();
+        expandsList = new LinkedList<>();
         String[] list = expands.split(" ");
-        for (val expand : list) {
-            ret.add(expand);
-        }
+        Collections.addAll(expandsList, list);
     }
 }
