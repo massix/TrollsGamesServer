@@ -30,9 +30,9 @@ public interface GameSelector {
                     resultSet.getInt("yearpublished"),
                     resultSet.getInt("rank"),
                     resultSet.getBoolean("extension"),
-                    resultSet.getString("expands"),
                     resultSet.getString("thumbnail"),
-                    resultSet.getString("authors"));
+                    resultSet.getString("authors"),
+                    resultSet.getString("expands"));
         }
     }
 

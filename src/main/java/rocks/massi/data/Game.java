@@ -1,12 +1,12 @@
 package rocks.massi.data;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
+
+import java.util.LinkedList;
+import java.util.List;
 
 @Data
-@AllArgsConstructor
-@Builder
+@RequiredArgsConstructor
 public class Game {
     private final int id;
     private final String name;
@@ -20,4 +20,23 @@ public class Game {
     private final String thumbnail;
     private final String authors;
     private final String expands;
+
+    private List<String> authorsList;
+    private List<String> expandsList;
+
+    public void buildAuthorsList() {
+        List<String> ret = new LinkedList<>();
+        String[] list = authors.split(" ");
+        for (val author : list) {
+            ret.add(author);
+        }
+    }
+
+    public void buildExpandsList() {
+        List<String> ret = new LinkedList<>();
+        String[] list = expands.split(" ");
+        for (val expand : list) {
+            ret.add(expand);
+        }
+    }
 }
