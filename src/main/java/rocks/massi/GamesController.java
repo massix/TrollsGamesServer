@@ -5,13 +5,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import rocks.massi.connector.SQLiteConnector;
 import rocks.massi.data.Game;
-import rocks.massi.data.Response;
 
 @RestController
 public class GamesController {
 
     @Autowired
-    SQLiteConnector connector;
+    private SQLiteConnector connector;
 
     @RequestMapping(value = "/v1/games/get/{id}", method = RequestMethod.GET)
     public Game getGame(@PathVariable("id") final int id) {
@@ -19,9 +18,9 @@ public class GamesController {
     }
 
     @RequestMapping(value = "/v1/games/add", method = RequestMethod.POST)
-    public Response insertGame(@RequestBody final Game game) {
+    public Game insertGame(@RequestBody final Game game) {
         connector.gameSelector.insertGame(game);
-        return new Response(false, "Ok.");
+        return connector.gameSelector.findById(game.getId());
     }
 
     @RequestMapping(value = "/v1/games/remove/{id}", method = RequestMethod.DELETE)
