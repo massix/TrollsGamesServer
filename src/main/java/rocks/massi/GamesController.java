@@ -6,11 +6,18 @@ import org.springframework.web.bind.annotation.*;
 import rocks.massi.connector.SQLiteConnector;
 import rocks.massi.data.Game;
 
+import java.util.List;
+
 @RestController
 public class GamesController {
 
     @Autowired
     private SQLiteConnector connector;
+
+    @RequestMapping(value = "/v1/games/get", method = RequestMethod.GET)
+    public List<Game> getGames() {
+        return connector.gameSelector.getGames();
+    }
 
     @RequestMapping(value = "/v1/games/get/{id}", method = RequestMethod.GET)
     public Game getGame(@PathVariable("id") final int id) {
