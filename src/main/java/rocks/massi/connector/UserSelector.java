@@ -2,7 +2,9 @@ package rocks.massi.connector;
 
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
+import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 import rocks.massi.data.User;
@@ -19,8 +21,8 @@ public interface UserSelector {
         @Override
         public User map(int i, ResultSet resultSet, StatementContext statementContext) throws SQLException {
             return new User(
-                    resultSet.getString("bggnick"),
-                    resultSet.getString("forumnick"),
+                    resultSet.getString("bggNick"),
+                    resultSet.getString("forumNick"),
                     resultSet.getString("games"),
                     resultSet.getString("wants")
             );
@@ -35,4 +37,10 @@ public interface UserSelector {
 
     @SqlQuery("select * from users")
     List<User> getUsers();
+
+    @SqlUpdate("insert into users values (:bggNick, :forumNick, :games, :wants)")
+    void addUser(@BindBean final User user);
+
+    @SqlUpdate("update users set games = :games, wants = :wants where bggNick = :bggNick")
+    void updateCollectionForUser(@BindBean final User user);
 }

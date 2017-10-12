@@ -1,5 +1,6 @@
 package rocks.massi.data;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
@@ -15,6 +16,7 @@ public class User {
     private final String games;
     private final String wants;
 
+    @JsonIgnore
     private List<Integer> collection;
 
     public void buildCollection() {

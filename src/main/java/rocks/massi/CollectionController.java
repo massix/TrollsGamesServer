@@ -1,5 +1,6 @@
 package rocks.massi;
 
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,6 +14,7 @@ import java.util.List;
 
 import static rocks.massi.utils.DBUtils.getUser;
 
+@Slf4j
 @RestController
 public class CollectionController {
     @Autowired

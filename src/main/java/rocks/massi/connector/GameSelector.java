@@ -42,9 +42,14 @@ public interface GameSelector {
     @SqlQuery("select * from games")
     List<Game> getGames();
 
-    @SqlUpdate("insert into games values (:id, :name, :description, :minPlayers, :maxPlayers, " +
+    @SqlUpdate("insert into games (id, name, description, minplayers, maxplayers, " +
+            "playingtime, yearpublished, rank, extension, expands, thumbnail, authors) " +
+            "values (:id, :name, :description, :minPlayers, :maxPlayers, " +
             ":playingTime, :yearPublished, :rank, :extension, :expands, :thumbnail, :authors)")
     void insertGame(@BindBean Game g);
+
+    @SqlUpdate("update games set minPlayers = :minPlayers, maxPlayers = :maxPlayers, rank = :rank where id = :id")
+    void updateGame(@BindBean Game g);
 
     @SqlUpdate("delete from games where id = :id")
     void removeGame(@BindBean Game g);

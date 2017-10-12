@@ -1,19 +1,20 @@
 package rocks.massi;
 
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import rocks.massi.connector.SQLiteConnector;
 import rocks.massi.data.User;
+import rocks.massi.utils.DBUtils;
+import sun.misc.Request;
 
 import java.util.LinkedList;
 import java.util.List;
 
 import static rocks.massi.utils.DBUtils.getUser;
 
+@Slf4j
 @RestController
 public class UsersController {
     @Autowired
@@ -27,5 +28,12 @@ public class UsersController {
     @RequestMapping("/v1/users/get")
     public List<User> getAllUsers() {
         return connector.userSelector.getUsers();
+    }
+
+    @RequestMapping(value = "/v1/users/add", method = RequestMethod.POST)
+    public User addUser(@RequestBody User user) {
+        log.info("Got user {}", user.getBggNick());
+        connector.userSelector.addUser(user);
+        return DBUtils.getUser(connector, user.getBggNick());
     }
 }
