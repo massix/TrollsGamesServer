@@ -48,6 +48,7 @@ public class CrawlCache extends HashMap<Integer, Long> {
             log.warn("File {} not found on disk.", cacheLocation);
             CrawlCache ret = new CrawlCache();
             ret.setCacheLocation(cacheLocation);
+            ret.setCacheTTL(60 * 60 * 24 * cacheTTL);
             return ret;
         }
     }
