@@ -15,6 +15,7 @@ import java.util.HashMap;
 @Component
 public class CrawlCache extends HashMap<Integer, Long> {
     private String cacheLocation;
+    private int cacheTTL;
 
     public void dumpToDisk() throws IOException {
         FileOutputStream outputStream = new FileOutputStream(cacheLocation);
@@ -23,10 +24,13 @@ public class CrawlCache extends HashMap<Integer, Long> {
         objectOutputStream.close();
     }
 
-    @Primary
     @Bean
-    public static CrawlCache readFromDisk(@Value("${crawler.cacheLocation}") final String cacheLocation) throws IOException, ClassNotFoundException {
+    @Primary
+    public static CrawlCache readFromDisk(@Value("${crawler.cacheLocation}") final String cacheLocation,
+                                          @Value("${crawler.cacheTTL}") final Integer cacheTTL) throws IOException, ClassNotFoundException {
         log.info("Loading cache @ {}", cacheLocation);
+        log.info("Setting cache TTL @ {}", cacheTTL);
+
         try {
             FileInputStream inputStream = new FileInputStream(cacheLocation);
             ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
@@ -34,8 +38,12 @@ public class CrawlCache extends HashMap<Integer, Long> {
             objectInputStream.close();
 
             ret.setCacheLocation(cacheLocation);
+
+            /* Set Cache TTL in days */
+            ret.setCacheTTL(60 * 60 * 24 * cacheTTL);
             return ret;
         }
+
         catch (FileNotFoundException exc) {
             log.warn("File {} not found on disk.", cacheLocation);
             CrawlCache ret = new CrawlCache();

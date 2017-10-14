@@ -31,9 +31,6 @@ public class CrawlerController {
     private final int TIMEOUT_INCREASE = 3000;
     private final int MAXIMUM_TIMEOUT = 10000;
 
-    // 1 month TTL for games
-    private final long CACHE_TTL = 60 * 60 * 24 * 31;
-
     @Autowired
     private CrawlCache recentlyCrawled;
 
@@ -127,10 +124,11 @@ public class CrawlerController {
                 if (recentlyCrawled.containsKey(gameId)) {
                     long timestamp = recentlyCrawled.get(gameId);
                     long difference = (new Date().getTime() / 1000) - timestamp;
-                    toBeCrawled = difference > CACHE_TTL;
+                    toBeCrawled = difference > recentlyCrawled.getCacheTTL();
 
-                    log.info("Game {} has been crawled @ {}s ago, {}", gameId, difference,
-                            toBeCrawled ? "refreshing it" : "not crawling it again.");
+                    log.info("Game {} has been crawled @ {}s ago, {} TTL: {}", gameId, difference,
+                            toBeCrawled ? "refreshing it." : "not crawling it again.",
+                            recentlyCrawled.getCacheTTL());
                 }
 
                 if (toBeCrawled) {
