@@ -1,0 +1,144 @@
+{
+	"info": {
+		"name": "Crawl All Users",
+		"_postman_id": "9be1fd89-3210-5d85-585b-7eba8da196e5",
+		"description": "Crawl all users in the server (not crawling the collection)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Get all users",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var jsonData = pm.response.json();",
+							"var usersArray = [];",
+							"",
+							"// console.log(\"Iterating\" + jsonData);",
+							"",
+							"for (var u = 0; u < jsonData.length ; u++) {",
+							"    usersArray.push(jsonData[u]);",
+							"    console.log(jsonData[u].bggNick);",
+							"}",
+							"",
+							"pm.globals.set(\"all_users\", usersArray);",
+							"pm.globals.set(\"index\", 0);",
+							"console.log(\"array_size = \" + usersArray.length);"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "{{server_address}}/v1/users/get",
+					"host": [
+						"{{server_address}}"
+					],
+					"path": [
+						"v1",
+						"users",
+						"get"
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Crawl user",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var response = pm.response.json();",
+							"var nick = response.bggNick;",
+							"var index = pm.globals.get(\"index\");",
+							"var all_users = pm.globals.get(\"all_users\");",
+							"",
+							"pm.test(\"User \" + nick + \" has been crawled (\" + index + \")\", function () {",
+							"    pm.expect(response.bggNick).to.eql(pm.globals.get(\"user\"));",
+							"});",
+							"",
+							"if (pm.response.status == 500)",
+							"    postman.setNextRequest(\"Crawl user\");",
+							"else if (index >= all_users.length - 1) {",
+							"    postman.setNextRequest(null);",
+							"}",
+							"else {",
+							"    pm.globals.set(\"index\", index + 1);",
+							"    postman.setNextRequest(\"Crawl user\");",
+							"}",
+							""
+						]
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var all_users = pm.globals.get(\"all_users\");",
+							"var index = pm.globals.get(\"index\");",
+							"",
+							"console.log(index);",
+							"console.log(all_users[index].bggNick);",
+							"",
+							"if (index < all_users.length) {",
+							"    pm.globals.set(\"user\", all_users[index].bggNick);",
+							"}",
+							"else {",
+							"    postman.setNextRequest(null);",
+							"}",
+							""
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "",
+							"value": "",
+							"description": "",
+							"type": "text",
+							"disabled": true
+						}
+					]
+				},
+				"url": {
+					"raw": "{{server_address}}/v1/crawler/crawl/users/:user",
+					"host": [
+						"{{server_address}}"
+					],
+					"path": [
+						"v1",
+						"crawler",
+						"crawl",
+						"users",
+						":user"
+					],
+					"variable": [
+						{
+							"key": "user",
+							"value": "{{user}}"
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		}
+	]
+}

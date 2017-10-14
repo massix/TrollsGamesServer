@@ -1,0 +1,205 @@
+{
+	"info": {
+		"name": "Crawl Collection for User",
+		"_postman_id": "55758c1b-36ca-60f1-8cd8-e56aeb7d3cb9",
+		"description": "",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Crawl user",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"User has been crawled\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.bggNick).to.eql(pm.globals.get(\"user\"));",
+							"});",
+							""
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "",
+							"value": "",
+							"description": "",
+							"type": "text",
+							"disabled": true
+						}
+					]
+				},
+				"url": {
+					"raw": "{{server_address}}/v1/crawler/crawl/users/:user",
+					"host": [
+						"{{server_address}}"
+					],
+					"path": [
+						"v1",
+						"crawler",
+						"crawl",
+						"users",
+						":user"
+					],
+					"variable": [
+						{
+							"key": "user",
+							"value": "{{user}}"
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Get Game",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Can get a game\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.name).to.eql(\"Antike II\");",
+							"});"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "{{server_address}}/v1/games/get/:id",
+					"host": [
+						"{{server_address}}"
+					],
+					"path": [
+						"v1",
+						"games",
+						"get",
+						":id"
+					],
+					"variable": [
+						{
+							"key": "id",
+							"value": "166857"
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Get User",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"User still exists in server\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.bggNick).to.eql(pm.globals.get(\"user\"));",
+							"});"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "{{server_address}}/v1/users/get/:nick",
+					"host": [
+						"{{server_address}}"
+					],
+					"path": [
+						"v1",
+						"users",
+						"get",
+						":nick"
+					],
+					"variable": [
+						{
+							"key": "nick",
+							"value": "{{user}}"
+						}
+					]
+				},
+				"description": "Get a specific user in TrollsGames server"
+			},
+			"response": []
+		},
+		{
+			"name": "Crawl Collection for User",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "{{server_address}}/v1/crawler/collection/:user",
+					"host": [
+						"{{server_address}}"
+					],
+					"path": [
+						"v1",
+						"crawler",
+						"collection",
+						":user"
+					],
+					"variable": [
+						{
+							"key": "user",
+							"value": "{{user}}"
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Get collection for user",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "{{server_address}}/v1/collection/get/:user",
+					"host": [
+						"{{server_address}}"
+					],
+					"path": [
+						"v1",
+						"collection",
+						"get",
+						":user"
+					],
+					"variable": [
+						{
+							"key": "user",
+							"value": "{{user}}"
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		}
+	]
+}
