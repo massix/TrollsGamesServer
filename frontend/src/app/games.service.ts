@@ -10,6 +10,10 @@ export class GamesService {
 
   constructor(private httpClient : HttpClient) {}
 
+  getCollection(user: string) : Promise<Game[]> {
+    return this.httpClient.get<Game[]>(this.cors + this.apiBase + "/collection/get/" + user).toPromise();
+  }
+
   getGame(id: number) : Promise<Game> {
     return this.httpClient.get<Game>(this.cors + this.apiBase + "/games/get/" + id).toPromise();
   }

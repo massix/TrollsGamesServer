@@ -29,10 +29,6 @@ import { GamesService } from './games.service';
       {
         path: 'games',
         component: GamesComponent
-      },
-      {
-        path: 'details/:id',
-        component: GameDetailsComponent
       }
     ])
   ],
