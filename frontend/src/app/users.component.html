@@ -1,0 +1,32 @@
+<div class="row">
+
+  <div class="col-md-3">
+
+    <ul *ngFor="let user of users" class="list-group">
+      <li (click)="onSelect(user)" class="list-group-item list-group-item-action border-0">
+        <span class="fa fa-user"></span> {{user.bggNick}}
+      </li>
+    </ul>
+
+  </div>
+
+  <div *ngIf="selectedUser" class="col-md-9">
+    <div class="row">
+      <div class="col-md-5">
+        <h4><label>{{selectedUser.forumNick}}</label></h4>
+      </div>
+      <div class="col-md-5">
+        <h4><label>{{selectedUser.bggNick}}</label></h4>
+      </div>
+    </div>
+
+    <div class="row" *ngIf="userGames">
+      <ul>
+        <li *ngFor="let game of userGames">
+          {{game.name}}
+        </li>
+      </ul>
+    </div>
+  </div>
+
+</div>
