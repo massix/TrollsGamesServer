@@ -108,6 +108,15 @@ public class SQLiteConnectorTest {
     }
 
     @Test
+    public void testRemoveUser() {
+        val u = new User("massi_x", "massi_x", "", "");
+        connector.userSelector.addUser(u);
+        connector.userSelector.removeUser("massi_x");
+
+        Assert.assertNull(connector.userSelector.findByBggNick("massi_x"));
+    }
+
+    @Test
     public void getUserCollection() {
         val u = connector.userSelector.findByBggNick("massi_x");
         u.buildCollection();
