@@ -36,4 +36,14 @@ public class UsersController {
         connector.userSelector.addUser(user);
         return DBUtils.getUser(connector, user.getBggNick());
     }
+
+    @RequestMapping(value = "/v1/users/del/{nick}", method = RequestMethod.DELETE)
+    public User removeUser(@PathVariable("nick") String nick) {
+        val user = DBUtils.getUser(connector, nick);
+        if (user != null) {
+            connector.userSelector.removeUser(nick);
+        }
+
+        return user;
+    }
 }

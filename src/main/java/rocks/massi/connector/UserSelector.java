@@ -43,4 +43,7 @@ public interface UserSelector {
 
     @SqlUpdate("update users set games = :games, wants = :wants where bggNick = :bggNick")
     void updateCollectionForUser(@BindBean final User user);
+
+    @SqlUpdate("delete from users where bggnick = :bggnick")
+    void removeUser(@Bind("bggnick") String nick);
 }
