@@ -1,7 +1,9 @@
 package rocks.massi.connector;
 
 import lombok.val;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import rocks.massi.data.Game;
 import rocks.massi.data.User;
@@ -11,6 +13,24 @@ import java.util.List;
 
 public class SQLiteConnectorTest {
     private final SQLiteConnector connector = new SQLiteConnector("jdbc:sqlite:trolls.db");
+
+    @Before
+    public void testCreateTables() {
+        connector.baseSelector.createTableGames();
+        connector.baseSelector.createTableUsers();
+
+        // Insert some games
+        connector.gameSelector.insertGame(new Game(54998, "Cyclades", "", 2, 18, 120, 2001, 1, false, "", "", ""));
+
+        // Insert some users
+        connector.userSelector.addUser(new User("massi_x", "massi_x", "54998", "54998"));
+    }
+
+    @After
+    public void dropTables() {
+        connector.baseSelector.dropTableGames();
+        connector.baseSelector.dropTableUsers();
+    }
 
     @Test
     public void testGetAllGames() {
@@ -32,6 +52,8 @@ public class SQLiteConnectorTest {
     public void testGetUser() {
         User u = connector.userSelector.findByBggNick("massi_x");
         User k = connector.userSelector.findByForumNick("massi_x");
+        Assert.assertNotNull(u);
+        Assert.assertNotNull(k);
         Assert.assertTrue(u.getForumNick().equals("massi_x"));
         Assert.assertEquals("Users are not the same?", u, k);
     }

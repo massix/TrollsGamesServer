@@ -10,6 +10,12 @@ public interface BaseSelector {
             "authors text, expands int)")
     void createTableGames();
 
-    @SqlUpdate("create table if not exists users (bggnick text primary key not null, forumnick not null, games text, wants text)")
+    @SqlUpdate("create table if not exists users (bggnick text not null, forumnick not null, games text, wants text)")
     void createTableUsers();
+
+    @SqlUpdate("drop table users")
+    void dropTableUsers();
+
+    @SqlUpdate("drop table games")
+    void dropTableGames();
 }
