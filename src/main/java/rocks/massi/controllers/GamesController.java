@@ -1,4 +1,4 @@
-package rocks.massi;
+package rocks.massi.controllers;
 
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;

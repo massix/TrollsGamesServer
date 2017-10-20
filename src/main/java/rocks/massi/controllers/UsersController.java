@@ -1,4 +1,4 @@
-package rocks.massi;
+package rocks.massi.controllers;
 
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;

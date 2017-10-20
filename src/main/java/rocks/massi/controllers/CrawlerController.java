@@ -1,4 +1,4 @@
-package rocks.massi;
+package rocks.massi.controllers;
 
 import feign.Feign;
 import feign.FeignException;
