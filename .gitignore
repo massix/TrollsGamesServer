@@ -4,3 +4,4 @@ target/
 .idea/
 recentlyCrawled.cache
 travis-key
+ssh-config

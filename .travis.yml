@@ -18,6 +18,5 @@ deploy:
     branch: master
 before_install:
 - openssl aes-256-cbc -K $encrypted_6e2695e2c6f8_key -iv $encrypted_6e2695e2c6f8_iv
-  -in travis-key.enc -out travis-key -d
-- openssl aes-256-cbc -K $encrypted_6e2695e2c6f8_key -iv $encrypted_6e2695e2c6f8_iv
-  -in ssh-config.enc -out ssh-config -d
+  -in secrets.tgz.enc -out secrets.tgz -d
+- tar xzf secrets.tgz
