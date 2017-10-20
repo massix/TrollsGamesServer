@@ -16,8 +16,8 @@ EOF
 function restart_docker() {
     ssh prod <<EOF
     cd tg/archives/build
-    cp target/TrollsGames-${TRAVIS_TAG}.jar ${HOME}/tg/TrollsGames.jar
-    cp configuration/application.prod.properties ${HOME}/tg/data/application.properties
+    cp target/TrollsGames-${TRAVIS_TAG}.jar /home/massi/tg/TrollsGames.jar
+    cp configuration/application.prod.properties /home/massi/tg/data/application.properties
     docker restart trolls
 EOF
 }
