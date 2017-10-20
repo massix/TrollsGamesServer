@@ -16,11 +16,17 @@ EOF
 function restart_docker() {
     ssh prod <<EOF
     cd tg/archives/build
-    cp TrollsGames-${TRAVIS_TAG}.jar ${HOME}/tg
+    cp target/TrollsGames-${TRAVIS_TAG}.jar ${HOME}/tg/TrollsGames.jar
+    cp configuration/application.prod.properties ${HOME}/tg/data/application.properties
     docker restart trolls
 EOF
+}
+
+function cleanup_build() {
+    ssh prod "rm -fr tg/archives/build"
 }
 
 deploy_tgz
 untar_tgz
 restart_docker
+cleanup_build
