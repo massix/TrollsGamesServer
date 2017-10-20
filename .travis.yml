@@ -3,7 +3,7 @@ script: mvn package
 
 before_deploy:
 - mkdir -p $HOME/.ssh
-- cp $TRAVIS_BUILD_DIR/travis-key $HOME/.ssh/
+- cp $TRAVIS_BUILD_DIR/travis_key $HOME/.ssh/travis-key
 - cp $TRAVIS_BUILD_DIR/ssh-config $HOME/.ssh/config
 - tar czf TrollsGamesServer.tgz configuration target/*.jar
 
@@ -21,6 +21,6 @@ deploy:
 
 before_install:
 - openssl aes-256-cbc -K $encrypted_e4574a9b01bc_key -iv $encrypted_e4574a9b01bc_iv
-  -in ssh-config.enc -out ssh-config -d
+  -in ssh_config.enc -out ssh_config -d
 - openssl aes-256-cbc -K $encrypted_e4574a9b01bc_key -iv $encrypted_e4574a9b01bc_iv
-  -in travis-key.enc -out travis-key -d
+  -in travis_key.enc -out travis_key -d
