@@ -1,18 +1,26 @@
 language: java
 script: mvn package
+
 before_deploy:
 - mkdir -p $HOME/.ssh
 - cp $TRAVIS_BUILD_DIR/travis-key $HOME/.ssh/
-- cp $TRAVIS_BUILD_DIR/ssh_config $HOME/.ssh/config
-before_install:
-- openssl aes-256-cbc -K $encrypted_e4574a9b01bc_key -iv $encrypted_e4574a9b01bc_iv
-  -in travis-key.enc -out travis-key -d
-- openssl aes-256-cbc -K $encrypted_e4574a9b01bc_key -iv $encrypted_e4574a9b01bc_iv
-  -in ssh-config.enc -out ssh-config -d
+- cp $TRAVIS_BUILD_DIR/ssh-config $HOME/.ssh/config
+- tar czf TrollsGamesServer.tgz configuration target/*.jar
+
 deploy:
-  provider: releases
+  - provider: releases
   api_key:
     secure: NlGbcX6AgwWaMjPtpG/+Hh89X2jKbfdswxDTjbHTNeEzf5znQTB8doCGXRrQPu5u7LPQofDMh2DEclCmne7146WTHzAtufR36igJ42QNR03xhq82doEeDldOC3l02kM7ro7YMWw9qoj9L/8Qmpx5A7hh1Ij3gKMk2jl2un3bYSw3DmDXivycL5E3osCrG2lzupzQQSdCvpfObQ24y1xz9/ZGRW+uaqtjmUX4hxyce36vGyeR2Vii7fHXCKdknIU0IComVpOdnkpbWAD0UGxbNf+ebbGJ+st6ouhDHakgpWjQ5lZucS+w/7wZTlxjnLfyy8MslK1c57VI5SAJ9aT9ZORGho6YZ8d5dy88dYH9b+Ypi5TZY433nFzxNOeZRO9FQ/ymVVEQu1nd4rhWHK4QrQYljgFgrdSib6uTfwk4MfgTaogWJGuHMNIOEOiiBt1nHDj2eRRfxF645ucAA/Tw9/VpQTyt6GEPxbvqjFmTaN4AwGQiI63WzBweZtAZik12a2FvXvjEMXJlhhy5FqWD2J+2fQre7q9P68aGI8tcpVQd9g6t5yFlzeB6MhlcH7a3Gd4FJpn2ter+dib33uoj7lvhr+1biiqXR8unYok3kqrovLIKZhFVXBBMadO2aSVk+9RGcgbHqnnJ5HATIQaimtJWKURbydJOGlUy2QsRJPM=
-  file: target/*.jar
+  file: TrollsGamesServer.tgz
   on:
     repo: massix/TrollsGamesServer
+  - provider: script
+  script: scp TrollsGamesServer.tgz prod:tg/
+  on:
+    branch: master
+
+before_install:
+- openssl aes-256-cbc -K $encrypted_e4574a9b01bc_key -iv $encrypted_e4574a9b01bc_iv
+  -in ssh-config.enc -out ssh-config -d
+- openssl aes-256-cbc -K $encrypted_e4574a9b01bc_key -iv $encrypted_e4574a9b01bc_iv
+  -in travis-key.enc -out travis-key -d
