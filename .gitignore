@@ -3,3 +3,4 @@ target/
 *.db
 .idea/
 recentlyCrawled.cache
+travis-key
