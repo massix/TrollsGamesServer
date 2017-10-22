@@ -1,11 +1,21 @@
 language: java
 script: mvn package
 services: postgresql
+
 before_deploy:
 - mkdir -p $HOME/.ssh
 - cp $TRAVIS_BUILD_DIR/travis-key $HOME/.ssh/travis-key
 - cp $TRAVIS_BUILD_DIR/ssh-config $HOME/.ssh/config
 - tar czf $TRAVIS_BUILD_DIR/TrollsGames-${TRAVIS_TAG}.tgz configuration target/*.jar
+
+before_install:
+- openssl aes-256-cbc -K $encrypted_6e2695e2c6f8_key -iv $encrypted_6e2695e2c6f8_iv
+  -in secrets.tgz.enc -out secrets.tgz -d
+- tar xzf secrets.tgz
+
+before_script:
+- psql -c 'create database trolls_test;' -U postgres
+
 deploy:
 - provider: releases
   skip_cleanup: true
@@ -16,15 +26,17 @@ deploy:
     branch: master
     repo: massix/TrollsGamesServer
     tags: true
+- provider: heroku
+  api_key:
+    secure: uiDL9eXqp5KPj/xRP4xKORgyNsKnYWOMtD2+bP/o+YLUXbG/Z0QrCqNmKd2KIHgrysqKee47Nib89+sAdHb0Hm/jklD0GoKlNgYnXWjhqAMbkFhtgNQSqJ1mDZ6vx0+U2g9xNylKPub7iY+jV2Z/ook1Z5zHb384hGMLBuIRU1ChNwQwhFlkKmNQxBe7TSegByJVEigCq5TPg6eSSE50M/gC7an6oenbJWmmjFoUgF2aLp7BdSXxJHnhNseUzs7XbmY7k7BBD6E9yWUTg5GsyswWeZv+sIeVI6j4fdrlCnJGwyRl5hkpRcXSzsC8vhr4vMtZfNMgPvWHY0MY14YX8t0UajG0PgP4tsB4P2H/L14xo+aGt4ogNrtqcoBpP43NuYzmpPb6j3aws8isOwyNi63i+ysCyy74GHn6+fnGn+rvs3IXEq/Ihd9tLlesX+EVfyeyC3cC4ggvNUEXm+5yCYcD4LAsHQOQjIbdgNP4+3WMqzFpy37i6Wm82cmRu1tP87AvlW06ApPJTgwmF/PikO4Zv1cFbcP+m1Ij7KMNwuEKqUTQ06rex7eBIqkVN6GPlMjJ5feO7flXpAzGoOcJUEKVcFM75qnjs5LqRC8k/RPISnZrIQUeXgz6Gk0StzVwDSNYCj3vvAFPmUAtkRV4kNkACN2kuVjOuvE/y4J8TdI=
+  app: trolls-server
+  on:
+    branch: master
+    repo: massix/TrollsGamesServer
+    tags: true
 - provider: script
   skip_cleanup: true
   script: ./deploy.sh
   on:
     branch: master
     tags: true
-before_install:
-- openssl aes-256-cbc -K $encrypted_6e2695e2c6f8_key -iv $encrypted_6e2695e2c6f8_iv
-  -in secrets.tgz.enc -out secrets.tgz -d
-- tar xzf secrets.tgz
-before_script:
-  - psql -c 'create database trolls_test;' -U postgres
