@@ -11,8 +11,11 @@ public class SQLiteConnector {
     public BaseSelector baseSelector;
     private DBI dbi;
 
-    public SQLiteConnector(@Value("${db.fileLocation}") final String fileLocation) {
-        dbi = new DBI(fileLocation);
+    public SQLiteConnector(@Value("${db.fileLocation}") final String fileLocation,
+                           @Value("${db.user}") final String user,
+                           @Value("${db.password") final String password) {
+        String dbUrl = fileLocation + "?user=" + user + "&password=" + password;
+        dbi = new DBI(dbUrl);
         gameSelector = dbi.open(GameSelector.class);
         userSelector = dbi.open(UserSelector.class);
         baseSelector = dbi.open(BaseSelector.class);

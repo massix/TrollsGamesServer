@@ -12,7 +12,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class SQLiteConnectorTest {
-    private final SQLiteConnector connector = new SQLiteConnector("jdbc:sqlite:trolls.db");
+    private final SQLiteConnector connector = new SQLiteConnector("jdbc:postgresql://localhost/trolls_test", "postgres", "");
 
     @Before
     public void testCreateTables() {
@@ -112,7 +112,6 @@ public class SQLiteConnectorTest {
     @Test
     public void testRemoveUser() {
         val u = new User("massi_x", "massi_x", "", "");
-        connector.userSelector.addUser(u);
         connector.userSelector.removeUser("massi_x");
 
         Assert.assertNull(connector.userSelector.findByBggNick("massi_x"));
