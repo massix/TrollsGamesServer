@@ -1,6 +1,7 @@
 package rocks.massi.controllers;
 
 import feign.Feign;
+import feign.Logger;
 import feign.gson.GsonDecoder;
 import javafx.util.Pair;
 import lombok.extern.slf4j.Slf4j;

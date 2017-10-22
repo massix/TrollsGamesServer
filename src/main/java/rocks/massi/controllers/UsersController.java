@@ -16,28 +16,29 @@ import static rocks.massi.utils.DBUtils.getUser;
 
 @Slf4j
 @RestController
+@RequestMapping("/v1/users")
 public class UsersController {
     @Autowired
     private SQLiteConnector connector;
 
-    @RequestMapping("/v1/users/get/{nick}")
+    @RequestMapping("/get/{nick}")
     public User getUserByNick(@PathVariable("nick") String nick) {
         return getUser(connector, nick);
     }
 
-    @RequestMapping("/v1/users/get")
+    @RequestMapping("/get")
     public List<User> getAllUsers() {
         return connector.userSelector.getUsers();
     }
 
-    @RequestMapping(value = "/v1/users/add", method = RequestMethod.POST)
+    @RequestMapping(value = "/add", method = RequestMethod.POST)
     public User addUser(@RequestBody User user) {
         log.info("Got user {}", user.getBggNick());
         connector.userSelector.addUser(user);
         return DBUtils.getUser(connector, user.getBggNick());
     }
 
-    @RequestMapping(value = "/v1/users/del/{nick}", method = RequestMethod.DELETE)
+    @RequestMapping(value = "/remove/{nick}", method = RequestMethod.DELETE)
     public User removeUser(@PathVariable("nick") String nick) {
         val user = DBUtils.getUser(connector, nick);
         if (user != null) {

@@ -16,11 +16,12 @@ import static rocks.massi.utils.DBUtils.getUser;
 
 @Slf4j
 @RestController
+@RequestMapping("/v1/collection")
 public class CollectionController {
     @Autowired
     private SQLiteConnector connector;
 
-    @RequestMapping("/v1/collection/get/{nick}")
+    @RequestMapping("/get/{nick}")
     public List<Game> getCollection(@PathVariable("nick") final String nick) {
         val user = getUser(connector, nick);
         LinkedList<Game> collection = new LinkedList<>();

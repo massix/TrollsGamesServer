@@ -7,12 +7,13 @@ import org.springframework.web.bind.annotation.RestController;
 import rocks.massi.connector.SQLiteConnector;
 
 @RestController
+@RequestMapping("/v1/dbcontroller")
 public class DBController {
 
     @Autowired
     SQLiteConnector connector;
 
-    @RequestMapping(value = "/v1/dbcontroller/create", method = RequestMethod.POST)
+    @RequestMapping(value = "/create", method = RequestMethod.POST)
     public void createTables() {
         connector.baseSelector.createTableUsers();
         connector.baseSelector.createTableGames();

@@ -9,28 +9,29 @@ import rocks.massi.data.Game;
 import java.util.List;
 
 @RestController
+@RequestMapping("/v1/games")
 public class GamesController {
 
     @Autowired
     private SQLiteConnector connector;
 
-    @RequestMapping(value = "/v1/games/get", method = RequestMethod.GET)
+    @RequestMapping(value = "/get", method = RequestMethod.GET)
     public List<Game> getGames() {
         return connector.gameSelector.getGames();
     }
 
-    @RequestMapping(value = "/v1/games/get/{id}", method = RequestMethod.GET)
+    @RequestMapping(value = "/get/{id}", method = RequestMethod.GET)
     public Game getGame(@PathVariable("id") final int id) {
         return connector.gameSelector.findById(id);
     }
 
-    @RequestMapping(value = "/v1/games/add", method = RequestMethod.POST)
+    @RequestMapping(value = "/add", method = RequestMethod.POST)
     public Game insertGame(@RequestBody final Game game) {
         connector.gameSelector.insertGame(game);
         return connector.gameSelector.findById(game.getId());
     }
 
-    @RequestMapping(value = "/v1/games/remove/{id}", method = RequestMethod.DELETE)
+    @RequestMapping(value = "/remove/{id}", method = RequestMethod.DELETE)
     public Game removeGame(@PathVariable("id") final int id) {
         val g = connector.gameSelector.findById(id);
 
