@@ -3,9 +3,10 @@ package rocks.massi.data;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
-@RequiredArgsConstructor
 @Data
+@RequiredArgsConstructor
 public class CrawlingProgress {
+    private long queue;
     private final User user;
     private final boolean running;
     private final int crawled;

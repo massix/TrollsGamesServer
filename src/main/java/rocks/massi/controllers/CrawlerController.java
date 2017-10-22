@@ -3,7 +3,6 @@ package rocks.massi.controllers;
 import feign.Feign;
 import feign.gson.GsonDecoder;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -105,27 +104,31 @@ public class CrawlerController {
     }
 
     @RequestMapping(value = "/queues", method = RequestMethod.GET)
-    public List<Map.Entry<Long, CrawlingProgress>> getQueues() {
-        final List<Map.Entry<Long, CrawlingProgress>> ret = new LinkedList<>();
+    public List<CrawlingProgress> getQueues() {
+        final List<CrawlingProgress> ret = new LinkedList<>();
 
         runningCrawlers().forEach((k, v) -> {
             CollectionCrawler collectionCrawler = (CollectionCrawler) v.getValue();
-            ret.add(new AbstractMap.SimpleEntry<>(v.getKey().getId(), collectionCrawler.getProgress()));
+            CrawlingProgress crawlingProgress = collectionCrawler.getProgress();
+            crawlingProgress.setQueue(v.getKey().getId());
+            ret.add(crawlingProgress);
         });
 
         return ret;
     }
 
     @RequestMapping(value = "/queues", method = RequestMethod.DELETE)
-    public List<Map.Entry<Long, CrawlingProgress>> purgeFinishedQueues() {
-        List<Map.Entry<Long, CrawlingProgress>> ret = new LinkedList<>();
+    public List<CrawlingProgress> purgeFinishedQueues() {
+        List<CrawlingProgress> ret = new LinkedList<>();
         LinkedList<String> toBeRemoved = new LinkedList<>();
 
         runningCrawlers().forEach((k, v) -> {
             CollectionCrawler crawler = (CollectionCrawler) v.getValue();
             if (! crawler.isRunning()) {
                 toBeRemoved.add(k);
-                ret.add(new AbstractMap.SimpleEntry<>(v.getKey().getId(), crawler.getProgress()));
+                CrawlingProgress crawlingProgress = crawler.getProgress();
+                crawlingProgress.setQueue(v.getKey().getId());
+                ret.add(crawlingProgress);
             }
         });
 
@@ -140,6 +143,7 @@ public class CrawlerController {
             if (v.getKey().getId() == id) {
                 CollectionCrawler crawler = (CollectionCrawler) v.getValue();
                 progress[0] = crawler.getProgress();
+                progress[0].setQueue(v.getKey().getId());
             }
         });
 
