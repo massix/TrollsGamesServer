@@ -31,6 +31,12 @@ public class CollectionCrawler implements Runnable {
     private final User user;
 
     @Getter
+    private int cacheHit;
+
+    @Getter
+    private int cacheMiss;
+
+    @Getter
     private boolean running;
 
     @Getter
@@ -83,12 +89,15 @@ public class CollectionCrawler implements Runnable {
         crawled = new LinkedList<>();
         failed = new LinkedList<>();
         started = new Date();
+        cacheHit = 0;
+        cacheMiss = 0;
 
         user.getCollection().forEach(gameId -> {
             boolean toBeCrawled = true;
 
             try {
                 if (cache.containsKey(gameId)) {
+                    cacheHit++;
                     long timestamp = cache.get(gameId);
                     long difference = (new Date().getTime() / 1000) - timestamp;
                     toBeCrawled = difference > cache.getCacheTTL();
@@ -99,6 +108,7 @@ public class CollectionCrawler implements Runnable {
                 }
 
                 if (toBeCrawled) {
+                    cacheMiss++;
                     Game g = crawlGame(gameId);
                     crawled.add(g);
                     log.info("Added game {} for user {}", g.getName(), user.getBggNick());
@@ -147,6 +157,8 @@ public class CollectionCrawler implements Runnable {
                 running,
                 crawled.size(),
                 failed.size(),
+                cacheHit,
+                cacheMiss,
                 user.getCollection().size(),
                 getStarted().toString(),
                 running? null : getFinished().toString());
