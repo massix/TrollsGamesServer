@@ -2,7 +2,6 @@ package rocks.massi.controllers;
 
 import feign.Feign;
 import feign.gson.GsonDecoder;
-import javafx.util.Pair;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -22,9 +21,7 @@ import rocks.massi.services.BGGJsonProxy;
 import rocks.massi.utils.DBUtils;
 
 import javax.servlet.http.HttpServletResponse;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 @Slf4j
 @RestController
@@ -38,9 +35,9 @@ public class CrawlerController {
     @Autowired
     private CrawlCache crawlCache;
 
-    private HashMap<String, Pair<Thread, Runnable>> runningCrawlers;
+    private HashMap<String, Map.Entry<Thread, Runnable>> runningCrawlers;
 
-    private HashMap<String, Pair<Thread, Runnable>> runningCrawlers() {
+    private HashMap<String, Map.Entry<Thread, Runnable>> runningCrawlers() {
         if (runningCrawlers == null) runningCrawlers = new HashMap<>();
         return runningCrawlers;
     }
@@ -92,7 +89,7 @@ public class CrawlerController {
             if (!runningCrawlers().containsKey(user.getBggNick())) {
                 CollectionCrawler collectionCrawler = new CollectionCrawler(crawlCache, connector, user);
                 thread = new Thread(collectionCrawler);
-                runningCrawlers().put(user.getBggNick(), new Pair<>(thread, collectionCrawler));
+                runningCrawlers().put(user.getBggNick(), new AbstractMap.SimpleEntry<>(thread, collectionCrawler));
                 thread.start();
             } else {
                 thread = runningCrawlers().get(user.getBggNick()).getKey();
@@ -107,12 +104,12 @@ public class CrawlerController {
     }
 
     @RequestMapping(value = "/queues", method = RequestMethod.GET)
-    public List<Pair<Long, CrawlingProgress>> getQueues() {
-        final List<Pair<Long, CrawlingProgress>> ret = new LinkedList<>();
+    public List<Map.Entry<Long, CrawlingProgress>> getQueues() {
+        final List<Map.Entry<Long, CrawlingProgress>> ret = new LinkedList<>();
 
         runningCrawlers().forEach((k, v) -> {
             CollectionCrawler collectionCrawler = (CollectionCrawler) v.getValue();
-            ret.add(new Pair<>(v.getKey().getId(), collectionCrawler.getProgress()));
+            ret.add(new AbstractMap.SimpleEntry<>(v.getKey().getId(), collectionCrawler.getProgress()));
         });
 
         return ret;
