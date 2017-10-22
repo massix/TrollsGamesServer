@@ -7,7 +7,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import rocks.massi.cache.CrawlCache;
-import rocks.massi.connector.SQLiteConnector;
+import rocks.massi.connector.DatabaseConnector;
 import rocks.massi.data.CrawlingProgress;
 import rocks.massi.data.Game;
 import rocks.massi.data.User;
@@ -27,7 +27,7 @@ public class CollectionCrawler implements Runnable {
     private final String BASE_URL = "https://bgg-json.azurewebsites.net";
 
     private final CrawlCache cache;
-    private final SQLiteConnector connector;
+    private final DatabaseConnector connector;
     private final User user;
 
     @Getter

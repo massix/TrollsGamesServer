@@ -1,7 +1,6 @@
 package rocks.massi.controllers;
 
 import feign.Feign;
-import feign.Logger;
 import feign.gson.GsonDecoder;
 import javafx.util.Pair;
 import lombok.extern.slf4j.Slf4j;
@@ -12,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import rocks.massi.cache.CrawlCache;
-import rocks.massi.connector.SQLiteConnector;
+import rocks.massi.connector.DatabaseConnector;
 import rocks.massi.crawler.CollectionCrawler;
 import rocks.massi.data.CrawlingProgress;
 import rocks.massi.data.Game;
@@ -34,7 +33,7 @@ public class CrawlerController {
     private final String BASE_URL = "https://bgg-json.azurewebsites.net";
 
     @Autowired
-    private SQLiteConnector connector;
+    private DatabaseConnector connector;
 
     @Autowired
     private CrawlCache crawlCache;

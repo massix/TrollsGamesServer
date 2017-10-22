@@ -3,7 +3,7 @@ package rocks.massi.controllers;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import rocks.massi.connector.SQLiteConnector;
+import rocks.massi.connector.DatabaseConnector;
 import rocks.massi.data.Game;
 
 import java.util.List;
@@ -13,7 +13,7 @@ import java.util.List;
 public class GamesController {
 
     @Autowired
-    private SQLiteConnector connector;
+    private DatabaseConnector connector;
 
     @RequestMapping(value = "/get", method = RequestMethod.GET)
     public List<Game> getGames() {

@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import rocks.massi.connector.SQLiteConnector;
+import rocks.massi.connector.DatabaseConnector;
 import rocks.massi.data.Game;
 
 import java.util.LinkedList;
@@ -19,7 +19,7 @@ import static rocks.massi.utils.DBUtils.getUser;
 @RequestMapping("/v1/collection")
 public class CollectionController {
     @Autowired
-    private SQLiteConnector connector;
+    private DatabaseConnector connector;
 
     @RequestMapping("/get/{nick}")
     public List<Game> getCollection(@PathVariable("nick") final String nick) {

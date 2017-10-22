@@ -11,8 +11,8 @@ import rocks.massi.data.User;
 import java.util.LinkedList;
 import java.util.List;
 
-public class SQLiteConnectorTest {
-    private final SQLiteConnector connector = new SQLiteConnector("jdbc:postgresql://localhost/trolls_test", "postgres", "");
+public class DatabaseConnectorTest {
+    private final DatabaseConnector connector = new DatabaseConnector("jdbc:postgresql://localhost/trolls_test", "postgres", "");
 
     @Before
     public void testCreateTables() {

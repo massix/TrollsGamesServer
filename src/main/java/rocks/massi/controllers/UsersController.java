@@ -4,12 +4,10 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import rocks.massi.connector.SQLiteConnector;
+import rocks.massi.connector.DatabaseConnector;
 import rocks.massi.data.User;
 import rocks.massi.utils.DBUtils;
-import sun.misc.Request;
 
-import java.util.LinkedList;
 import java.util.List;
 
 import static rocks.massi.utils.DBUtils.getUser;
@@ -19,7 +17,7 @@ import static rocks.massi.utils.DBUtils.getUser;
 @RequestMapping("/v1/users")
 public class UsersController {
     @Autowired
-    private SQLiteConnector connector;
+    private DatabaseConnector connector;
 
     @RequestMapping("/get/{nick}")
     public User getUserByNick(@PathVariable("nick") String nick) {
