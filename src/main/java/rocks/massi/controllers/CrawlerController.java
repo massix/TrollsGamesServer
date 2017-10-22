@@ -1,43 +1,51 @@
 package rocks.massi.controllers;
 
 import feign.Feign;
-import feign.FeignException;
 import feign.gson.GsonDecoder;
+import javafx.util.Pair;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import rocks.massi.cache.CrawlCache;
 import rocks.massi.connector.SQLiteConnector;
+import rocks.massi.crawler.CollectionCrawler;
+import rocks.massi.data.CrawlingProgress;
 import rocks.massi.data.Game;
 import rocks.massi.data.User;
-import rocks.massi.data.bgg.BGGGame;
 import rocks.massi.data.bgg.Collection;
 import rocks.massi.exceptions.UserNotFoundException;
 import rocks.massi.services.BGGJsonProxy;
 import rocks.massi.utils.DBUtils;
 
-import java.io.IOException;
-import java.util.*;
+import javax.servlet.http.HttpServletResponse;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 
 @Slf4j
 @RestController
+@RequestMapping("/v1/crawler")
 public class CrawlerController {
-
     private final String BASE_URL = "https://bgg-json.azurewebsites.net";
-    private final int INITIAL_TIMEOUT = 1000;
-    private final int TIMEOUT_INCREASE = 3000;
-    private final int MAXIMUM_TIMEOUT = 10000;
-
-    @Autowired
-    private CrawlCache recentlyCrawled;
 
     @Autowired
     private SQLiteConnector connector;
 
-    @RequestMapping(value = "/v1/crawler/crawl/users/{user}", method = RequestMethod.POST)
+    @Autowired
+    private CrawlCache crawlCache;
+
+    private HashMap<String, Pair<Thread, Runnable>> runningCrawlers;
+
+    private HashMap<String, Pair<Thread, Runnable>> runningCrawlers() {
+        if (runningCrawlers == null) runningCrawlers = new HashMap<>();
+        return runningCrawlers;
+    }
+
+    @RequestMapping(value = "/users/{user}", method = RequestMethod.POST)
     public User crawlUser(@PathVariable("user") String user) {
         User userFromDb = DBUtils.getUser(connector, user);
 
@@ -68,103 +76,76 @@ public class CrawlerController {
         return connector.userSelector.findByBggNick(updated.getBggNick());
     }
 
-    @RequestMapping(value = "/v1/crawler/crawl/games/{gameId}", method = RequestMethod.POST)
+    @RequestMapping(value = "/games/{gameId}", method = RequestMethod.POST)
     public Game crawlGame(@PathVariable("gameId") final int gameId) {
-        BGGJsonProxy bggJsonProxy = Feign.builder().decoder(new GsonDecoder()).target(BGGJsonProxy.class, BASE_URL);
-
-        BGGGame game = bggJsonProxy.getGameForId(gameId);
-        recentlyCrawled.put(gameId, new Date().getTime() / 1000);
-
-        try {
-            recentlyCrawled.dumpToDisk();
-        } catch (IOException e) {
-            log.error("Could not dump to disk: {}", e.getMessage());
-        }
-
-        ArrayList<String> expands = new ArrayList<>();
-
-        if (game.getExpands() != null)
-            game.getExpands().forEach(expandsL -> expands.add(String.valueOf(expandsL.getGameId())));
-
-        Game toInsert = new Game(game.getGameId(), game.getName(), game.getDescription(),
-                game.getMinPlayers(), game.getMaxPlayers(), game.getPlayingTime(),
-                game.getYearPublished(), game.getRank(), game.isExpansion(),
-                game.getThumbnail(), String.join(", ", game.getDesigners()),
-                String.join(" ", expands));
-
-        Game inDb = connector.gameSelector.findById(game.getGameId());
-
-        if (inDb != null) {
-            connector.gameSelector.updateGame(toInsert);
-        } else {
-            connector.gameSelector.insertGame(toInsert);
-        }
-
-        return connector.gameSelector.findById(gameId);
+        return new CollectionCrawler(crawlCache, connector, null).crawlGame(gameId);
     }
 
-    @RequestMapping(value = "/v1/crawler/collection/{user}", method = RequestMethod.POST)
-    public List<Game> crawlCollectionForUser(@PathVariable("user") final String nick) {
+    @RequestMapping(value = "/collection/{user}", method = RequestMethod.POST)
+    public void crawlCollectionForUser(@PathVariable("user") final String nick, HttpServletResponse response) {
         User user = DBUtils.getUser(connector, nick);
 
-        log.info("Starting crawl @ {}", new Date().getTime());
+        if (user != null) {
+            response.setStatus(HttpServletResponse.SC_ACCEPTED);
+            Thread thread;
 
-        if (user == null)
-            throw new UserNotFoundException("User not found in DB.");
-
-        user.buildCollection();
-        List<Game> ret = new LinkedList<>();
-
-        List<Integer> failed = new LinkedList<>();
-
-        user.getCollection().forEach(gameId -> {
-            boolean toBeCrawled = true;
-
-            try {
-                if (recentlyCrawled.containsKey(gameId)) {
-                    long timestamp = recentlyCrawled.get(gameId);
-                    long difference = (new Date().getTime() / 1000) - timestamp;
-                    toBeCrawled = difference > recentlyCrawled.getCacheTTL();
-
-                    log.info("Game {} has been crawled @ {}s ago, {} TTL: {}", gameId, difference,
-                            toBeCrawled ? "refreshing it." : "not crawling it again.",
-                            recentlyCrawled.getCacheTTL());
-                }
-
-                if (toBeCrawled) {
-                    Game g = crawlGame(gameId);
-                    ret.add(g);
-                    log.info("Added game {} for user {}", g.getName(), user.getBggNick());
-                }
+            if (!runningCrawlers().containsKey(user.getBggNick())) {
+                CollectionCrawler collectionCrawler = new CollectionCrawler(crawlCache, connector, user);
+                thread = new Thread(collectionCrawler);
+                runningCrawlers().put(user.getBggNick(), new Pair<>(thread, collectionCrawler));
+                thread.start();
+            } else {
+                thread = runningCrawlers().get(user.getBggNick()).getKey();
             }
-            catch (FeignException exception) {
-                log.warn("Could not download game id {} ({})", gameId, exception.status());
-                failed.add(gameId);
+
+            response.setHeader(HttpHeaders.LOCATION, "/v1/crawler/queue/" + String.valueOf(thread.getId()));
+        }
+
+        else {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+        }
+    }
+
+    @RequestMapping(value = "/queues", method = RequestMethod.GET)
+    public List<Pair<Long, CrawlingProgress>> getQueues() {
+        final List<Pair<Long, CrawlingProgress>> ret = new LinkedList<>();
+
+        runningCrawlers().forEach((k, v) -> {
+            CollectionCrawler collectionCrawler = (CollectionCrawler) v.getValue();
+            ret.add(new Pair<>(v.getKey().getId(), collectionCrawler.getProgress()));
+        });
+
+        return ret;
+    }
+
+    @RequestMapping(value = "/queue/{id}", method = RequestMethod.GET)
+    public CrawlingProgress getProgress(@PathVariable("id") final long id, HttpServletResponse response) {
+        final CrawlingProgress[] progress = {null};
+        runningCrawlers().forEach((k, v) -> {
+            if (v.getKey().getId() == id) {
+                CollectionCrawler crawler = (CollectionCrawler) v.getValue();
+                progress[0] = crawler.getProgress();
             }
         });
 
-        int timeout = INITIAL_TIMEOUT;
-        for (Iterator<Integer> it = failed.iterator(); it.hasNext(); ) {
-            int gameId = it.next();
-            try {
-                log.info("Sleeping for {}s", ((double) timeout / 1000));
-                Thread.sleep(timeout);
-                Game g = crawlGame(gameId);
-                ret.add(g);
-                log.info("Added game {} for user {}", g.getName(), user.getBggNick());
-                it.remove();
-                timeout = INITIAL_TIMEOUT;
-            }
-            catch (final FeignException exception) {
-                log.warn("Could not download game id {} ({}), timeout = {}", gameId, exception.status(), timeout);
-                it = failed.iterator();
-                timeout += TIMEOUT_INCREASE;
-                if (timeout > MAXIMUM_TIMEOUT) timeout = MAXIMUM_TIMEOUT;
-            } catch (final InterruptedException e) {
-                log.error("Could not sleep because {}", e.getMessage());
-            }
+        if (progress[0] == null) {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
         }
 
-        return ret;
+        return progress[0];
+    }
+
+    @RequestMapping(value = "/queue/{id}", method = RequestMethod.DELETE)
+    public void deleteQueue(@PathVariable("id") final long id, HttpServletResponse response) {
+        CrawlingProgress progress = getProgress(id, response);
+        if (progress != null && ! progress.isRunning()) {
+            runningCrawlers().remove(progress.getUser().getBggNick());
+        }
+        else if (progress == null) {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+        }
+        else if (progress.isRunning()) {
+            response.setStatus(HttpServletResponse.SC_CONFLICT);
+        }
     }
 }

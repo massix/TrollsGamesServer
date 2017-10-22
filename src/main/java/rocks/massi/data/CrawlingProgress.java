@@ -1,0 +1,16 @@
+package rocks.massi.data;
+
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
+
+@RequiredArgsConstructor
+@Data
+public class CrawlingProgress {
+    private final User user;
+    private final boolean running;
+    private final int crawled;
+    private final int failed;
+    private final int total;
+    private final String started;
+    private final String finished;
+}
