@@ -15,7 +15,12 @@ public class DatabaseConnector {
                              @Value("${db.user}") final String user,
                              @Value("${db.password") final String password) {
         String dbUrl = fileLocation + "?user=" + user + "&password=" + password;
-        dbi = new DBI(dbUrl);
+        String herokuBase = System.getenv("JDBC_DATABASE_URL");
+
+        if (herokuBase != null) {
+            dbi = new DBI(herokuBase);
+        }
+        else dbi = new DBI(dbUrl);
         gameSelector = dbi.open(GameSelector.class);
         userSelector = dbi.open(UserSelector.class);
         baseSelector = dbi.open(BaseSelector.class);
