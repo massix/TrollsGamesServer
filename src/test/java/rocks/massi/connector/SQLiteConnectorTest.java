@@ -18,6 +18,8 @@ public class SQLiteConnectorTest {
     public void testCreateTables() {
         connector.baseSelector.createTableGames();
         connector.baseSelector.createTableUsers();
+        connector.baseSelector.truncateTableGames();
+        connector.baseSelector.truncateTableUsers();
 
         // Insert some games
         connector.gameSelector.insertGame(new Game(54998, "Cyclades", "", 2, 18, 120, 2001, 1, false, "", "", ""));

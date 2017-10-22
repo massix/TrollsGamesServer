@@ -18,4 +18,10 @@ public interface BaseSelector {
 
     @SqlUpdate("drop table games")
     void dropTableGames();
+
+    @SqlUpdate("delete from users")
+    void truncateTableUsers();
+
+    @SqlUpdate("delete from games")
+    void truncateTableGames();
 }
