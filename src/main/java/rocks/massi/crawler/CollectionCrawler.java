@@ -153,7 +153,7 @@ public class CollectionCrawler implements Runnable {
 
     public final CrawlingProgress getProgress() {
         return new CrawlingProgress(
-                user,
+                user.getBggNick(),
                 running,
                 crawled.size(),
                 failed.size(),

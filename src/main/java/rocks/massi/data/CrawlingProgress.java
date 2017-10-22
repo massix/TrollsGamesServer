@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class CrawlingProgress {
     private long queue;
-    private final User user;
+    private final String user;
     private final boolean running;
     private final int crawled;
     private final int failed;

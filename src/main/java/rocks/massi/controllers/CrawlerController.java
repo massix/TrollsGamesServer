@@ -158,7 +158,7 @@ public class CrawlerController {
     public void deleteQueue(@PathVariable("id") final long id, HttpServletResponse response) {
         CrawlingProgress progress = getProgress(id, response);
         if (progress != null && ! progress.isRunning()) {
-            runningCrawlers().remove(progress.getUser().getBggNick());
+            runningCrawlers().remove(progress.getUser());
         }
         else if (progress == null) {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
