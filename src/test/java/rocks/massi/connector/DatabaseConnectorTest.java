@@ -12,7 +12,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class DatabaseConnectorTest {
-    private final DatabaseConnector connector = new DatabaseConnector("jdbc:postgresql://localhost/trolls_test", "postgres", "");
+    private final DatabaseConnector connector = new DatabaseConnector("jdbc:sqlite:trolls.db");
 
     @Before
     public void testCreateTables() {
