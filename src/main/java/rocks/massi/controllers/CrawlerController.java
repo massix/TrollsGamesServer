@@ -5,10 +5,7 @@ import feign.gson.GsonDecoder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import rocks.massi.cache.CrawlCache;
 import rocks.massi.connector.DatabaseConnector;
 import rocks.massi.crawler.CollectionCrawler;
@@ -42,7 +39,7 @@ public class CrawlerController {
         return runningCrawlers;
     }
 
-    @RequestMapping(value = "/users/{user}", method = RequestMethod.POST)
+    @PostMapping("/users/{user}")
     public User crawlUser(@PathVariable("user") String user) {
         User userFromDb = DBUtils.getUser(connector, user);
 
@@ -73,12 +70,12 @@ public class CrawlerController {
         return connector.userSelector.findByBggNick(updated.getBggNick());
     }
 
-    @RequestMapping(value = "/games/{gameId}", method = RequestMethod.POST)
+    @PostMapping("/games/{gameId}")
     public Game crawlGame(@PathVariable("gameId") final int gameId) {
         return new CollectionCrawler(crawlCache, connector, null).crawlGame(gameId);
     }
 
-    @RequestMapping(value = "/collection/{user}", method = RequestMethod.POST)
+    @PostMapping("/collection/{user}")
     public void crawlCollectionForUser(@PathVariable("user") final String nick, HttpServletResponse response) {
         User user = DBUtils.getUser(connector, nick);
 
@@ -103,7 +100,7 @@ public class CrawlerController {
         }
     }
 
-    @RequestMapping(value = "/queues", method = RequestMethod.GET)
+    @GetMapping("/queues")
     public List<CrawlingProgress> getQueues() {
         final List<CrawlingProgress> ret = new LinkedList<>();
 
@@ -117,7 +114,7 @@ public class CrawlerController {
         return ret;
     }
 
-    @RequestMapping(value = "/queues", method = RequestMethod.DELETE)
+    @DeleteMapping("/queues")
     public List<CrawlingProgress> purgeFinishedQueues() {
         List<CrawlingProgress> ret = new LinkedList<>();
         LinkedList<String> toBeRemoved = new LinkedList<>();
@@ -136,7 +133,7 @@ public class CrawlerController {
         return ret;
     }
 
-    @RequestMapping(value = "/queue/{id}", method = RequestMethod.GET)
+    @GetMapping("/queue/{id}")
     public CrawlingProgress getProgress(@PathVariable("id") final long id, HttpServletResponse response) {
         final CrawlingProgress[] progress = {null};
         runningCrawlers().forEach((k, v) -> {
@@ -154,7 +151,7 @@ public class CrawlerController {
         return progress[0];
     }
 
-    @RequestMapping(value = "/queue/{id}", method = RequestMethod.DELETE)
+    @DeleteMapping("/queue/{id}")
     public void deleteQueue(@PathVariable("id") final long id, HttpServletResponse response) {
         CrawlingProgress progress = getProgress(id, response);
         if (progress != null && ! progress.isRunning()) {

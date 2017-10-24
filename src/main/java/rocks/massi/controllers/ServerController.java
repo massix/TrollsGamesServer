@@ -1,5 +1,6 @@
 package rocks.massi.controllers;
 
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -10,14 +11,14 @@ import java.util.Properties;
 @RequestMapping("/v1/server")
 public class ServerController {
 
-    @RequestMapping("/version")
+    @GetMapping("/version")
     public String getServerVersion() throws IOException {
         final Properties properties = new Properties();
         properties.load(this.getClass().getClassLoader().getResourceAsStream("project.properties"));
         return properties.getProperty("server_version");
     }
 
-    @RequestMapping("/artifact")
+    @GetMapping("/artifact")
     public String getServerArtifact() throws IOException {
         final Properties properties = new Properties();
         properties.load(this.getClass().getClassLoader().getResourceAsStream("project.properties"));

@@ -15,23 +15,23 @@ public class GamesController {
     @Autowired
     private DatabaseConnector connector;
 
-    @RequestMapping(value = "/get", method = RequestMethod.GET)
+    @GetMapping("/get")
     public List<Game> getGames() {
         return connector.gameSelector.getGames();
     }
 
-    @RequestMapping(value = "/get/{id}", method = RequestMethod.GET)
+    @GetMapping("/get/{id}")
     public Game getGame(@PathVariable("id") final int id) {
         return connector.gameSelector.findById(id);
     }
 
-    @RequestMapping(value = "/add", method = RequestMethod.POST)
+    @PostMapping("/add")
     public Game insertGame(@RequestBody final Game game) {
         connector.gameSelector.insertGame(game);
         return connector.gameSelector.findById(game.getId());
     }
 
-    @RequestMapping(value = "/remove/{id}", method = RequestMethod.DELETE)
+    @DeleteMapping("/remove/{id}")
     public Game removeGame(@PathVariable("id") final int id) {
         val g = connector.gameSelector.findById(id);
 

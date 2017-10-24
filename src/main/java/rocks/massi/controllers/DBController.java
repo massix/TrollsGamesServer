@@ -1,6 +1,7 @@
 package rocks.massi.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -13,7 +14,7 @@ public class DBController {
     @Autowired
     DatabaseConnector connector;
 
-    @RequestMapping(value = "/create", method = RequestMethod.POST)
+    @PostMapping("/create")
     public void createTables() {
         connector.baseSelector.createTableUsers();
         connector.baseSelector.createTableGames();

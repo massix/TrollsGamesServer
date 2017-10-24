@@ -19,24 +19,24 @@ public class UsersController {
     @Autowired
     private DatabaseConnector connector;
 
-    @RequestMapping("/get/{nick}")
+    @GetMapping("/get/{nick}")
     public User getUserByNick(@PathVariable("nick") String nick) {
         return getUser(connector, nick);
     }
 
-    @RequestMapping("/get")
+    @GetMapping("/get")
     public List<User> getAllUsers() {
         return connector.userSelector.getUsers();
     }
 
-    @RequestMapping(value = "/add", method = RequestMethod.POST)
+    @PostMapping(value = "/add")
     public User addUser(@RequestBody User user) {
         log.info("Got user {}", user.getBggNick());
         connector.userSelector.addUser(user);
         return DBUtils.getUser(connector, user.getBggNick());
     }
 
-    @RequestMapping(value = "/remove/{nick}", method = RequestMethod.DELETE)
+    @DeleteMapping("/remove/{nick}")
     public User removeUser(@PathVariable("nick") String nick) {
         val user = DBUtils.getUser(connector, nick);
         if (user != null) {
