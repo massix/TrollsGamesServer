@@ -13,7 +13,9 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Set;
 
 @Slf4j
 @Data
@@ -28,7 +30,7 @@ public class CrawlCache {
         return cache.put(key, value);
     }
 
-    public boolean containsKey(Integer key) {
+    private boolean containsKey(Integer key) {
         if (! cache.containsKey(key) && cacheLocation.getProtocol().equals("redis") && redis.exists(String.valueOf(key))) {
             Long value = Long.valueOf(redis.get(String.valueOf(key)));
             cache.put(key, value);
@@ -41,6 +43,16 @@ public class CrawlCache {
         return cache.get(key);
     }
 
+    public boolean isExpired(Integer key) {
+        if (containsKey(key)) {
+            long timestamp = get(key);
+            long difference = (new Date().getTime() / 1000) - timestamp;
+            return difference >= getCacheTTL();
+        }
+
+        return true;
+    }
+
     public void store() throws IOException {
         if (cacheLocation.getProtocol().equals("file")) {
             FileOutputStream outputStream = new FileOutputStream(cacheLocation.getPath());
@@ -51,6 +63,37 @@ public class CrawlCache {
 
         else if (cacheLocation.getProtocol().equals("redis")) {
             cache.forEach((k, v) -> redis.set(String.valueOf(k), String.valueOf(v)));
+        }
+    }
+
+    public void purgeAll() throws IOException {
+        cache.clear();
+        if (cacheLocation.getProtocol().equals("redis"))
+            redis.flushAll();
+
+        store();
+    }
+
+    public void purgeExpired() throws IOException {
+        long now = new Date().getTime();
+        for (HashMap.Entry<Integer, Long> entry : cache.entrySet()) {
+            long diff = entry.getValue() - now;
+            if (diff >= getCacheTTL()) {
+                cache.remove(entry.getKey());
+
+                if (cacheLocation.getProtocol().equals("redis"))
+                    redis.del(String.valueOf(entry.getKey()));
+            }
+        }
+
+        if (cacheLocation.getProtocol().equals("redis")) {
+            Set<String> keys = redis.keys("*");
+            keys.forEach(key -> {
+                long diff = Long.valueOf(redis.get(key)) - now;
+                if (diff >= getCacheTTL()) {
+                    redis.del(key);
+                }
+            });
         }
     }
 

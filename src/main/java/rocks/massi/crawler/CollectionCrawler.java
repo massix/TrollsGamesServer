@@ -86,27 +86,16 @@ public class CollectionCrawler implements Runnable {
         cacheMiss = 0;
 
         user.getCollection().forEach(gameId -> {
-            boolean toBeCrawled = true;
-
             try {
-                if (cache.containsKey(gameId)) {
-                    long timestamp = cache.get(gameId);
-                    long difference = (new Date().getTime() / 1000) - timestamp;
-                    toBeCrawled = difference > cache.getCacheTTL();
-
-                    if (! toBeCrawled)
-                        cacheHit++;
-
-                    log.info("Game {} has been crawled @ {}s ago, {} TTL: {}", gameId, difference,
-                            toBeCrawled ? "refreshing it." : "not crawling it again.",
-                            cache.getCacheTTL());
-                }
-
-                if (toBeCrawled) {
-                    cacheMiss++;
+                if (cache.isExpired(gameId)) {
                     Game g = crawlGame(gameId);
                     crawled.add(g);
                     log.info("Added game {} for user {}", g.getName(), user.getBggNick());
+                    cacheMiss++;
+                }
+                else {
+                    log.info("No need to recrawl game {}", gameId);
+                    cacheHit++;
                 }
             }
             catch (FeignException exception) {
