@@ -53,13 +53,6 @@ public class CollectionCrawler implements Runnable {
 
         BGGGame game = bggJsonProxy.getGameForId(gameId);
         cache.put(gameId, new Date().getTime() / 1000);
-
-        try {
-            cache.dumpToDisk();
-        } catch (IOException e) {
-            log.error("Could not dump to disk: {}", e.getMessage());
-        }
-
         ArrayList<String> expands = new ArrayList<>();
 
         if (game.getExpands() != null)
@@ -97,10 +90,12 @@ public class CollectionCrawler implements Runnable {
 
             try {
                 if (cache.containsKey(gameId)) {
-                    cacheHit++;
                     long timestamp = cache.get(gameId);
                     long difference = (new Date().getTime() / 1000) - timestamp;
                     toBeCrawled = difference > cache.getCacheTTL();
+
+                    if (! toBeCrawled)
+                        cacheHit++;
 
                     log.info("Game {} has been crawled @ {}s ago, {} TTL: {}", gameId, difference,
                             toBeCrawled ? "refreshing it." : "not crawling it again.",
@@ -121,9 +116,17 @@ public class CollectionCrawler implements Runnable {
                 try {
                     Thread.sleep(FAILURE_TIMEOUT);
                 } catch (InterruptedException e) {
+                    log.warn("Couldn't sleep.");
                 }
             }
         });
+
+        // Store intermediary cache
+        try {
+            cache.store();
+        } catch (IOException e) {
+            log.error("Could not dump to disk: {}", e.getMessage());
+        }
 
         int timeout = INITIAL_TIMEOUT;
         for (Iterator<Integer> it = failed.iterator(); it.hasNext(); ) {
@@ -149,6 +152,13 @@ public class CollectionCrawler implements Runnable {
 
         running = false;
         finished = new Date();
+
+        // Store final cache
+        try {
+            cache.store();
+        } catch (IOException e) {
+            log.error("Could not dump to disk: {}", e.getMessage());
+        }
     }
 
     public final CrawlingProgress getProgress() {
