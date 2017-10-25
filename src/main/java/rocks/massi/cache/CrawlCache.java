@@ -19,7 +19,7 @@ import java.util.HashMap;
 @Data
 @Component
 public class CrawlCache {
-    private URL cacheLocation;
+    private CacheURL cacheLocation;
     private int cacheTTL;
     private HashMap<Integer, Long> cache;
     private Jedis redis;
@@ -55,7 +55,7 @@ public class CrawlCache {
     }
 
     @SuppressWarnings("unchecked")
-    private static CrawlCache loadFromDisk(final URL cacheLocation, final int cacheTTL) {
+    private static CrawlCache loadFromDisk(final CacheURL cacheLocation, final int cacheTTL) {
         CrawlCache ret = new CrawlCache();
 
         try {
@@ -82,10 +82,12 @@ public class CrawlCache {
         return ret;
     }
 
-    private static CrawlCache loadFromRedis(final URL cacheLocation, final Integer cacheTTL) throws URISyntaxException {
+    private static CrawlCache loadFromRedis(final CacheURL cacheLocation, final Integer cacheTTL) throws URISyntaxException {
         CrawlCache ret = new CrawlCache();
+        log.info("Loading cache from Redis");
+        ret.setCacheLocation(cacheLocation);
         ret.setCache(new HashMap<>());
-        ret.setRedis(new Jedis(cacheLocation.toURI()));
+        ret.setRedis(new Jedis(cacheLocation.getOriginal()));
         ret.setCacheTTL(60 * 60 * 24 * cacheTTL);
         return ret;
     }
@@ -98,7 +100,7 @@ public class CrawlCache {
         log.info("Loading cache @ {}", cacheLocation);
         log.info("Setting cache TTL @ {}", cacheTTL);
 
-        URL dbUrl = new URL(cacheLocation);
+        CacheURL dbUrl = new CacheURL(cacheLocation);
         switch (dbUrl.getProtocol()) {
             case "file":
                 return loadFromDisk(dbUrl, cacheTTL);
@@ -109,6 +111,7 @@ public class CrawlCache {
                 CrawlCache ret = new CrawlCache();
                 ret.setCacheLocation(dbUrl);
                 ret.setCacheTTL(60 * 60 * 24 * cacheTTL);
+                ret.setCache(new HashMap<>());
                 ret.setRedis(null);
                 return ret;
 
