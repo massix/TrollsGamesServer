@@ -9,7 +9,9 @@ import org.springframework.stereotype.Component;
 import redis.clients.jedis.Jedis;
 
 import java.io.*;
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.HashMap;
 
@@ -80,10 +82,10 @@ public class CrawlCache {
         return ret;
     }
 
-    private static CrawlCache loadFromRedis(final URL cacheLocation, final Integer cacheTTL) {
+    private static CrawlCache loadFromRedis(final URL cacheLocation, final Integer cacheTTL) throws URISyntaxException {
         CrawlCache ret = new CrawlCache();
         ret.setCache(new HashMap<>());
-        ret.setRedis(new Jedis(cacheLocation.toString()));
+        ret.setRedis(new Jedis(cacheLocation.toURI()));
         ret.setCacheTTL(60 * 60 * 24 * cacheTTL);
         return ret;
     }
@@ -91,23 +93,24 @@ public class CrawlCache {
     @Bean
     @Primary
     @SuppressWarnings("unused")
-    public static CrawlCache loadCache(@Value("${crawler.cacheLocation}") final URL cacheLocation,
-                                       @Value("${crawler.cacheTTL}") final Integer cacheTTL) {
+    public static CrawlCache loadCache(@Value("${crawler.cacheLocation}") final String cacheLocation,
+                                       @Value("${crawler.cacheTTL}") final Integer cacheTTL) throws URISyntaxException, MalformedURLException {
         log.info("Loading cache @ {}", cacheLocation);
         log.info("Setting cache TTL @ {}", cacheTTL);
 
-        if (cacheLocation.getProtocol().equals("file"))
-            return loadFromDisk(cacheLocation, cacheTTL);
-        else if (cacheLocation.getProtocol().equals("redis")) {
-            return loadFromRedis(cacheLocation, cacheTTL);
-        }
-        else {
-            log.warn("Couldn't read protocol, using in-memory cache!");
-            CrawlCache ret = new CrawlCache();
-            ret.setCacheLocation(cacheLocation);
-            ret.setCacheTTL(60 * 60 * 24 * cacheTTL);
-            ret.setRedis(null);
-            return ret;
+        URL dbUrl = new URL(cacheLocation);
+        switch (dbUrl.getProtocol()) {
+            case "file":
+                return loadFromDisk(dbUrl, cacheTTL);
+            case "redis":
+                return loadFromRedis(dbUrl, cacheTTL);
+            default:
+                log.warn("Couldn't read protocol, using in-memory cache!");
+                CrawlCache ret = new CrawlCache();
+                ret.setCacheLocation(dbUrl);
+                ret.setCacheTTL(60 * 60 * 24 * cacheTTL);
+                ret.setRedis(null);
+                return ret;
 
         }
     }
