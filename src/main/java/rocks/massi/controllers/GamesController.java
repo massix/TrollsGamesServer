@@ -15,11 +15,13 @@ public class GamesController {
     @Autowired
     private DatabaseConnector connector;
 
+    @CrossOrigin
     @GetMapping("/get")
     public List<Game> getGames() {
         return connector.gameSelector.getGames();
     }
 
+    @CrossOrigin
     @GetMapping("/get/{id}")
     public Game getGame(@PathVariable("id") final int id) {
         return connector.gameSelector.findById(id);

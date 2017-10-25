@@ -1,5 +1,6 @@
 package rocks.massi.controllers;
 
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -11,6 +12,7 @@ import java.util.Properties;
 @RequestMapping("/v1/server")
 public class ServerController {
 
+    @CrossOrigin
     @GetMapping("/version")
     public String getServerVersion() throws IOException {
         final Properties properties = new Properties();

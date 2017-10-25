@@ -19,11 +19,13 @@ public class UsersController {
     @Autowired
     private DatabaseConnector connector;
 
+    @CrossOrigin
     @GetMapping("/get/{nick}")
     public User getUserByNick(@PathVariable("nick") String nick) {
         return getUser(connector, nick);
     }
 
+    @CrossOrigin
     @GetMapping("/get")
     public List<User> getAllUsers() {
         return connector.userSelector.getUsers();
