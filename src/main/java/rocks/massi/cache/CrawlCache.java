@@ -30,7 +30,7 @@ public class CrawlCache {
         return cache.put(key, value);
     }
 
-    public boolean containsKey(Integer key) {
+    private boolean containsKey(Integer key) {
         if (! cache.containsKey(key) && cacheLocation.getProtocol().equals("redis") && redis.exists(String.valueOf(key))) {
             Long value = Long.valueOf(redis.get(String.valueOf(key)));
             cache.put(key, value);
@@ -41,6 +41,16 @@ public class CrawlCache {
 
     public Long get(Integer key) {
         return cache.get(key);
+    }
+
+    public boolean isExpired(Integer key) {
+        if (containsKey(key)) {
+            long timestamp = get(key);
+            long difference = (new Date().getTime() / 1000) - timestamp;
+            return difference >= getCacheTTL();
+        }
+
+        return true;
     }
 
     public void store() throws IOException {

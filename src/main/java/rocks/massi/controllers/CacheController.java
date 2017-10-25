@@ -44,7 +44,7 @@ public class CacheController {
     @GetMapping("/get")
     public CacheOperation getMemoryCache() {
         List<CacheOperation.CacheEntry> entries = new LinkedList<>();
-        crawlCache.getCache().forEach((k, v) -> entries.add(new CacheOperation.CacheEntry(k, v, new Date(v).toString())));
+        crawlCache.getCache().forEach((k, v) -> entries.add(new CacheOperation.CacheEntry(k, v, new Date(v * 1000).toString())));
         return new CacheOperation(true, "", entries);
     }
 }
