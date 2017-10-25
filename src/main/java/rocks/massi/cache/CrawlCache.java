@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.exceptions.JedisConnectionException;
 
 import java.io.*;
 import java.net.MalformedURLException;
@@ -26,13 +27,27 @@ public class CrawlCache {
     private HashMap<Integer, Long> cache;
     private Jedis redis;
 
+    private Jedis redis() {
+        if (cacheLocation.getProtocol().equals("redis")) {
+            try {
+                redis.set("timeout", "now");
+            }
+            catch(JedisConnectionException exception) {
+                redis.close();
+                redis = new Jedis(getCacheLocation().getOriginal());
+            }
+        }
+
+        return redis;
+    }
+
     public Long put(Integer key, Long value) {
         return cache.put(key, value);
     }
 
     private boolean containsKey(Integer key) {
-        if (! cache.containsKey(key) && cacheLocation.getProtocol().equals("redis") && redis.exists(String.valueOf(key))) {
-            Long value = Long.valueOf(redis.get(String.valueOf(key)));
+        if (! cache.containsKey(key) && cacheLocation.getProtocol().equals("redis") && redis().exists(String.valueOf(key))) {
+            Long value = Long.valueOf(redis().get(String.valueOf(key)));
             cache.put(key, value);
         }
 
@@ -62,14 +77,14 @@ public class CrawlCache {
         }
 
         else if (cacheLocation.getProtocol().equals("redis")) {
-            cache.forEach((k, v) -> redis.set(String.valueOf(k), String.valueOf(v)));
+            cache.forEach((k, v) -> redis().set(String.valueOf(k), String.valueOf(v)));
         }
     }
 
     public void purgeAll() throws IOException {
         cache.clear();
         if (cacheLocation.getProtocol().equals("redis"))
-            redis.flushAll();
+            redis().flushAll();
 
         store();
     }
@@ -82,16 +97,16 @@ public class CrawlCache {
                 cache.remove(entry.getKey());
 
                 if (cacheLocation.getProtocol().equals("redis"))
-                    redis.del(String.valueOf(entry.getKey()));
+                    redis().del(String.valueOf(entry.getKey()));
             }
         }
 
         if (cacheLocation.getProtocol().equals("redis")) {
-            Set<String> keys = redis.keys("*");
+            Set<String> keys = redis().keys("*");
             keys.forEach(key -> {
-                long diff = Long.valueOf(redis.get(key)) - now;
+                long diff = Long.valueOf(redis().get(key)) - now;
                 if (diff >= getCacheTTL()) {
-                    redis.del(key);
+                    redis().del(key);
                 }
             });
         }
