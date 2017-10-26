@@ -1,10 +1,10 @@
 <div class="row">
 
-  <div class="col-md-3 pre-scrollable">
+  <div class="col-md-3">
     <p *ngIf="games == null">Loading</p>
 
-    <ul *ngFor="let game of games" class="list-group">
-      <li (click)="onSelect(game)" class="list-group-item list-group-item-action border-0">
+    <ul *ngFor="let game of games" class="list">
+      <li (click)="onSelect(game)" class="list-item list-item-action border-0">
         <span class="fa fa-puzzle-piece"></span> {{game.name}}
       </li>
     </ul>

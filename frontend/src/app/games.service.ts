@@ -5,20 +5,19 @@ import 'rxjs/add/operator/toPromise';
 
 @Injectable()
 export class GamesService {
-  apiBase = "http://massi.rocks:8180/v1";
-  cors = "https://cors-anywhere.herokuapp.com/";
+  apiBase = "http://localhost:8180/v1";
 
   constructor(private httpClient : HttpClient) {}
 
   getCollection(user: string) : Promise<Game[]> {
-    return this.httpClient.get<Game[]>(this.cors + this.apiBase + "/collection/get/" + user).toPromise();
+    return this.httpClient.get<Game[]>(this.apiBase + "/collection/get/" + user).toPromise();
   }
 
   getGame(id: number) : Promise<Game> {
-    return this.httpClient.get<Game>(this.cors + this.apiBase + "/games/get/" + id).toPromise();
+    return this.httpClient.get<Game>(this.apiBase + "/games/get/" + id).toPromise();
   }
 
   getGames() : Promise<Game[]> {
-    return this.httpClient.get<Game[]>(this.cors + this.apiBase + "/games/get").toPromise();
+    return this.httpClient.get<Game[]>(this.apiBase + "/games/get").toPromise();
   }
 }
