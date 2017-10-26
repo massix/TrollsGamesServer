@@ -47,7 +47,7 @@ public class CrawlCache {
 
     private boolean containsKey(Integer key) {
         if (! cache.containsKey(key) && cacheLocation.getProtocol().equals("redis") && redis().exists(String.valueOf(key))) {
-            Long value = Long.valueOf(redis().get(String.valueOf(key)));
+            Long value = Long.valueOf(redis.get(String.valueOf(key)));
             cache.put(key, value);
         }
 
@@ -77,7 +77,8 @@ public class CrawlCache {
         }
 
         else if (cacheLocation.getProtocol().equals("redis")) {
-            cache.forEach((k, v) -> redis().set(String.valueOf(k), String.valueOf(v)));
+            redis();
+            cache.forEach((k, v) -> redis.set(String.valueOf(k), String.valueOf(v)));
         }
     }
 
@@ -91,22 +92,25 @@ public class CrawlCache {
 
     public void purgeExpired() throws IOException {
         long now = new Date().getTime();
+        redis();
         for (HashMap.Entry<Integer, Long> entry : cache.entrySet()) {
             long diff = entry.getValue() - now;
             if (diff >= getCacheTTL()) {
                 cache.remove(entry.getKey());
 
                 if (cacheLocation.getProtocol().equals("redis"))
-                    redis().del(String.valueOf(entry.getKey()));
+                    redis.del(String.valueOf(entry.getKey()));
             }
         }
 
         if (cacheLocation.getProtocol().equals("redis")) {
             Set<String> keys = redis().keys("*");
             keys.forEach(key -> {
-                long diff = Long.valueOf(redis().get(key)) - now;
-                if (diff >= getCacheTTL()) {
-                    redis().del(key);
+                if (! "timeout".equals(key)) {
+                    long diff = Long.valueOf(redis().get(key)) - now;
+                    if (diff >= getCacheTTL()) {
+                        redis.del(key);
+                    }
                 }
             });
         }
