@@ -17,6 +17,7 @@
     <properties>
         <timestamp>${maven.build.timestamp}</timestamp>
         <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
+        <java.version>1.8</java.version>
     </properties>
 
     <dependencies>
@@ -101,11 +102,6 @@
         </dependency>
 
     </dependencies>
-
-    <properties>
-        <java.version>1.8</java.version>
-    </properties>
-
 
     <build>
         <plugins>
