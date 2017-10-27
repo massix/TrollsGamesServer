@@ -18,6 +18,9 @@ public class ServerController {
     public ServerInformation getServerInformation() throws IOException {
         final Properties properties = new Properties();
         properties.load(this.getClass().getClassLoader().getResourceAsStream("project.properties"));
-        return new ServerInformation(properties.getProperty("server_version"), properties.getProperty("artifact_name"), properties.getProperty("build_time"));
+        return new ServerInformation(
+                properties.getProperty("server_version"),
+                properties.getProperty("artifact_name"),
+                properties.getProperty("build_time"));
     }
 }
