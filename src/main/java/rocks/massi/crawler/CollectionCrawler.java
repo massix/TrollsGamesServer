@@ -85,20 +85,18 @@ public class CollectionCrawler implements Runnable {
         cacheHit = 0;
         cacheMiss = 0;
 
-        user.getCollection().forEach(gameId -> {
+        for (int gameId : user.getCollection()) {
             try {
                 if (cache.isExpired(gameId)) {
                     Game g = crawlGame(gameId);
                     crawled.add(g);
                     log.info("Added game {} for user {}", g.getName(), user.getBggNick());
                     cacheMiss++;
-                }
-                else {
+                } else {
                     log.info("No need to recrawl game {}", gameId);
                     cacheHit++;
                 }
-            }
-            catch (FeignException exception) {
+            } catch (FeignException exception) {
                 log.warn("Could not download game id {} ({})", gameId, exception.status());
                 log.warn("Sleeping for {}s", FAILURE_TIMEOUT / 1000);
                 failed.add(gameId);
@@ -107,8 +105,11 @@ public class CollectionCrawler implements Runnable {
                 } catch (InterruptedException e) {
                     log.warn("Couldn't sleep.");
                 }
+            } catch (final Exception exception) {
+                log.warn("Generic exception caught: {}. Leaving!");
+                break;
             }
-        });
+        }
 
         // Store intermediary cache
         try {
@@ -136,6 +137,10 @@ public class CollectionCrawler implements Runnable {
                 if (timeout > MAXIMUM_TIMEOUT) timeout = MAXIMUM_TIMEOUT;
             } catch (final InterruptedException e) {
                 log.error("Could not sleep because {}", e.getMessage());
+            }
+            catch (final Exception exception) {
+                log.error("Generic exception caught: {}. Leaving!", exception.getMessage());
+                break;
             }
         }
 
