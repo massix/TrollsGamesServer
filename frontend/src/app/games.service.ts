@@ -5,7 +5,7 @@ import 'rxjs/add/operator/toPromise';
 
 @Injectable()
 export class GamesService {
-  apiBase = "http://localhost:8180/v1";
+  apiBase = "http://staging.massi.rocks/v1";
 
   constructor(private httpClient : HttpClient) {}
 

@@ -12,26 +12,23 @@ import {Game} from './game';
 export class UsersComponent implements OnInit {
   users: User[];
   selectedUser: User;
-  selectedGame: Game;
-  userGames: Game[] = [];
 
   ngOnInit() {
-    this.usersService.fetchUsers().then(users => this.users = users);
+    this.usersService.fetchUsers().then(users => {
+      this.users = users;
+      this.users.forEach(user => this.gamesService.getCollection(user.bggNick).then(collection => user.collection = collection));
+    });
   }
 
   onSelect(user: User) {
+    if (this.selectedUser)
+      this.selectedUser.active = !this.selectedUser.active;
+
     this.selectedUser = user;
     let splitGames = this.selectedUser.games.split(" ");
-    this.userGames = []
 
-    this.gamesService.getCollection(this.selectedUser.bggNick).then(collection => this.userGames = collection);
-  }
-
-  selectGame(game: Game) {
-    this.selectedGame = game;
+    user.active = !user.active;
   }
 
   constructor(private usersService: UsersService, private gamesService: GamesService) {}
-
-
 }

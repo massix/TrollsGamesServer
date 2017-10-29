@@ -1,34 +1,36 @@
-<div class="row">
+<div class="row content">
+  <div class="col-sm-3 sidenav">
+    <h4>Utilisateurs</h4>
+    <ul *ngFor="let user of users" class="nav nav-pills nav-stacked">
+      <li [class.active]="user.active"><a role="button" (click)="onSelect(user)"><span class="fa fa-user"></span> {{user.forumNick}} <span *ngIf="user.collection" class="badge pull-right">{{user.collection.length}}</span></a></li>
+    </ul><br>
 
-  <div class="col-md-3 pre-scrollable">
-
-    <ul *ngFor="let user of users" class="list-group">
-      <li (click)="onSelect(user)" class="list-group-item list-group-item-action border-0">
-        <span class="fa fa-user"></span> {{user.bggNick}}
-      </li>
-    </ul>
-
+    <div class="input-group">
+      <input type="text" class="form-control" placeholder="Search User..">
+      <span class="input-group-btn">
+        <button class="btn btn-default" type="button">
+          <span class="glyphicon glyphicon-search"></span>
+        </button>
+      </span>
+    </div>
   </div>
 
-  <div *ngIf="selectedUser" class="col-md-9">
-    <div class="row">
-      <div class="col-md-5">
-        <h4><label>{{selectedUser.forumNick}}</label></h4>
+  <div *ngIf="selectedUser" class="col-sm-9">
+    <h1>{{selectedUser.forumNick}}</h1>
+    <div *ngFor="let game of selectedUser.collection">
+      <a class="btn btn-lg" data-toggle="collapse" href="#{{game.id}}">{{game.name}} <span class="fa fa-caret-down"></span></a>
+      <div id="{{game.id}}" class="collapse">
+        <div class="media-left">
+          <img src="{{game.thumbnail}}" class="media-object">
+          <p>Un jeu de <b>{{game.authors}}</b>.<br />
+          Publié en {{game.yearPublished}}<br />
+          Pour <b>{{game.minPlayers}}</b> à <b>{{game.maxPlayers}}</b> joueurs.<br />
+          {{game.playingTime}} minutes.</p>
+        </div>
+        <div class="media-body">
+          {{game.description}}
+        </div>
       </div>
-      <div class="col-md-5">
-        <h4><label>{{selectedUser.bggNick}}</label></h4>
-      </div>
-    </div>
-
-    <div class="row pre-scrollable" *ngIf="userGames">
-      <ul>
-        <li class="label" *ngFor="let game of userGames"
-            (click)="selectGame(game)"
-            data-toggle="modal"
-            data-target="#modalGameDisplay">
-            {{game.name}}
-        </li>
-      </ul>
     </div>
   </div>
 </div>

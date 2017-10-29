@@ -5,8 +5,6 @@ import { HttpClientModule } from '@angular/common/http';
 
 import { AppComponent } from './app.component';
 import { UsersComponent } from './users.component';
-import { GamesComponent } from './games.component';
-import { GameDetailsComponent } from './game-details.component';
 
 import { UsersService } from './users.service';
 import { GamesService } from './games.service';
@@ -15,8 +13,6 @@ import { GamesService } from './games.service';
   declarations: [
     AppComponent,
     UsersComponent,
-    GamesComponent,
-    GameDetailsComponent
   ],
   imports: [
     BrowserModule,
@@ -27,8 +23,9 @@ import { GamesService } from './games.service';
         component: UsersComponent
       },
       {
-        path: 'games',
-        component: GamesComponent
+        path: '',
+        redirectTo: '/users',
+        pathMatch: 'full'
       }
     ])
   ],
