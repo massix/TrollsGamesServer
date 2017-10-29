@@ -54,6 +54,7 @@ public class CollectionCrawler implements Runnable {
 
         crawled = new LinkedList<>();
         failed = new LinkedList<>();
+        started = new Date();
     }
 
     public Game crawlGame(final int gameId) {
@@ -87,9 +88,6 @@ public class CollectionCrawler implements Runnable {
     public void run() {
         running = true;
         user.buildCollection();
-        crawled = new LinkedList<>();
-        failed = new LinkedList<>();
-        started = new Date();
         cacheHit = 0;
         cacheMiss = 0;
 
