@@ -18,7 +18,6 @@ import java.io.IOException;
 import java.util.*;
 
 @Slf4j
-@RequiredArgsConstructor
 public class CollectionCrawler implements Runnable {
     private final int FAILURE_TIMEOUT = 2000;
     private final int INITIAL_TIMEOUT = 1000;
@@ -47,6 +46,15 @@ public class CollectionCrawler implements Runnable {
 
     private List<Game> crawled;
     private List<Integer> failed;
+
+    public CollectionCrawler(CrawlCache cache, DatabaseConnector connector, User user) {
+        this.cache = cache;
+        this.connector = connector;
+        this.user = user;
+
+        crawled = new LinkedList<>();
+        failed = new LinkedList<>();
+    }
 
     public Game crawlGame(final int gameId) {
         BGGJsonProxy bggJsonProxy = Feign.builder().decoder(new GsonDecoder()).target(BGGJsonProxy.class, BASE_URL);
