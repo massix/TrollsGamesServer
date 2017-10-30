@@ -11,9 +11,7 @@ public class DatabaseConnector {
     public BaseSelector baseSelector;
     private DBI dbi;
 
-    public DatabaseConnector(@Value("${db.url}") final String dbUrl) {
-        String herokuBase = System.getenv("JDBC_DATABASE_URL");
-
+    DatabaseConnector(@Value("${db.url}") final String dbUrl) {
         dbi = new DBI(dbUrl);
         gameSelector = dbi.open(GameSelector.class);
         userSelector = dbi.open(UserSelector.class);
