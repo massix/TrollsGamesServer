@@ -6,12 +6,15 @@ import feign.gson.GsonDecoder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 import rocks.massi.cache.CrawlCache;
 import rocks.massi.connector.DatabaseConnector;
 import rocks.massi.data.CrawlingProgress;
 import rocks.massi.data.Game;
 import rocks.massi.data.User;
 import rocks.massi.data.bgg.BGGGame;
+import rocks.massi.data.bgg.Collection;
 import rocks.massi.services.BGGJsonProxy;
 
 import java.io.IOException;
@@ -23,7 +26,7 @@ public class CollectionCrawler implements Runnable {
     private final int INITIAL_TIMEOUT = 1000;
     private final int TIMEOUT_INCREASE = 3000;
     private final int MAXIMUM_TIMEOUT = 10000;
-    private final String BASE_URL = "https://bgg-json.azurewebsites.net";
+    public static String BASE_URL = "https://bgg-json.azurewebsites.net";
 
     private final CrawlCache cache;
     private final DatabaseConnector connector;

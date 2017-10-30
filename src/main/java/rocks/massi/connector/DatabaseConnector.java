@@ -11,7 +11,7 @@ public class DatabaseConnector {
     public BaseSelector baseSelector;
     private DBI dbi;
 
-    DatabaseConnector(@Value("${db.url}") final String dbUrl) {
+    public DatabaseConnector(@Value("${db.url}") final String dbUrl) {
         dbi = new DBI(dbUrl);
         gameSelector = dbi.open(GameSelector.class);
         userSelector = dbi.open(UserSelector.class);

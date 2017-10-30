@@ -13,10 +13,10 @@ public interface BaseSelector {
     @SqlUpdate("create table if not exists users (bggnick text primary key not null, forumnick text not null, games text, wants text)")
     void createTableUsers();
 
-    @SqlUpdate("drop table users")
+    @SqlUpdate("drop table if exists users")
     void dropTableUsers();
 
-    @SqlUpdate("drop table games")
+    @SqlUpdate("drop table if exists games")
     void dropTableGames();
 
     @SqlUpdate("delete from users")
