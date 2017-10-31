@@ -14,7 +14,5 @@ public class CacheURL {
         this.original = original;
         this.protocol = original.substring(0, original.indexOf("://"));
         this.path = original.substring(original.indexOf("//") + 2);
-
-        log.info("Original: {}, protocol: '{}', path: '{}'", getOriginal(), getProtocol(), getPath());
     }
 }
