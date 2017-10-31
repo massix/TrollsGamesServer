@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import rocks.massi.connector.DatabaseConnector;
 import rocks.massi.data.Game;
+import rocks.massi.exceptions.UserNotFoundException;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -28,6 +29,9 @@ public class CollectionController {
         if (user != null) {
             user.buildCollection();
             user.getCollection().forEach(id -> collection.add(connector.gameSelector.findById(id)));
+        }
+        else {
+            throw new UserNotFoundException("");
         }
 
         return collection;

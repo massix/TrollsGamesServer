@@ -62,6 +62,13 @@ public class GamesControllerTest {
     }
 
     @Test
+    public void getNonExistingGame() throws Exception {
+        ResponseEntity<Game> responseEntity = restTemplate.getForEntity("/v1/games/get/666", Game.class);
+        assertTrue(responseEntity.getStatusCode().is4xxClientError());
+        assertNull(responseEntity.getBody());
+    }
+
+    @Test
     public void insertGame() throws Exception {
         Game newGame = new Game(2, "Cyclades II", "New game of Cyclades",
                 2, 24, 350, 2012, 2, false, "",
@@ -69,6 +76,23 @@ public class GamesControllerTest {
         ResponseEntity<Game> responseEntity = restTemplate.postForEntity("/v1/games/add", newGame, Game.class);
         assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
         assertEquals("Cyclades II", responseEntity.getBody().getName());
+    }
+
+    @Test
+    public void insertMalformattedGame() throws Exception {
+        Game newGame = new Game(0, "Cyclades II", "New game of Cyclades",
+                2, 24, 350, 2012, 2, false, "",
+                "Bruno Cathala", "");
+        ResponseEntity<Game> responseEntity = restTemplate.postForEntity("/v1/games/add", newGame, Game.class);
+        assertTrue(responseEntity.getStatusCode().is4xxClientError());
+        assertNull(responseEntity.getBody());
+
+        newGame = new Game(2, "", "New game of Cyclades",
+                2, 24, 350, 2012, 2, false, "",
+                "Bruno Cathala", "");
+        responseEntity = restTemplate.postForEntity("/v1/games/add", newGame, Game.class);
+        assertTrue(responseEntity.getStatusCode().is4xxClientError());
+        assertNull(responseEntity.getBody());
     }
 
     @Test

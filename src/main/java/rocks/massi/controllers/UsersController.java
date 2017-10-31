@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import rocks.massi.connector.DatabaseConnector;
 import rocks.massi.data.User;
+import rocks.massi.exceptions.MalformattedUserException;
+import rocks.massi.exceptions.UserNotFoundException;
 import rocks.massi.utils.DBUtils;
 
 import java.util.List;
@@ -22,7 +24,14 @@ public class UsersController {
     @CrossOrigin
     @GetMapping("/get/{nick}")
     public User getUserByNick(@PathVariable("nick") String nick) {
-        return getUser(connector, nick);
+        User user = getUser(connector, nick);
+
+        if (user == null) {
+            log.error("User {} not found", nick);
+            throw new UserNotFoundException(String.format("User %s not found on server", nick));
+        }
+
+        return user;
     }
 
     @CrossOrigin
@@ -34,6 +43,10 @@ public class UsersController {
     @PostMapping(value = "/add")
     public User addUser(@RequestBody User user) {
         log.info("Got user {}", user.getBggNick());
+
+        if (user.getBggNick().isEmpty() || user.getForumNick().isEmpty())
+            throw new MalformattedUserException("Missing mandatory field");
+
         connector.userSelector.addUser(user);
         return DBUtils.getUser(connector, user.getBggNick());
     }
@@ -43,6 +56,9 @@ public class UsersController {
         val user = DBUtils.getUser(connector, nick);
         if (user != null) {
             connector.userSelector.removeUser(nick);
+        }
+        else {
+            throw new UserNotFoundException(String.format("User %s not found on server.", nick));
         }
 
         return user;

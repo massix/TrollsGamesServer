@@ -23,6 +23,7 @@ import rocks.massi.data.bgg.BGGGame;
 import rocks.massi.data.bgg.Collection;
 import rocks.massi.services.BGGJsonProxy;
 
+import javax.xml.ws.Response;
 import java.util.ArrayList;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
@@ -119,5 +120,12 @@ public class CrawlerControllerTest {
         restTemplate.delete("/v1/crawler/queues");
         ResponseEntity<CrawlingProgress[]> responseEntity = restTemplate.getForEntity("/v1/crawler/queues", CrawlingProgress[].class);
         assertEquals(0, responseEntity.getBody().length);
+    }
+
+    @Test
+    public void test4_crawlNonExistingUser() throws Exception {
+        ResponseEntity<User> responseEntity = restTemplate.postForEntity("/v1/crawler/users/non_existing", null, User.class);
+        assertTrue(responseEntity.getStatusCode().is4xxClientError());
+        assertNull(responseEntity.getBody());
     }
 }

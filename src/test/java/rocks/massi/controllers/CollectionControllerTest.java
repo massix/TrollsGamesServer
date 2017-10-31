@@ -67,4 +67,10 @@ public class CollectionControllerTest {
         assertEquals("Cyclades III", responseEntity.getBody()[2].getName());
     }
 
+    @Test
+    public void getCollectionNonExistingUser() throws Exception {
+        ResponseEntity<Game[]> responseEntity = restTemplate.getForEntity("/v1/collection/get/non_existing", Game[].class);
+        assertTrue(responseEntity.getStatusCode().is4xxClientError());
+        assertNull(responseEntity.getBody());
+    }
 }

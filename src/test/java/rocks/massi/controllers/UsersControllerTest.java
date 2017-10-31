@@ -10,6 +10,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import rocks.massi.connector.DatabaseConnector;
 import rocks.massi.data.User;
 
@@ -67,11 +68,33 @@ public class UsersControllerTest {
     }
 
     @Test
+    public void addMalformattedUser() throws Exception {
+        ResponseEntity<User> responseEntity = restTemplate.postForEntity("/v1/users/add", new User("", "new_forum", "", ""), User.class);
+        assertTrue(responseEntity.getStatusCode().is4xxClientError());
+        assertNull(responseEntity.getBody());
+
+        responseEntity = restTemplate.postForEntity("/v1/users/add", new User("new_bgg", "", "", ""), User.class);
+        assertTrue(responseEntity.getStatusCode().is4xxClientError());
+        assertNull(responseEntity.getBody());
+
+        responseEntity = restTemplate.postForEntity("/v1/users/add", new User("", "", "", ""), User.class);
+        assertTrue(responseEntity.getStatusCode().is4xxClientError());
+        assertNull(responseEntity.getBody());
+    }
+
+    @Test
     public void removeUser() throws Exception {
         restTemplate.delete("/v1/users/remove/new_bgg");
         ResponseEntity<User> responseEntity = restTemplate.getForEntity("/v1/users/get/new_bgg", User.class);
-        assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
+        assertTrue(responseEntity.getStatusCode().is4xxClientError());
         assertNull(responseEntity.getBody());
+    }
+
+    @Test
+    public void getNonExistingUser() throws Exception {
+        ResponseEntity<User> responseEntity = restTemplate.getForEntity("/v1/users/get/non_existing", User.class);
+        assertNull(responseEntity.getBody());
+        assertTrue(responseEntity.getStatusCode().is4xxClientError());
     }
 
 }
