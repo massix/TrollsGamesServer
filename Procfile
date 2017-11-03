@@ -1,1 +1,1 @@
-web: java -Dspring.config.location=configuration/application.properties -jar target/*.jar
+web: java -Dspring.profiles.active=heroku -jar target/*.jar

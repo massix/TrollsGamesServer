@@ -11,13 +11,15 @@ import rocks.massi.data.User;
 import java.util.LinkedList;
 import java.util.List;
 
-public class SQLiteConnectorTest {
-    private final SQLiteConnector connector = new SQLiteConnector("jdbc:sqlite:trolls.db");
+public class DatabaseConnectorTest {
+    private final DatabaseConnector connector = new DatabaseConnector("jdbc:sqlite:trolls.db");
 
     @Before
     public void testCreateTables() {
         connector.baseSelector.createTableGames();
         connector.baseSelector.createTableUsers();
+        connector.baseSelector.truncateTableGames();
+        connector.baseSelector.truncateTableUsers();
 
         // Insert some games
         connector.gameSelector.insertGame(new Game(54998, "Cyclades", "", 2, 18, 120, 2001, 1, false, "", "", ""));
@@ -110,7 +112,6 @@ public class SQLiteConnectorTest {
     @Test
     public void testRemoveUser() {
         val u = new User("massi_x", "massi_x", "", "");
-        connector.userSelector.addUser(u);
         connector.userSelector.removeUser("massi_x");
 
         Assert.assertNull(connector.userSelector.findByBggNick("massi_x"));

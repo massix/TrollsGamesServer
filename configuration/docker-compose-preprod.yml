@@ -1,0 +1,33 @@
+version: '2'
+
+services:
+  postgres:
+    image: postgres:9.6
+    environment:
+      - POSTGRES_USER=trolls
+      - POSTGRES_PASSWORD=trolls
+    volumes:
+      - ./data/pgsql/:/var/lib/postgresql/data
+    restart: always
+
+  redis:
+    image: redis:3.2
+    volumes:
+      - ./data/redis/:/data
+    restart: always
+
+  trolls-server:
+    image: openjdk:8-jre
+    expose:
+      - "8180"
+    environment:
+      - VIRTUAL_HOST=staging.massi.rocks
+      - JDBC_DATABASE_URL=jdbc:postgresql://postgres/trolls?user=trolls&password=trolls
+      - REDIS_URL=redis://redis:6379
+    links:
+      - postgres:postgres
+      - redis:redis
+    volumes:
+      - ./java/:/opt/tg/
+    command: java -Dspring.profiles.active=preprod -jar /opt/tg/TrollsGames.jar
+    restart: always

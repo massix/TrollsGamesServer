@@ -5,4 +5,7 @@ export class Game {
   thumbnail: string;
   authors: string;
   yearPublished: number;
+  minPlayers: number;
+  maxPlayers: number;
+  playingTime: number;
 }

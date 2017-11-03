@@ -1,47 +1,64 @@
-package rocks.massi;
+package rocks.massi.controllers;
 
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import rocks.massi.connector.SQLiteConnector;
+import rocks.massi.connector.DatabaseConnector;
 import rocks.massi.data.User;
+import rocks.massi.exceptions.MalformattedUserException;
+import rocks.massi.exceptions.UserNotFoundException;
 import rocks.massi.utils.DBUtils;
-import sun.misc.Request;
 
-import java.util.LinkedList;
 import java.util.List;
 
 import static rocks.massi.utils.DBUtils.getUser;
 
 @Slf4j
 @RestController
+@RequestMapping("/v1/users")
 public class UsersController {
     @Autowired
-    private SQLiteConnector connector;
+    private DatabaseConnector connector;
 
-    @RequestMapping("/v1/users/get/{nick}")
+    @CrossOrigin
+    @GetMapping("/get/{nick}")
     public User getUserByNick(@PathVariable("nick") String nick) {
-        return getUser(connector, nick);
+        User user = getUser(connector, nick);
+
+        if (user == null) {
+            log.error("User {} not found", nick);
+            throw new UserNotFoundException(String.format("User %s not found on server", nick));
+        }
+
+        return user;
     }
 
-    @RequestMapping("/v1/users/get")
+    @CrossOrigin
+    @GetMapping("/get")
     public List<User> getAllUsers() {
         return connector.userSelector.getUsers();
     }
 
-    @RequestMapping(value = "/v1/users/add", method = RequestMethod.POST)
+    @PostMapping(value = "/add")
     public User addUser(@RequestBody User user) {
         log.info("Got user {}", user.getBggNick());
+
+        if (user.getBggNick().isEmpty() || user.getForumNick().isEmpty())
+            throw new MalformattedUserException("Missing mandatory field");
+
         connector.userSelector.addUser(user);
         return DBUtils.getUser(connector, user.getBggNick());
     }
 
-    @RequestMapping(value = "/v1/users/del/{nick}", method = RequestMethod.DELETE)
+    @DeleteMapping("/remove/{nick}")
     public User removeUser(@PathVariable("nick") String nick) {
         val user = DBUtils.getUser(connector, nick);
         if (user != null) {
             connector.userSelector.removeUser(nick);
+        }
+        else {
+            throw new UserNotFoundException(String.format("User %s not found on server.", nick));
         }
 
         return user;
