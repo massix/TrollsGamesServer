@@ -8,6 +8,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlValue;
+import java.util.LinkedList;
 import java.util.List;
 
 @Getter
@@ -96,6 +97,15 @@ public class Boardgames {
                     if (category.getId() == Constants.EXPANSION_CATEGORY)
                         isExpansion = true;
                 }
+            }
+
+            if (getExpansion() != null) {
+                LinkedList<String> expansions = new LinkedList<>();
+                for (BoardgameExpansion expansion : getExpansion()) {
+                    if (expansion.isInbound()) expansions.add(String.valueOf(expansion.getForGame()));
+                }
+
+                expands = String.join(" ", expansions);
             }
 
             return new Game(getId(), primaryName, getDescription(), getMinPlayers(), getMaxPlayers(),
