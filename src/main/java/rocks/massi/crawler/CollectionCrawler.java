@@ -3,6 +3,8 @@ package rocks.massi.crawler;
 import feign.Feign;
 import feign.FeignException;
 import feign.gson.GsonDecoder;
+import feign.jaxb.JAXBContextFactory;
+import feign.jaxb.JAXBDecoder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import rocks.massi.cache.CrawlCache;
@@ -11,7 +13,9 @@ import rocks.massi.data.CrawlingProgress;
 import rocks.massi.data.Game;
 import rocks.massi.data.User;
 import rocks.massi.data.bggjson.BGGGame;
+import rocks.massi.data.boardgamegeek.Boardgames;
 import rocks.massi.services.BGGJsonProxy;
+import rocks.massi.services.BoardGameGeek;
 
 import java.io.IOException;
 import java.util.*;
@@ -57,22 +61,16 @@ public class CollectionCrawler implements Runnable {
     }
 
     public Game crawlGame(final int gameId) {
-        BGGJsonProxy bggJsonProxy = Feign.builder().decoder(new GsonDecoder()).target(BGGJsonProxy.class, BASE_URL);
+        JAXBContextFactory contextFactory = new JAXBContextFactory.Builder().build();
+        BoardGameGeek boardGameGeek = Feign.builder().decoder(new JAXBDecoder(contextFactory)).target(BoardGameGeek.class, "https://www.boardgamegeek.com");
+        Boardgames boardgames = boardGameGeek.getGameForId(gameId);
 
-        BGGGame game = bggJsonProxy.getGameForId(gameId);
+        // Get only the first result
+        Boardgames.Boardgame boardgame = boardgames.getBoardgame().get(0);
+        Game toInsert = boardgame.convert();
         cache.put(gameId, new Date().getTime() / 1000);
-        ArrayList<String> expands = new ArrayList<>();
 
-        if (game.getExpands() != null)
-            game.getExpands().forEach(expandsL -> expands.add(String.valueOf(expandsL.getGameId())));
-
-        Game toInsert = new Game(game.getGameId(), game.getName(), game.getDescription(),
-                game.getMinPlayers(), game.getMaxPlayers(), game.getPlayingTime(),
-                game.getYearPublished(), game.getRank(), game.isExpansion(),
-                game.getThumbnail(), String.join(", ", game.getDesigners()),
-                String.join(" ", expands));
-
-        Game inDb = connector.gameSelector.findById(game.getGameId());
+        Game inDb = connector.gameSelector.findById(boardgame.getId());
 
         if (inDb != null) {
             connector.gameSelector.updateGame(toInsert);
@@ -97,6 +95,7 @@ public class CollectionCrawler implements Runnable {
                     crawled.add(g);
                     log.info("Added game {} for user {}", g.getName(), user.getBggNick());
                     cacheMiss++;
+                    Thread.sleep(550);
                 } else {
                     log.info("No need to recrawl game {}", gameId);
                     cacheHit++;
@@ -111,7 +110,7 @@ public class CollectionCrawler implements Runnable {
                     log.warn("Couldn't sleep.");
                 }
             } catch (final Exception exception) {
-                log.warn("Generic exception caught: {}. Leaving!");
+                log.warn("Generic exception caught: {}. Leaving!", exception.getMessage());
                 break;
             }
         }
@@ -134,6 +133,7 @@ public class CollectionCrawler implements Runnable {
                 log.info("Added game {} for user {}", g.getName(), user.getBggNick());
                 it.remove();
                 timeout = INITIAL_TIMEOUT;
+                Thread.sleep(550);
             }
             catch (final FeignException exception) {
                 log.warn("Could not download game id {} ({}), timeout = {}", gameId, exception.status(), timeout);
