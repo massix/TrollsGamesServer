@@ -2,16 +2,21 @@ package rocks.massi.data.boardgamegeek;
 
 import lombok.Getter;
 import lombok.ToString;
+import rocks.massi.data.Game;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlValue;
 import java.util.List;
 
 @Getter
 @ToString
 @XmlRootElement(name = "boardgames")
 public class Boardgames {
+    public static class Constants {
+        public static int EXPANSION_CATEGORY = 1042;
+    }
 
     @Getter
     @ToString
@@ -22,6 +27,15 @@ public class Boardgames {
 
         @XmlElement(name = "yearpublished")
         private int yearPublished;
+
+        @XmlElement(name = "minplayers")
+        private int minPlayers;
+
+        @XmlElement(name = "maxplayers")
+        private int maxPlayers;
+
+        @XmlElement(name = "playingtime")
+        private int playingTime;
 
         @XmlElement
         private String description;
@@ -39,10 +53,55 @@ public class Boardgames {
         private List<String> designers;
 
         @XmlElement(name = "name")
-        private List<String> alternativeNames;
+        private List<Name> alternativeNames;
 
         @XmlElement
         private Statistics statistics;
+
+        @XmlElement(name = "boardgameexpansion")
+        private List<BoardgameExpansion> expansion;
+
+        @XmlElement(name = "boardgamecategory")
+        private List<BoardgameCategory> categories;
+
+
+        public Game convert() {
+            String primaryName = "";
+            int globalRank = -1;
+            boolean isExpansion = false;
+            String expands = "";
+            String authors = "";
+
+            if (getDesigners() != null)
+                authors = String.join(", ", getDesigners());
+
+            for (Name name : getAlternativeNames()) {
+                if (name.isPrimary())
+                    primaryName = name.getName();
+            }
+
+            for (Rank rank : getStatistics().getRatings().getRanks().getRanks()) {
+                if ("boardgame".equals(rank.getName())) {
+                    try {
+                        globalRank = Integer.valueOf(rank.getValue());
+                    }
+                    catch(Exception e) {
+                        // Do nothing
+                    }
+                }
+            }
+
+            if (getCategories() != null) {
+                for (BoardgameCategory category : getCategories()) {
+                    if (category.getId() == Constants.EXPANSION_CATEGORY)
+                        isExpansion = true;
+                }
+            }
+
+            return new Game(getId(), primaryName, getDescription(), getMinPlayers(), getMaxPlayers(),
+                    getPlayingTime(), getYearPublished(), globalRank, isExpansion, getThumbnail(), authors, expands);
+        }
+
     }
 
     @Getter
@@ -86,10 +145,43 @@ public class Boardgames {
         private String friendlyName;
 
         @XmlAttribute
-        private long value;
+        private String value;
 
         @XmlAttribute(name = "bayesaverage")
-        private double bayesAverage;
+        private String bayesAverage;
+    }
+
+    @Getter
+    @ToString
+    public static class Name {
+        @XmlAttribute
+        private boolean primary;
+
+        @XmlValue
+        private String name;
+    }
+
+    @Getter
+    @ToString
+    public static class BoardgameExpansion {
+        @XmlAttribute(name = "objectid")
+        private int forGame;
+
+        @XmlAttribute
+        private boolean inbound;
+
+        @XmlValue
+        private String game;
+    }
+
+    @Getter
+    @ToString
+    public static class BoardgameCategory {
+        @XmlAttribute(name = "objectid")
+        private int id;
+
+        @XmlValue
+        private String description;
     }
 
     @XmlElement
