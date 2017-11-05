@@ -45,7 +45,7 @@ public class CrawlerControllerTest {
         restTemplate.delete("/v1/cache/purge");
 
         // Setup WireMock
-        CrawlerController.BASE_URL = "http://localhost:8080";
+        CrawlerController.BGG_BASE_URL = "http://localhost:8080";
         CollectionCrawler.BGG_BASE_URL = "http://localhost:8080";
 
         server = new WireMockServer(8080);
@@ -56,9 +56,15 @@ public class CrawlerControllerTest {
         server.stubFor(get((urlEqualTo("/xmlapi/boardgame/111661?stats=1")))
                 .willReturn(aResponse().withStatus(200).withBodyFile("samples/7wonders_cities.xml")));
 
-        server.stubFor(get((urlEqualTo("/collection/new_user")))
-                .willReturn(aResponse().withStatus(200).withBodyFile("samples/Chakado.json")));
+        server.stubFor(get((urlEqualTo("/xmlapi/collection/new_user")))
+                .willReturn(aResponse().withStatus(200).withBodyFile("samples/massi_x.xml")));
 
+        server.stubFor(get((urlEqualTo("/xmlapi/collection/timed_user"))).inScenario("timed user").whenScenarioStateIs("Started")
+                .willReturn(aResponse().withStatus(202).withBodyFile("samples/please_wait.xml")).willSetStateTo("SECOND"));
+        server.stubFor(get((urlEqualTo("/xmlapi/collection/timed_user"))).inScenario("timed user").whenScenarioStateIs("SECOND")
+                .willReturn(aResponse().withStatus(202).withBodyFile("samples/please_wait.xml")).willSetStateTo("THIRD"));
+        server.stubFor(get((urlEqualTo("/xmlapi/collection/timed_user"))).inScenario("timed user").whenScenarioStateIs("THIRD")
+                .willReturn(aResponse().withStatus(200).withBodyFile("samples/massi_x.xml")).willSetStateTo("END"));
     }
 
     @After
@@ -107,6 +113,16 @@ public class CrawlerControllerTest {
         assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
         assertNotNull(responseEntity.getBody());
         responseEntity.getBody().buildCollection();
-        assertEquals(2, responseEntity.getBody().getCollection().size());
+        assertEquals(70, responseEntity.getBody().getCollection().size());
+    }
+
+    @Test
+    public void test6_timedUser() throws Exception {
+        databaseConnector.userSelector.addUser(new User("timed_user", "forum_user", "", ""));
+        ResponseEntity<User> responseEntity = restTemplate.postForEntity("/v1/crawler/users/timed_user", null, User.class);
+        assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
+        assertNotNull(responseEntity.getBody());
+        responseEntity.getBody().buildCollection();
+        assertEquals(70, responseEntity.getBody().getCollection().size());
     }
 }

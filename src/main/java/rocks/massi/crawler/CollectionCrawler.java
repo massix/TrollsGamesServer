@@ -2,7 +2,6 @@ package rocks.massi.crawler;
 
 import feign.Feign;
 import feign.FeignException;
-import feign.gson.GsonDecoder;
 import feign.jaxb.JAXBContextFactory;
 import feign.jaxb.JAXBDecoder;
 import lombok.Getter;
@@ -12,13 +11,14 @@ import rocks.massi.connector.DatabaseConnector;
 import rocks.massi.data.CrawlingProgress;
 import rocks.massi.data.Game;
 import rocks.massi.data.User;
-import rocks.massi.data.bggjson.BGGGame;
 import rocks.massi.data.boardgamegeek.Boardgames;
-import rocks.massi.services.BGGJsonProxy;
 import rocks.massi.services.BoardGameGeek;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 @Slf4j
 public class CollectionCrawler implements Runnable {
