@@ -24,7 +24,7 @@ import java.util.*;
 @RestController
 @RequestMapping("/v1/crawler")
 public class CrawlerController {
-    private final String BASE_URL = "https://bgg-json.azurewebsites.net";
+    public static String BASE_URL = "https://bgg-json.azurewebsites.net";
 
     @Autowired
     private DatabaseConnector connector;

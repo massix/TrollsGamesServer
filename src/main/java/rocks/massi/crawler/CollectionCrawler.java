@@ -26,7 +26,7 @@ public class CollectionCrawler implements Runnable {
     private final int INITIAL_TIMEOUT = 1000;
     private final int TIMEOUT_INCREASE = 3000;
     private final int MAXIMUM_TIMEOUT = 10000;
-    public static String BASE_URL = "https://bgg-json.azurewebsites.net";
+    public static String BGG_BASE_URL = "https://www.boardgamegeek.com";
 
     private final CrawlCache cache;
     private final DatabaseConnector connector;
@@ -62,7 +62,7 @@ public class CollectionCrawler implements Runnable {
 
     public Game crawlGame(final int gameId) {
         JAXBContextFactory contextFactory = new JAXBContextFactory.Builder().build();
-        BoardGameGeek boardGameGeek = Feign.builder().decoder(new JAXBDecoder(contextFactory)).target(BoardGameGeek.class, "https://www.boardgamegeek.com");
+        BoardGameGeek boardGameGeek = Feign.builder().decoder(new JAXBDecoder(contextFactory)).target(BoardGameGeek.class, BGG_BASE_URL);
         Boardgames boardgames = boardGameGeek.getGameForId(gameId);
 
         // Get only the first result
