@@ -3,8 +3,8 @@ package rocks.massi.services;
 import feign.Headers;
 import feign.Param;
 import feign.RequestLine;
-import rocks.massi.data.bgg.BGGGame;
-import rocks.massi.data.bgg.Collection;
+import rocks.massi.data.bggjson.BGGGame;
+import rocks.massi.data.bggjson.Collection;
 
 public interface BGGJsonProxy {
     @RequestLine("GET /collection/{nick}")

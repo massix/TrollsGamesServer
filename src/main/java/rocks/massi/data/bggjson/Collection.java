@@ -1,4 +1,4 @@
-package rocks.massi.data.bgg;
+package rocks.massi.data.bggjson;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
