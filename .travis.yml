@@ -27,4 +27,5 @@ deploy:
   skip_cleanup: true
   script: ./configuration/deploy.sh dev
   on:
-    branch: /ˆfeature\/.*$/
+    all_branches: true
+    condition: "$TRAVIS_BRANCH =~ ^feature/.*$"
