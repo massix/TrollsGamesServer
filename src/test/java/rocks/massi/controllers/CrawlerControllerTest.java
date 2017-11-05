@@ -1,16 +1,11 @@
 package rocks.massi.controllers;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
-import com.github.tomakehurst.wiremock.client.WireMock;
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import org.junit.*;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
@@ -19,16 +14,9 @@ import rocks.massi.connector.DatabaseConnector;
 import rocks.massi.crawler.CollectionCrawler;
 import rocks.massi.data.CrawlingProgress;
 import rocks.massi.data.User;
-import rocks.massi.data.bgg.BGGGame;
-import rocks.massi.data.bgg.Collection;
-import rocks.massi.services.BGGJsonProxy;
-
-import javax.xml.ws.Response;
-import java.util.ArrayList;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.Assert.*;
-import static org.mockito.BDDMockito.given;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @RunWith(SpringRunner.class)
@@ -51,43 +39,32 @@ public class CrawlerControllerTest {
         databaseConnector.baseSelector.createTableGames();
         databaseConnector.baseSelector.createTableUsers();
 
-        Collection collection = new Collection();
-        collection.add(new Collection.Item(1, "Cyclades", "", "", 2, 210,
-            180, false, 2012, 9.9, 9.9, 1, 150, 9.9,
-                true, false, false, false, false, false, false, false,
-                "Best game ever."));
-        collection.add(new Collection.Item(2, "Cyclades II", "", "", 2, 210,
-                180, false, 2012, 9.9, 9.9, 1, 150, 9.9,
-                true, false, false, false, false, false, false, false,
-                "Best game ever."));
+        databaseConnector.userSelector.addUser(new User("bgg_user", "forum_user", "68448 111661", ""));
 
-        // TODO: Yeah, I don't like this.
-        String[] mechanics = {"mech"};
-        ArrayList<BGGGame.Expands> expands = new ArrayList<>();
-        BGGGame cyclades = new BGGGame(1, "Cyclades", "Cyclades", "", "",
-                2, 20, 250, mechanics, 2012, 8.9, 9.9, 1, mechanics, expands);
-        BGGGame cyclades2 = new BGGGame(2, "Cyclades 2", "Cyclades", "", "",
-                2, 20, 250, mechanics, 2012, 8.9, 9.9, 1, mechanics, expands);;
+        // Force purge cache
+        restTemplate.delete("/v1/cache/purge");
+
+        // Setup WireMock
+        CrawlerController.BGG_BASE_URL = "http://localhost:8080";
+        CollectionCrawler.BGG_BASE_URL = "http://localhost:8080";
 
         server = new WireMockServer(8080);
         server.start();
 
-        ObjectMapper mapper = new ObjectMapper();
+        server.stubFor(get((urlEqualTo("/xmlapi/boardgame/68448?stats=1")))
+                .willReturn(aResponse().withStatus(200).withBodyFile("samples/7wonders.xml")));
+        server.stubFor(get((urlEqualTo("/xmlapi/boardgame/111661?stats=1")))
+                .willReturn(aResponse().withStatus(200).withBodyFile("samples/7wonders_cities.xml")));
 
-        CollectionCrawler.BASE_URL = "http://localhost:8080";
-        server.stubFor(get((urlEqualTo("/collection/bgg_user")))
-                .willReturn(aResponse().withStatus(200).withBody(mapper.writeValueAsString(collection))));
+        server.stubFor(get((urlEqualTo("/xmlapi/collection/new_user")))
+                .willReturn(aResponse().withStatus(200).withBodyFile("samples/massi_x.xml")));
 
-        // TODO: THERE HAS TO BE A BETTER WAY TO DO THIS
-        server.stubFor(get((urlMatching("/thing/1")))
-                .willReturn(aResponse().withStatus(200).withBody(mapper.writeValueAsString(cyclades))));
-        server.stubFor(get((urlMatching("/thing/2")))
-                .willReturn(aResponse().withStatus(200).withBody(mapper.writeValueAsString(cyclades2))));
-
-        databaseConnector.userSelector.addUser(new User("bgg_user", "forum_user", "1 2", ""));
-
-        // Force purge cache
-        restTemplate.delete("/v1/cache/purge");
+        server.stubFor(get((urlEqualTo("/xmlapi/collection/timed_user"))).inScenario("timed user").whenScenarioStateIs("Started")
+                .willReturn(aResponse().withStatus(202).withBodyFile("samples/please_wait.xml")).willSetStateTo("SECOND"));
+        server.stubFor(get((urlEqualTo("/xmlapi/collection/timed_user"))).inScenario("timed user").whenScenarioStateIs("SECOND")
+                .willReturn(aResponse().withStatus(202).withBodyFile("samples/please_wait.xml")).willSetStateTo("THIRD"));
+        server.stubFor(get((urlEqualTo("/xmlapi/collection/timed_user"))).inScenario("timed user").whenScenarioStateIs("THIRD")
+                .willReturn(aResponse().withStatus(200).withBodyFile("samples/massi_x.xml")).willSetStateTo("END"));
     }
 
     @After
@@ -105,7 +82,7 @@ public class CrawlerControllerTest {
         assertTrue(responseEntity.getHeaders().get("location").get(0).startsWith("/v1/crawler/queue"));
 
         // Wait for the Q to be over.
-        Thread.sleep(2000);
+        Thread.sleep(1500);
     }
 
     @Test
@@ -127,5 +104,25 @@ public class CrawlerControllerTest {
         ResponseEntity<User> responseEntity = restTemplate.postForEntity("/v1/crawler/users/non_existing", null, User.class);
         assertTrue(responseEntity.getStatusCode().is4xxClientError());
         assertNull(responseEntity.getBody());
+    }
+
+    @Test
+    public void test5_crawlUser() throws Exception {
+        databaseConnector.userSelector.addUser(new User("new_user", "forum_user", "", ""));
+        ResponseEntity<User> responseEntity = restTemplate.postForEntity("/v1/crawler/users/new_user", null, User.class);
+        assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
+        assertNotNull(responseEntity.getBody());
+        responseEntity.getBody().buildCollection();
+        assertEquals(70, responseEntity.getBody().getCollection().size());
+    }
+
+    @Test
+    public void test6_timedUser() throws Exception {
+        databaseConnector.userSelector.addUser(new User("timed_user", "forum_user", "", ""));
+        ResponseEntity<User> responseEntity = restTemplate.postForEntity("/v1/crawler/users/timed_user", null, User.class);
+        assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
+        assertNotNull(responseEntity.getBody());
+        responseEntity.getBody().buildCollection();
+        assertEquals(70, responseEntity.getBody().getCollection().size());
     }
 }

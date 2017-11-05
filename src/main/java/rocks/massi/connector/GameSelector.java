@@ -48,7 +48,7 @@ public interface GameSelector {
             ":playingTime, :yearPublished, :rank, :extension, :expands, :thumbnail, :authors)")
     void insertGame(@BindBean Game g);
 
-    @SqlUpdate("update games set minPlayers = :minPlayers, maxPlayers = :maxPlayers, rank = :rank where id = :id")
+    @SqlUpdate("update games set authors = :authors, description = :description, minPlayers = :minPlayers, maxPlayers = :maxPlayers, rank = :rank where id = :id")
     void updateGame(@BindBean Game g);
 
     @SqlUpdate("delete from games where id = :id")
