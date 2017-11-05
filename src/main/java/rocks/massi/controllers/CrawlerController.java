@@ -1,7 +1,10 @@
 package rocks.massi.controllers;
 
 import feign.Feign;
-import feign.gson.GsonDecoder;
+import feign.Response;
+import feign.jaxb.JAXBContextFactory;
+import feign.jaxb.JAXBDecoder;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -12,19 +15,20 @@ import rocks.massi.crawler.CollectionCrawler;
 import rocks.massi.data.CrawlingProgress;
 import rocks.massi.data.Game;
 import rocks.massi.data.User;
-import rocks.massi.data.bggjson.Collection;
+import rocks.massi.data.boardgamegeek.Collection;
 import rocks.massi.exceptions.UserNotFoundException;
-import rocks.massi.services.BGGJsonProxy;
+import rocks.massi.services.BoardGameGeek;
 import rocks.massi.utils.DBUtils;
 
 import javax.servlet.http.HttpServletResponse;
+import java.lang.reflect.Type;
 import java.util.*;
 
 @Slf4j
 @RestController
 @RequestMapping("/v1/crawler")
 public class CrawlerController {
-    public static String BASE_URL = "https://bgg-json.azurewebsites.net";
+    public static String BGG_BASE_URL = "https://www.boardgamegeek.com";
 
     @Autowired
     private DatabaseConnector connector;
@@ -39,6 +43,7 @@ public class CrawlerController {
         return runningCrawlers;
     }
 
+    @SneakyThrows
     @PostMapping("/users/{user}")
     public User crawlUser(@PathVariable("user") String user) {
         User userFromDb = DBUtils.getUser(connector, user);
@@ -47,24 +52,29 @@ public class CrawlerController {
             throw new UserNotFoundException(String.format("User %s not found in DB.", user));
         }
 
-        BGGJsonProxy bggJsonProxy = Feign.builder()
-                .decoder(new GsonDecoder())
-                .target(BGGJsonProxy.class, BASE_URL);
+        int status = 0;
+        JAXBContextFactory contextFactory = new JAXBContextFactory.Builder().build();
+        BoardGameGeek boardGameGeek = Feign.builder().decoder(new JAXBDecoder(contextFactory)).target(BoardGameGeek.class, BGG_BASE_URL);
+        Response response = null;
 
-        Collection ownedGames = bggJsonProxy.getCollectionForUser(user);
-        log.info("Original collection {}", ownedGames.toString());
+        while (status != 200) {
+            response = boardGameGeek.getCollectionForUser(user);
+            status = response.status();
 
-        // Keep only wanted Games
-        Collection wantedGames = (Collection) ownedGames.clone();
-        wantedGames.removeIf(item -> ! item.isWantToPlay());
+            if (status != 200) {
+                log.info("Have to wait... status code {}", status);
+                Thread.sleep(5000);
+            }
 
-        // Remove non-owned games
-        ownedGames.removeIf(item -> ! item.isOwned());
+        }
 
-        log.info("Collection {}", ownedGames.toString());
-        log.info("Wanted {}", wantedGames.toString());
+        Collection collection = (Collection) new JAXBDecoder(contextFactory).decode(response, Collection.class);
 
-        User updated = new User(userFromDb.getBggNick(), userFromDb.getForumNick(), ownedGames.toString(), wantedGames.toString());
+        log.info("Original collection {}", collection.toString());
+        log.info("Collection {}", collection.ownedAsString());
+        log.info("Wanted {}", collection.wantedAsString());
+
+        User updated = new User(userFromDb.getBggNick(), userFromDb.getForumNick(), collection.ownedAsString(), collection.wantedAsString());
         connector.userSelector.updateCollectionForUser(updated);
 
         return connector.userSelector.findByBggNick(updated.getBggNick());
