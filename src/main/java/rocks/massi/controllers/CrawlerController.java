@@ -12,7 +12,7 @@ import rocks.massi.crawler.CollectionCrawler;
 import rocks.massi.data.CrawlingProgress;
 import rocks.massi.data.Game;
 import rocks.massi.data.User;
-import rocks.massi.data.bgg.Collection;
+import rocks.massi.data.bggjson.Collection;
 import rocks.massi.exceptions.UserNotFoundException;
 import rocks.massi.services.BGGJsonProxy;
 import rocks.massi.utils.DBUtils;

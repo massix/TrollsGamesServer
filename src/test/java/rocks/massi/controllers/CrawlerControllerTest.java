@@ -2,15 +2,11 @@ package rocks.massi.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
-import com.github.tomakehurst.wiremock.client.WireMock;
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import org.junit.*;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
@@ -19,16 +15,13 @@ import rocks.massi.connector.DatabaseConnector;
 import rocks.massi.crawler.CollectionCrawler;
 import rocks.massi.data.CrawlingProgress;
 import rocks.massi.data.User;
-import rocks.massi.data.bgg.BGGGame;
-import rocks.massi.data.bgg.Collection;
-import rocks.massi.services.BGGJsonProxy;
+import rocks.massi.data.bggjson.BGGGame;
+import rocks.massi.data.bggjson.Collection;
 
-import javax.xml.ws.Response;
 import java.util.ArrayList;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.Assert.*;
-import static org.mockito.BDDMockito.given;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @RunWith(SpringRunner.class)

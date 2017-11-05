@@ -4,17 +4,13 @@ import feign.Feign;
 import feign.FeignException;
 import feign.gson.GsonDecoder;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 import rocks.massi.cache.CrawlCache;
 import rocks.massi.connector.DatabaseConnector;
 import rocks.massi.data.CrawlingProgress;
 import rocks.massi.data.Game;
 import rocks.massi.data.User;
-import rocks.massi.data.bgg.BGGGame;
-import rocks.massi.data.bgg.Collection;
+import rocks.massi.data.bggjson.BGGGame;
 import rocks.massi.services.BGGJsonProxy;
 
 import java.io.IOException;
