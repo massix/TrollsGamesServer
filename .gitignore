@@ -1,7 +1,7 @@
 target/
 *.iml
-*.db
 .idea/
+trolls.db
 recentlyCrawled.cache
 travis-key
 ssh-config
