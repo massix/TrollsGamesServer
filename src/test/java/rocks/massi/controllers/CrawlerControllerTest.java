@@ -113,18 +113,18 @@ public class CrawlerControllerTest {
     @Test
     public void test5_crawlUser() throws Exception {
         usersRepository.save(new User("new_user", "forum_user_new"));
-        ResponseEntity<User> responseEntity = restTemplate.postForEntity("/v1/crawler/users/new_user", null, User.class);
+        ResponseEntity<Ownership[]> responseEntity = restTemplate.postForEntity("/v1/crawler/users/new_user", null, Ownership[].class);
         assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
         assertNotNull(responseEntity.getBody());
-        assertEquals(70, ownershipsRepository.findByUser("new_user").size());
+        assertEquals(responseEntity.getBody().length, ownershipsRepository.findByUser("new_user").size());
     }
 
     @Test
     public void test6_timedUser() throws Exception {
         usersRepository.save(new User("timed_user", "forum_user_new"));
-        ResponseEntity<User> responseEntity = restTemplate.postForEntity("/v1/crawler/users/timed_user", null, User.class);
+        ResponseEntity<Ownership[]> responseEntity = restTemplate.postForEntity("/v1/crawler/users/timed_user", null, Ownership[].class);
         assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
         assertNotNull(responseEntity.getBody());
-        assertEquals(70, ownershipsRepository.findByUser("timed_user").size());
+        assertEquals(responseEntity.getBody().length, ownershipsRepository.findByUser("timed_user").size());
     }
 }

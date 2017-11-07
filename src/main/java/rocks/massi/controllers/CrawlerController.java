@@ -47,7 +47,7 @@ public class CrawlerController {
 
     @SneakyThrows
     @PostMapping("/users/{user}")
-    public User crawlUser(@PathVariable("user") String user) {
+    public List<Ownership> crawlUser(@PathVariable("user") String user) {
         User userFromDb = DBUtils.getUser(usersRepository, user);
 
         if (userFromDb == null) {
@@ -81,7 +81,7 @@ public class CrawlerController {
             }
         });
 
-        return userFromDb;
+        return ownershipsRepository.findByUser(userFromDb.getBggNick());
     }
 
     @PostMapping("/games/{gameId}")
