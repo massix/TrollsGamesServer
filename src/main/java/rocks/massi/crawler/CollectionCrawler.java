@@ -7,10 +7,7 @@ import feign.jaxb.JAXBDecoder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import rocks.massi.cache.CrawlCache;
-import rocks.massi.data.CrawlingProgress;
-import rocks.massi.data.Game;
-import rocks.massi.data.GamesRepository;
-import rocks.massi.data.User;
+import rocks.massi.data.*;
 import rocks.massi.data.boardgamegeek.Boardgames;
 import rocks.massi.services.BoardGameGeek;
 
@@ -30,6 +27,7 @@ public class CollectionCrawler implements Runnable {
 
     private final CrawlCache cache;
     private final GamesRepository gamesRepository;
+    private final OwnershipsRepository ownershipsRepository;
     private final User user;
 
     @Getter
@@ -49,10 +47,12 @@ public class CollectionCrawler implements Runnable {
 
     private List<Game> crawled;
     private List<Integer> failed;
+    private List<Ownership> ownerships;
 
-    public CollectionCrawler(CrawlCache cache, GamesRepository gamesRepository, User user) {
+    public CollectionCrawler(CrawlCache cache, GamesRepository gamesRepository, OwnershipsRepository ownershipsRepository, User user) {
         this.cache = cache;
         this.gamesRepository = gamesRepository;
+        this.ownershipsRepository = ownershipsRepository;
         this.user = user;
 
         crawled = new LinkedList<>();
@@ -79,11 +79,12 @@ public class CollectionCrawler implements Runnable {
     @Override
     public void run() {
         running = true;
-        user.buildCollection();
+        ownerships = ownershipsRepository.findByUser(user.getBggNick());
         cacheHit = 0;
         cacheMiss = 0;
 
-        for (int gameId : user.getCollection()) {
+        for (Ownership ownership : ownerships) {
+            int gameId = ownership.getGame();
             try {
                 if (cache.isExpired(gameId)) {
                     Game g = crawlGame(gameId);
@@ -163,7 +164,7 @@ public class CollectionCrawler implements Runnable {
                 failed.size(),
                 cacheHit,
                 cacheMiss,
-                user.getCollection() == null ? 0 : user.getCollection().size(),
+                ownerships.size(),
                 getStarted().toString(),
                 running? null : getFinished().toString());
     }

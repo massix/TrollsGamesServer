@@ -28,7 +28,7 @@ public class UsersControllerTest {
     @Before
     public void setUp() throws Exception {
         usersRepository.deleteAll();
-        usersRepository.save(new User("bgg_nick", "forum_nick", "1 2 3", ""));
+        usersRepository.save(new User("bgg_nick", "forum_nick"));
     }
 
     @Test
@@ -48,22 +48,22 @@ public class UsersControllerTest {
 
     @Test
     public void addUser() throws Exception {
-        ResponseEntity<User> responseEntity = restTemplate.postForEntity("/v1/users/add", new User("new_bgg", "new_forum", "", ""), User.class);
+        ResponseEntity<User> responseEntity = restTemplate.postForEntity("/v1/users/add", new User("new_bgg", "new_forum"), User.class);
         assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
         assertEquals("new_bgg", responseEntity.getBody().getBggNick());
     }
 
     @Test
     public void addMalformattedUser() throws Exception {
-        ResponseEntity<User> responseEntity = restTemplate.postForEntity("/v1/users/add", new User("", "new_forum", "", ""), User.class);
+        ResponseEntity<User> responseEntity = restTemplate.postForEntity("/v1/users/add", new User("", "new_forum"), User.class);
         assertTrue(responseEntity.getStatusCode().is4xxClientError());
         assertNull(responseEntity.getBody());
 
-        responseEntity = restTemplate.postForEntity("/v1/users/add", new User("new_bgg", "", "", ""), User.class);
+        responseEntity = restTemplate.postForEntity("/v1/users/add", new User("new_bgg", ""), User.class);
         assertTrue(responseEntity.getStatusCode().is4xxClientError());
         assertNull(responseEntity.getBody());
 
-        responseEntity = restTemplate.postForEntity("/v1/users/add", new User("", "", "", ""), User.class);
+        responseEntity = restTemplate.postForEntity("/v1/users/add", new User("", ""), User.class);
         assertTrue(responseEntity.getStatusCode().is4xxClientError());
         assertNull(responseEntity.getBody());
     }

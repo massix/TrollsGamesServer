@@ -14,10 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import rocks.massi.crawler.CollectionCrawler;
-import rocks.massi.data.CrawlingProgress;
-import rocks.massi.data.GamesRepository;
-import rocks.massi.data.User;
-import rocks.massi.data.UsersRepository;
+import rocks.massi.data.*;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.Assert.*;
@@ -35,6 +32,9 @@ public class CrawlerControllerTest {
     private UsersRepository usersRepository;
 
     @Autowired
+    private OwnershipsRepository ownershipsRepository;
+
+    @Autowired
     private TestRestTemplate restTemplate;
 
     WireMockServer server;
@@ -43,7 +43,9 @@ public class CrawlerControllerTest {
     public void setUp() throws Exception {
         usersRepository.deleteAll();
         gamesRepository.deleteAll();
-        usersRepository.save(new User("bgg_user", "forum_user", "68448 111661", ""));
+        usersRepository.save(new User("bgg_user", "forum_user"));
+        ownershipsRepository.save(new Ownership("bgg_user", 68448));
+        ownershipsRepository.save(new Ownership("bgg_user", 111661));
 
         // Force purge cache
         restTemplate.delete("/v1/cache/purge");
@@ -110,21 +112,19 @@ public class CrawlerControllerTest {
 
     @Test
     public void test5_crawlUser() throws Exception {
-        usersRepository.save(new User("new_user", "forum_user_new", "", ""));
+        usersRepository.save(new User("new_user", "forum_user_new"));
         ResponseEntity<User> responseEntity = restTemplate.postForEntity("/v1/crawler/users/new_user", null, User.class);
         assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
         assertNotNull(responseEntity.getBody());
-        responseEntity.getBody().buildCollection();
-        assertEquals(70, responseEntity.getBody().getCollection().size());
+        assertEquals(70, ownershipsRepository.findByUser("new_user").size());
     }
 
     @Test
     public void test6_timedUser() throws Exception {
-        usersRepository.save(new User("timed_user", "forum_user_new", "", ""));
+        usersRepository.save(new User("timed_user", "forum_user_new"));
         ResponseEntity<User> responseEntity = restTemplate.postForEntity("/v1/crawler/users/timed_user", null, User.class);
         assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
         assertNotNull(responseEntity.getBody());
-        responseEntity.getBody().buildCollection();
-        assertEquals(70, responseEntity.getBody().getCollection().size());
+        assertEquals(70, ownershipsRepository.findByUser("timed_user").size());
     }
 }

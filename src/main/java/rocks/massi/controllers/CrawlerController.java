@@ -33,6 +33,9 @@ public class CrawlerController {
     private GamesRepository gamesRepository;
 
     @Autowired
+    private OwnershipsRepository ownershipsRepository;
+
+    @Autowired
     private CrawlCache crawlCache;
 
     private HashMap<String, Map.Entry<Thread, Runnable>> runningCrawlers;
@@ -72,16 +75,18 @@ public class CrawlerController {
         log.info("Original collection {}", collection.toString());
         log.info("Collection {}", collection.ownedAsString());
         log.info("Wanted {}", collection.wantedAsString());
+        collection.getItemList().forEach(item -> {
+            if (item.getStatus().isOwn()) {
+                ownershipsRepository.save(new Ownership(userFromDb.getBggNick(), item.getId()));
+            }
+        });
 
-        User updated = new User(userFromDb.getBggNick(), userFromDb.getForumNick(), collection.ownedAsString(), collection.wantedAsString());
-        usersRepository.save(updated);
-
-        return usersRepository.findByBggNick(updated.getBggNick());
+        return userFromDb;
     }
 
     @PostMapping("/games/{gameId}")
     public Game crawlGame(@PathVariable("gameId") final int gameId) {
-        return new CollectionCrawler(crawlCache, gamesRepository, null).crawlGame(gameId);
+        return new CollectionCrawler(crawlCache, gamesRepository, ownershipsRepository, null).crawlGame(gameId);
     }
 
     @PostMapping("/collection/{user}")
@@ -93,7 +98,7 @@ public class CrawlerController {
             Thread thread;
 
             if (!runningCrawlers().containsKey(user.getBggNick())) {
-                CollectionCrawler collectionCrawler = new CollectionCrawler(crawlCache, gamesRepository, user);
+                CollectionCrawler collectionCrawler = new CollectionCrawler(crawlCache, gamesRepository, ownershipsRepository, user);
                 thread = new Thread(collectionCrawler);
                 runningCrawlers().put(user.getBggNick(), new AbstractMap.SimpleEntry<>(thread, collectionCrawler));
                 thread.start();

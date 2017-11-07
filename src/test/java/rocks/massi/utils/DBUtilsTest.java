@@ -13,7 +13,7 @@ import rocks.massi.data.UsersRepository;
 
 import static junit.framework.TestCase.*;
 
-@ActiveProfiles("local")
+@ActiveProfiles("dev")
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class DBUtilsTest {
@@ -22,8 +22,8 @@ public class DBUtilsTest {
 
     @Before
     public void setUp() throws Exception {
-        usersRepository.save(new User("bgg_nick", "forum_nick", "", ""));
-        usersRepository.save(new User("bgg_nick_2", "forum_nick_2", "", ""));
+        usersRepository.save(new User("bgg_nick", "forum_nick"));
+        usersRepository.save(new User("bgg_nick_2", "forum_nick_2"));
     }
 
     @After

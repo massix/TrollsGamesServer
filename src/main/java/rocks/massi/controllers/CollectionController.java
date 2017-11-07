@@ -4,9 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import rocks.massi.data.Game;
-import rocks.massi.data.GamesRepository;
-import rocks.massi.data.UsersRepository;
+import rocks.massi.data.*;
 import rocks.massi.exceptions.UserNotFoundException;
 
 import java.util.LinkedList;
@@ -24,6 +22,9 @@ public class CollectionController {
     @Autowired
     private UsersRepository usersRepository;
 
+    @Autowired
+    private OwnershipsRepository ownershipsRepository;
+
     @CrossOrigin
     @GetMapping("/get/{nick}")
     public List<Game> getCollection(@PathVariable("nick") final String nick) {
@@ -31,8 +32,8 @@ public class CollectionController {
         LinkedList<Game> collection = new LinkedList<>();
 
         if (user != null) {
-            user.buildCollection();
-            user.getCollection().forEach(id -> collection.add(gamesRepository.findById(id)));
+            List<Ownership> ownerships = ownershipsRepository.findByUser(user.getBggNick());
+            ownerships.forEach(ownership -> collection.add(gamesRepository.findById(ownership.getGame())));
         }
         else {
             throw new UserNotFoundException("");
