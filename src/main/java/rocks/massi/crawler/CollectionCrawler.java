@@ -172,7 +172,7 @@ public class CollectionCrawler implements Runnable {
                 failed.size(),
                 cacheHit,
                 cacheMiss,
-                user.getCollection().size(),
+                user.getCollection() == null ? 0 : user.getCollection().size(),
                 getStarted().toString(),
                 running? null : getFinished().toString());
     }
