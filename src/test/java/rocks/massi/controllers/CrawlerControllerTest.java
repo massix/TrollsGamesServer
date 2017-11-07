@@ -1,7 +1,10 @@
 package rocks.massi.controllers;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
-import org.junit.*;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.FixMethodOrder;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,22 +13,26 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
-import rocks.massi.connector.DatabaseConnector;
 import rocks.massi.crawler.CollectionCrawler;
 import rocks.massi.data.CrawlingProgress;
+import rocks.massi.data.GamesRepository;
 import rocks.massi.data.User;
+import rocks.massi.data.UsersRepository;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.Assert.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @RunWith(SpringRunner.class)
-@ActiveProfiles("local")
+@ActiveProfiles("dev")
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class CrawlerControllerTest {
 
     @Autowired
-    private DatabaseConnector databaseConnector;
+    private GamesRepository gamesRepository;
+
+    @Autowired
+    private UsersRepository usersRepository;
 
     @Autowired
     private TestRestTemplate restTemplate;
@@ -34,12 +41,9 @@ public class CrawlerControllerTest {
 
     @Before
     public void setUp() throws Exception {
-        databaseConnector.baseSelector.dropTableGames();
-        databaseConnector.baseSelector.dropTableUsers();
-        databaseConnector.baseSelector.createTableGames();
-        databaseConnector.baseSelector.createTableUsers();
-
-        databaseConnector.userSelector.addUser(new User("bgg_user", "forum_user", "68448 111661", ""));
+        usersRepository.deleteAll();
+        gamesRepository.deleteAll();
+        usersRepository.save(new User("bgg_user", "forum_user", "68448 111661", ""));
 
         // Force purge cache
         restTemplate.delete("/v1/cache/purge");
@@ -69,8 +73,6 @@ public class CrawlerControllerTest {
 
     @After
     public void tearDown() throws Exception {
-        databaseConnector.baseSelector.dropTableUsers();
-        databaseConnector.baseSelector.dropTableGames();
         server.stop();
     }
 
@@ -108,7 +110,7 @@ public class CrawlerControllerTest {
 
     @Test
     public void test5_crawlUser() throws Exception {
-        databaseConnector.userSelector.addUser(new User("new_user", "forum_user", "", ""));
+        usersRepository.save(new User("new_user", "forum_user_new", "", ""));
         ResponseEntity<User> responseEntity = restTemplate.postForEntity("/v1/crawler/users/new_user", null, User.class);
         assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
         assertNotNull(responseEntity.getBody());
@@ -118,7 +120,7 @@ public class CrawlerControllerTest {
 
     @Test
     public void test6_timedUser() throws Exception {
-        databaseConnector.userSelector.addUser(new User("timed_user", "forum_user", "", ""));
+        usersRepository.save(new User("timed_user", "forum_user_new", "", ""));
         ResponseEntity<User> responseEntity = restTemplate.postForEntity("/v1/crawler/users/timed_user", null, User.class);
         assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
         assertNotNull(responseEntity.getBody());

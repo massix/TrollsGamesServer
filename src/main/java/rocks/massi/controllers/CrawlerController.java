@@ -10,18 +10,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.*;
 import rocks.massi.cache.CrawlCache;
-import rocks.massi.connector.DatabaseConnector;
 import rocks.massi.crawler.CollectionCrawler;
-import rocks.massi.data.CrawlingProgress;
-import rocks.massi.data.Game;
-import rocks.massi.data.User;
+import rocks.massi.data.*;
 import rocks.massi.data.boardgamegeek.Collection;
 import rocks.massi.exceptions.UserNotFoundException;
 import rocks.massi.services.BoardGameGeek;
 import rocks.massi.utils.DBUtils;
 
 import javax.servlet.http.HttpServletResponse;
-import java.lang.reflect.Type;
 import java.util.*;
 
 @Slf4j
@@ -31,7 +27,10 @@ public class CrawlerController {
     public static String BGG_BASE_URL = "https://www.boardgamegeek.com";
 
     @Autowired
-    private DatabaseConnector connector;
+    private UsersRepository usersRepository;
+
+    @Autowired
+    private GamesRepository gamesRepository;
 
     @Autowired
     private CrawlCache crawlCache;
@@ -46,7 +45,7 @@ public class CrawlerController {
     @SneakyThrows
     @PostMapping("/users/{user}")
     public User crawlUser(@PathVariable("user") String user) {
-        User userFromDb = DBUtils.getUser(connector, user);
+        User userFromDb = DBUtils.getUser(usersRepository, user);
 
         if (userFromDb == null) {
             throw new UserNotFoundException(String.format("User %s not found in DB.", user));
@@ -75,26 +74,26 @@ public class CrawlerController {
         log.info("Wanted {}", collection.wantedAsString());
 
         User updated = new User(userFromDb.getBggNick(), userFromDb.getForumNick(), collection.ownedAsString(), collection.wantedAsString());
-        connector.userSelector.updateCollectionForUser(updated);
+        usersRepository.save(updated);
 
-        return connector.userSelector.findByBggNick(updated.getBggNick());
+        return usersRepository.findByBggNick(updated.getBggNick());
     }
 
     @PostMapping("/games/{gameId}")
     public Game crawlGame(@PathVariable("gameId") final int gameId) {
-        return new CollectionCrawler(crawlCache, connector, null).crawlGame(gameId);
+        return new CollectionCrawler(crawlCache, gamesRepository, null).crawlGame(gameId);
     }
 
     @PostMapping("/collection/{user}")
     public void crawlCollectionForUser(@PathVariable("user") final String nick, HttpServletResponse response) {
-        User user = DBUtils.getUser(connector, nick);
+        User user = DBUtils.getUser(usersRepository, nick);
 
         if (user != null) {
             response.setStatus(HttpServletResponse.SC_ACCEPTED);
             Thread thread;
 
             if (!runningCrawlers().containsKey(user.getBggNick())) {
-                CollectionCrawler collectionCrawler = new CollectionCrawler(crawlCache, connector, user);
+                CollectionCrawler collectionCrawler = new CollectionCrawler(crawlCache, gamesRepository, user);
                 thread = new Thread(collectionCrawler);
                 runningCrawlers().put(user.getBggNick(), new AbstractMap.SimpleEntry<>(thread, collectionCrawler));
                 thread.start();

@@ -7,9 +7,9 @@ import feign.jaxb.JAXBDecoder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import rocks.massi.cache.CrawlCache;
-import rocks.massi.connector.DatabaseConnector;
 import rocks.massi.data.CrawlingProgress;
 import rocks.massi.data.Game;
+import rocks.massi.data.GamesRepository;
 import rocks.massi.data.User;
 import rocks.massi.data.boardgamegeek.Boardgames;
 import rocks.massi.services.BoardGameGeek;
@@ -29,7 +29,7 @@ public class CollectionCrawler implements Runnable {
     public static String BGG_BASE_URL = "https://www.boardgamegeek.com";
 
     private final CrawlCache cache;
-    private final DatabaseConnector connector;
+    private final GamesRepository gamesRepository;
     private final User user;
 
     @Getter
@@ -50,9 +50,9 @@ public class CollectionCrawler implements Runnable {
     private List<Game> crawled;
     private List<Integer> failed;
 
-    public CollectionCrawler(CrawlCache cache, DatabaseConnector connector, User user) {
+    public CollectionCrawler(CrawlCache cache, GamesRepository gamesRepository, User user) {
         this.cache = cache;
-        this.connector = connector;
+        this.gamesRepository = gamesRepository;
         this.user = user;
 
         crawled = new LinkedList<>();
@@ -70,15 +70,10 @@ public class CollectionCrawler implements Runnable {
         Game toInsert = boardgame.convert();
         cache.put(gameId, new Date().getTime() / 1000);
 
-        Game inDb = connector.gameSelector.findById(boardgame.getId());
+        Game inDb = gamesRepository.findById(boardgame.getId());
+        gamesRepository.save(toInsert);
 
-        if (inDb != null) {
-            connector.gameSelector.updateGame(toInsert);
-        } else {
-            connector.gameSelector.insertGame(toInsert);
-        }
-
-        return connector.gameSelector.findById(gameId);
+        return gamesRepository.findById(gameId);
     }
 
     @Override

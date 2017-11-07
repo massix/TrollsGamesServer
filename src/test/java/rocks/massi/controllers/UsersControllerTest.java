@@ -1,6 +1,5 @@
 package rocks.massi.controllers;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -10,39 +9,26 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import rocks.massi.connector.DatabaseConnector;
 import rocks.massi.data.User;
-
-import java.util.List;
+import rocks.massi.data.UsersRepository;
 
 import static org.junit.Assert.*;
 
-@ActiveProfiles("local")
+@ActiveProfiles("dev")
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class UsersControllerTest {
 
     @Autowired
-    private DatabaseConnector connector;
+    private UsersRepository usersRepository;
 
     @Autowired
     private TestRestTemplate restTemplate;
 
     @Before
     public void setUp() throws Exception {
-        connector.baseSelector.dropTableGames();
-        connector.baseSelector.dropTableUsers();
-        connector.baseSelector.createTableUsers();
-        connector.baseSelector.createTableGames();
-
-        connector.userSelector.addUser(new User("bgg_nick", "forum_nick", "1 2 3", ""));
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        connector.baseSelector.dropTableUsers();
-        connector.baseSelector.dropTableGames();
+        usersRepository.deleteAll();
+        usersRepository.save(new User("bgg_nick", "forum_nick", "1 2 3", ""));
     }
 
     @Test
