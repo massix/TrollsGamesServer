@@ -1,10 +1,21 @@
+-- Migrate users to new schema
+alter table users rename to users_old;
+create table users (
+    bggNick text primary key not null,
+    forumNick text
+);
+
+-- Port users
+insert into users select bggnick, forumnick from users_old;
+drop table users_old;
+
 -- Relation between user and game(s)
 create table ownerships (
-    user text not null,
-    game int not null,
-    primary key (user, game),
-    foreign key(user) references users(bggNick),
-    foreign key(game) references games(id)
+    userid text not null,
+    gameid int not null,
+    primary key (userid, gameid),
+    foreign key(userid) references users(bggNick),
+    foreign key(gameid) references games(id)
 );
 
 -- Honors
@@ -21,14 +32,3 @@ create table game_honors (
     foreign key(game) references games(id),
     foreign key(honor) references honors(id)
 );
-
--- Migrate users to new schema
-alter table users rename to users_old;
-create table users (
-    bggNick text primary key not null,
-    forumNick text
-);
-
--- Port users
-insert into users select bggnick, forumnick from users_old;
-drop table users_old;

@@ -14,11 +14,11 @@ import java.io.Serializable;
 public class Ownership implements Serializable {
 
     @Id
-    @Column
+    @Column(name = "userid")
     private final String user;
 
     @Id
-    @Column
+    @Column(name = "gameid")
     private final int game;
 
     public Ownership() {
