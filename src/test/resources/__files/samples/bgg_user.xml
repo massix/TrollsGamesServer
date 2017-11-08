@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<items totalitems="2" termsofuse="http://boardgamegeek.com/xmlapi/termsofuse"
+       pubdate="Wed, 01 Nov 2017 11:08:20 +0000">
+    <item objecttype="thing" objectid="68448" subtype="boardgame" collid="29756076">
+        <name sortindex="1">7 Wonders</name>
+        <yearpublished>2010</yearpublished>
+        <image>https://cf.geekdo-images.com/images/pic860217.jpg</image>
+        <thumbnail>https://cf.geekdo-images.com/images/pic860217_t.jpg</thumbnail>
+        <stats minplayers="2" maxplayers="7" minplaytime="30" maxplaytime="30" playingtime="30" numowned="72395">
+            <rating value="N/A">
+                <usersrated value="55801"/>
+                <average value="7.82094"/>
+                <bayesaverage value="7.73359"/>
+                <stddev value="1.27266"/>
+                <median value="0"/>
+            </rating>
+        </stats>
+        <status own="1" prevowned="0" fortrade="0" want="0" wanttoplay="0" wanttobuy="0" wishlist="0" preordered="0"
+                lastmodified="2016-02-05 07:56:21"/>
+        <numplays>0</numplays>
+    </item>
+
+    <item objecttype="thing" objectid="111661" subtype="boardgame" collid="27663228">
+        <name sortindex="1">7 Wonders: Cities</name>
+        <yearpublished>2012</yearpublished>
+        <image>https://cf.geekdo-images.com/images/pic1380423.jpg</image>
+        <thumbnail>
+            https://cf.geekdo-images.com/images/pic1380423_t.jpg
+        </thumbnail>
+        <stats minplayers="2" maxplayers="8" minplaytime="30" maxplaytime="30" playingtime="30" numowned="18950">
+            <rating value="N/A">
+                <usersrated value="7206"/>
+                <average value="7.86255"/>
+                <bayesaverage value="7.53176"/>
+                <stddev value="1.1302"/>
+                <median value="0"/>
+            </rating>
+        </stats>
+        <status own="1" prevowned="0" fortrade="0" want="0" wanttoplay="0" wanttobuy="0" wishlist="0" preordered="0"
+                lastmodified="2015-03-22 03:43:49"/>
+        <numplays>0</numplays>
+    </item>
+</items>
