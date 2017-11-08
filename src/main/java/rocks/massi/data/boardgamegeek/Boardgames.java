@@ -47,9 +47,6 @@ public class Boardgames {
         @XmlElement
         private String image;
 
-        @XmlElement(name = "boardgamehonor")
-        private List<String> honors;
-
         @XmlElement(name = "boardgamedesigner")
         private List<String> designers;
 
@@ -64,6 +61,9 @@ public class Boardgames {
 
         @XmlElement(name = "boardgamecategory")
         private List<BoardgameCategory> categories;
+
+        @XmlElement(name = "boardgamehonor")
+        private List<BoardgameHonor> honors;
 
 
         public Game convert() {
@@ -194,7 +194,18 @@ public class Boardgames {
         private String description;
     }
 
+    @Getter
+    @ToString
+    public static class BoardgameHonor {
+        @XmlAttribute(name = "objectid")
+        private int id;
+
+        @XmlValue
+        private String description;
+    }
+
     @XmlElement
     private List<Boardgame> boardgame;
+
 }
 

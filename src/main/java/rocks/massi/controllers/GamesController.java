@@ -3,8 +3,8 @@ package rocks.massi.controllers;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import rocks.massi.connector.DatabaseConnector;
 import rocks.massi.data.Game;
+import rocks.massi.data.GamesRepository;
 import rocks.massi.exceptions.GameNotFoundException;
 import rocks.massi.exceptions.MalformattedGameException;
 
@@ -15,18 +15,18 @@ import java.util.List;
 public class GamesController {
 
     @Autowired
-    private DatabaseConnector connector;
+    private GamesRepository gamesRepository;
 
     @CrossOrigin
     @GetMapping("/get")
     public List<Game> getGames() {
-        return connector.gameSelector.getGames();
+        return gamesRepository.findAll();
     }
 
     @CrossOrigin
     @GetMapping("/get/{id}")
     public Game getGame(@PathVariable("id") final int id) {
-        Game g = connector.gameSelector.findById(id);
+        Game g = gamesRepository.findById(id);
 
         if (g == null)
             throw new GameNotFoundException();
@@ -40,16 +40,16 @@ public class GamesController {
             throw new MalformattedGameException();
         }
 
-        connector.gameSelector.insertGame(game);
-        return connector.gameSelector.findById(game.getId());
+        gamesRepository.save(game);
+        return gamesRepository.findById(game.getId());
     }
 
     @DeleteMapping("/remove/{id}")
     public Game removeGame(@PathVariable("id") final int id) {
-        val g = connector.gameSelector.findById(id);
+        val g = gamesRepository.findById(id);
 
         if (g != null) {
-            connector.gameSelector.removeGame(g);
+            gamesRepository.delete(g);
         }
 
         return g;

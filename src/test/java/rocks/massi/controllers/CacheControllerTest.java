@@ -1,7 +1,5 @@
 package rocks.massi.controllers;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,36 +8,17 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.sqlite.SQLiteException;
-import rocks.massi.connector.DatabaseConnector;
 import rocks.massi.data.CacheOperation;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
-@ActiveProfiles("local")
+@ActiveProfiles("dev")
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class CacheControllerTest {
 
     @Autowired
-    private DatabaseConnector connector;
-
-    @Autowired
     private TestRestTemplate restTemplate;
-
-    @Before
-    public void setUp() throws Exception {
-        connector.baseSelector.dropTableGames();
-        connector.baseSelector.dropTableUsers();
-        connector.baseSelector.createTableGames();
-        connector.baseSelector.createTableUsers();
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        connector.baseSelector.dropTableUsers();
-        connector.baseSelector.dropTableGames();
-    }
 
     @Test
     public void purgeCache() throws Exception {
