@@ -150,13 +150,15 @@ public class CollectionCrawler implements Runnable {
                     Game g = crawlGame(gameId);
                     crawled.add(g);
                     log.info("Added game {} for user {}", g.getName(), user.getBggNick());
-                    ownershipsRepository.save(new Ownership(user.getBggNick(), gameId));
                     cacheMiss++;
                     Thread.sleep(550);
                 } else {
                     log.info("No need to recrawl game {}", gameId);
                     cacheHit++;
                 }
+
+                ownershipsRepository.save(new Ownership(user.getBggNick(), gameId));
+
             } catch (FeignException exception) {
                 log.warn("Could not download game id {} ({})", gameId, exception.status());
                 log.warn("Sleeping for {}s", FAILURE_TIMEOUT / 1000);

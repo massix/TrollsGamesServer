@@ -56,9 +56,11 @@ public class CrawlerControllerTest {
         usersRepository.deleteAll();
         gamesRepository.deleteAll();
         honorsRepository.deleteAll();
+        ownershipsRepository.deleteAll();
 
         usersRepository.save(new User("bgg_user", "forum_user"));
-        usersRepository.save(new User("timed_user", "forum_user_new"));
+        usersRepository.save(new User("bgg_user_two", "forum_user_two"));
+        usersRepository.save(new User("timed_user", "timed_forum_user"));
 
         // Force purge cache
         restTemplate.delete("/v1/cache/purge");
@@ -72,6 +74,8 @@ public class CrawlerControllerTest {
 
         stubFor(get((urlEqualTo("/xmlapi/collection/bgg_user")))
                 .willReturn(aResponse().withStatus(200).withBodyFile("samples/bgg_user.xml")));
+        stubFor(get((urlEqualTo("/xmlapi/collection/bgg_user_two")))
+                .willReturn(aResponse().withStatus(200).withBodyFile("samples/bgg_user.xml")));
 
         stubFor(get((urlEqualTo("/xmlapi/collection/timed_user"))).inScenario("timed user").whenScenarioStateIs("Started")
                 .willReturn(aResponse().withStatus(202).withBodyFile("samples/please_wait.xml")).willSetStateTo("SECOND"));
@@ -79,6 +83,10 @@ public class CrawlerControllerTest {
                 .willReturn(aResponse().withStatus(202).withBodyFile("samples/please_wait.xml")).willSetStateTo("THIRD"));
         stubFor(get((urlEqualTo("/xmlapi/collection/timed_user"))).inScenario("timed user").whenScenarioStateIs("THIRD")
                 .willReturn(aResponse().withStatus(200).withBodyFile("samples/bgg_user.xml")).willSetStateTo("END"));
+
+        // Wait for server to be ready.
+        // This is a bug with WireMock and SpringBoot: https://github.com/tomakehurst/wiremock/issues/97
+        Thread.sleep(5000);
     }
 
     @SneakyThrows
@@ -134,14 +142,27 @@ public class CrawlerControllerTest {
     }
 
     @Test
-    public void test6_timedUser() throws Exception {
+    public void test5_timedUser() throws Exception {
         restTemplate.delete("/v1/crawler/queues");
-        Thread.sleep(500);
         ResponseEntity<Void> responseEntity = restTemplate.postForEntity("/v1/crawler/collection/timed_user", null, Void.class);
         assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
 
         waitForQ();
 
         assertEquals(2, ownershipsRepository.findByUser("timed_user").size());
+        restTemplate.delete("/v1/crawler/queues");
+    }
+
+    @Test
+    public void test6_multipleUsersSameGame() throws Exception {
+        restTemplate.postForEntity("/v1/crawler/collection/bgg_user", null, Void.class);
+        waitForQ();
+
+        restTemplate.delete("/v1/crawler/queues");
+        restTemplate.postForEntity("/v1/crawler/collection/bgg_user_two", null, Void.class);
+        waitForQ();
+
+        assertEquals(2, ownershipsRepository.findByUser("bgg_user").size());
+        assertEquals(2, ownershipsRepository.findByUser("bgg_user_two").size());
     }
 }
