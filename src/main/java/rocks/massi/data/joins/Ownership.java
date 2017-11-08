@@ -1,25 +1,23 @@
 package rocks.massi.data.joins;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
 import javax.persistence.*;
+import java.io.Serializable;
 
 @Data
 @RequiredArgsConstructor
 @Entity
 @Table(name = "ownerships")
-public class Ownership {
-    @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
-    @Column
-    @JsonIgnore
-    private long id;
+@IdClass(Ownership.class)
+public class Ownership implements Serializable {
 
+    @Id
     @Column
     private final String user;
 
+    @Id
     @Column
     private final int game;
 

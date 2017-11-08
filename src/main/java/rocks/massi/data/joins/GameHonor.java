@@ -1,25 +1,23 @@
 package rocks.massi.data.joins;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
 import javax.persistence.*;
+import java.io.Serializable;
 
 @Data
 @RequiredArgsConstructor
 @Entity
 @Table(name = "game_honors")
-public class GameHonor {
-    @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
-    @Column
-    @JsonIgnore
-    private int id;
+@IdClass(GameHonor.class)
+public class GameHonor implements Serializable {
 
+    @Id
     @Column
     private final int honor;
 
+    @Id
     @Column
     private final int game;
 

@@ -1,9 +1,8 @@
 -- Relation between user and game(s)
 create table ownerships (
-    id serial,
-    user text,
-    game int,
-    unique (user, game) on conflict replace,
+    user text not null,
+    game int not null,
+    primary key (user, game),
     foreign key(user) references users(bggNick),
     foreign key(game) references games(id)
 );
@@ -16,10 +15,9 @@ create table honors (
 
 -- Relation between game and honors
 create table game_honors (
-    id serial,
-    game int,
-    honor int,
-    unique (game, honor) on conflict replace,
+    game int not null,
+    honor int not null,
+    primary key (game, honor),
     foreign key(game) references games(id),
     foreign key(honor) references honors(id)
 );
