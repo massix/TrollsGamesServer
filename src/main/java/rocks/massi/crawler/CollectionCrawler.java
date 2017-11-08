@@ -54,6 +54,9 @@ public class CollectionCrawler implements Runnable {
     @Getter
     private Date finished;
 
+    @Getter
+    private int totalGames;
+
     private List<Game> crawled;
     private List<Integer> failed;
     private List<Ownership> ownerships;
@@ -138,6 +141,7 @@ public class CollectionCrawler implements Runnable {
             }
         });
 
+        totalGames = integers.size();
 
         for (int gameId : integers) {
             try {
@@ -219,7 +223,7 @@ public class CollectionCrawler implements Runnable {
                 failed.size(),
                 cacheHit,
                 cacheMiss,
-                ownerships.size(),
+                totalGames,
                 getStarted().toString(),
                 running? null : getFinished().toString());
     }

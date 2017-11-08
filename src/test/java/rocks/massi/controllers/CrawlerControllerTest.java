@@ -123,6 +123,7 @@ public class CrawlerControllerTest {
         ResponseEntity<CrawlingProgress[]> responseEntity = restTemplate.getForEntity("/v1/crawler/queues", CrawlingProgress[].class);
         assertEquals(1, responseEntity.getBody().length);
         assertFalse(responseEntity.getBody()[0].isRunning());
+        assertEquals(2, responseEntity.getBody()[0].getTotal());
     }
 
     @Test
