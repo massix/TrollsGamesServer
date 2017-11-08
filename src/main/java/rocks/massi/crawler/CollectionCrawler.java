@@ -55,7 +55,7 @@ public class CollectionCrawler implements Runnable {
     private Date finished;
 
     @Getter
-    private int totalGames;
+    private int totalGames = 0;
 
     private List<Game> crawled;
     private List<Integer> failed;
@@ -81,6 +81,7 @@ public class CollectionCrawler implements Runnable {
         failed = new LinkedList<>();
         ownerships = new LinkedList<>();
         started = new Date();
+        finished = new Date();
         contextFactory = new JAXBContextFactory.Builder().build();
         boardGameGeek = Feign.builder().decoder(new JAXBDecoder(contextFactory)).target(BoardGameGeek.class, BGG_BASE_URL);
     }
@@ -125,7 +126,7 @@ public class CollectionCrawler implements Runnable {
 
             if (status != 200) {
                 log.info("Have to wait... status code {}", status);
-                Thread.sleep(5000);
+                Thread.sleep(2000);
             }
 
         }
@@ -225,6 +226,6 @@ public class CollectionCrawler implements Runnable {
                 cacheMiss,
                 totalGames,
                 getStarted().toString(),
-                running? null : getFinished().toString());
+                getFinished().toString());
     }
 }

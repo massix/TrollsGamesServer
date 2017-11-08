@@ -1,11 +1,11 @@
 package rocks.massi.controllers;
 
-import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.FixMethodOrder;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
@@ -48,7 +48,8 @@ public class CrawlerControllerTest {
     @Autowired
     private TestRestTemplate restTemplate;
 
-    WireMockServer server;
+    @Rule
+    public WireMockRule wireMockRule = new WireMockRule(8080);
 
     @Before
     public void setUp() throws Exception {
@@ -57,35 +58,27 @@ public class CrawlerControllerTest {
         honorsRepository.deleteAll();
 
         usersRepository.save(new User("bgg_user", "forum_user"));
+        usersRepository.save(new User("timed_user", "forum_user_new"));
 
         // Force purge cache
         restTemplate.delete("/v1/cache/purge");
 
         // Setup WireMock
         CollectionCrawler.BGG_BASE_URL = "http://localhost:8080";
-
-        server = new WireMockServer(8080);
-        server.start();
-
-        server.stubFor(get((urlEqualTo("/xmlapi/boardgame/68448?stats=1")))
+        stubFor(get((urlEqualTo("/xmlapi/boardgame/68448?stats=1")))
                 .willReturn(aResponse().withStatus(200).withBodyFile("samples/7wonders.xml")));
-        server.stubFor(get((urlEqualTo("/xmlapi/boardgame/111661?stats=1")))
+        stubFor(get((urlEqualTo("/xmlapi/boardgame/111661?stats=1")))
                 .willReturn(aResponse().withStatus(200).withBodyFile("samples/7wonders_cities.xml")));
 
-        server.stubFor(get((urlEqualTo("/xmlapi/collection/bgg_user")))
+        stubFor(get((urlEqualTo("/xmlapi/collection/bgg_user")))
                 .willReturn(aResponse().withStatus(200).withBodyFile("samples/bgg_user.xml")));
 
-        server.stubFor(get((urlEqualTo("/xmlapi/collection/timed_user"))).inScenario("timed user").whenScenarioStateIs("Started")
+        stubFor(get((urlEqualTo("/xmlapi/collection/timed_user"))).inScenario("timed user").whenScenarioStateIs("Started")
                 .willReturn(aResponse().withStatus(202).withBodyFile("samples/please_wait.xml")).willSetStateTo("SECOND"));
-        server.stubFor(get((urlEqualTo("/xmlapi/collection/timed_user"))).inScenario("timed user").whenScenarioStateIs("SECOND")
+        stubFor(get((urlEqualTo("/xmlapi/collection/timed_user"))).inScenario("timed user").whenScenarioStateIs("SECOND")
                 .willReturn(aResponse().withStatus(202).withBodyFile("samples/please_wait.xml")).willSetStateTo("THIRD"));
-        server.stubFor(get((urlEqualTo("/xmlapi/collection/timed_user"))).inScenario("timed user").whenScenarioStateIs("THIRD")
+        stubFor(get((urlEqualTo("/xmlapi/collection/timed_user"))).inScenario("timed user").whenScenarioStateIs("THIRD")
                 .willReturn(aResponse().withStatus(200).withBodyFile("samples/bgg_user.xml")).willSetStateTo("END"));
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        server.stop();
     }
 
     @SneakyThrows
@@ -143,7 +136,7 @@ public class CrawlerControllerTest {
     @Test
     public void test6_timedUser() throws Exception {
         restTemplate.delete("/v1/crawler/queues");
-        usersRepository.save(new User("timed_user", "forum_user_new"));
+        Thread.sleep(500);
         ResponseEntity<Void> responseEntity = restTemplate.postForEntity("/v1/crawler/collection/timed_user", null, Void.class);
         assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
 
