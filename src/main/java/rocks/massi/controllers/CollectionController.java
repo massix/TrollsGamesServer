@@ -4,7 +4,11 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import rocks.massi.data.*;
+import rocks.massi.data.Game;
+import rocks.massi.data.GamesRepository;
+import rocks.massi.data.UsersRepository;
+import rocks.massi.data.joins.Ownership;
+import rocks.massi.data.joins.OwnershipsRepository;
 import rocks.massi.exceptions.UserNotFoundException;
 
 import java.util.LinkedList;

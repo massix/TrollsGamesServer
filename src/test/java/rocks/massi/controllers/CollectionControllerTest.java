@@ -9,7 +9,12 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
-import rocks.massi.data.*;
+import rocks.massi.data.Game;
+import rocks.massi.data.GamesRepository;
+import rocks.massi.data.User;
+import rocks.massi.data.UsersRepository;
+import rocks.massi.data.joins.Ownership;
+import rocks.massi.data.joins.OwnershipsRepository;
 
 import static junit.framework.TestCase.*;
 

@@ -15,6 +15,9 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import rocks.massi.crawler.CollectionCrawler;
 import rocks.massi.data.*;
+import rocks.massi.data.joins.GameHonorsRepository;
+import rocks.massi.data.joins.Ownership;
+import rocks.massi.data.joins.OwnershipsRepository;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.Assert.*;
@@ -35,6 +38,12 @@ public class CrawlerControllerTest {
     private OwnershipsRepository ownershipsRepository;
 
     @Autowired
+    private HonorsRepository honorsRepository;
+
+    @Autowired
+    private GameHonorsRepository gameHonorsRepository;
+
+    @Autowired
     private TestRestTemplate restTemplate;
 
     WireMockServer server;
@@ -43,6 +52,8 @@ public class CrawlerControllerTest {
     public void setUp() throws Exception {
         usersRepository.deleteAll();
         gamesRepository.deleteAll();
+        honorsRepository.deleteAll();
+
         usersRepository.save(new User("bgg_user", "forum_user"));
         ownershipsRepository.save(new Ownership("bgg_user", 68448));
         ownershipsRepository.save(new Ownership("bgg_user", 111661));
@@ -86,7 +97,16 @@ public class CrawlerControllerTest {
         assertTrue(responseEntity.getHeaders().get("location").get(0).startsWith("/v1/crawler/queue"));
 
         // Wait for the Q to be over.
-        Thread.sleep(1500);
+        Thread.sleep(5000);
+
+        // Check that honors have been inserted in the base
+        Honor honor = honorsRepository.findById(19901);
+        assertEquals(honor.getDescription(), "2012 Ludoteca Ideale Winner");
+        assertEquals(51, honorsRepository.findAll().size());
+        assertEquals(50, gameHonorsRepository.findByGame(68448).size());
+        assertEquals(1, gameHonorsRepository.findByGame(111661).size());
+        assertEquals(honorsRepository.findById(gameHonorsRepository.findByGame(111661).get(0).getHonor()).getDescription(),
+                "2012 Golden Geek Best Board Game Expansion Nominee");
     }
 
     @Test

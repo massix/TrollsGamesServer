@@ -13,6 +13,9 @@ import rocks.massi.cache.CrawlCache;
 import rocks.massi.crawler.CollectionCrawler;
 import rocks.massi.data.*;
 import rocks.massi.data.boardgamegeek.Collection;
+import rocks.massi.data.joins.GameHonorsRepository;
+import rocks.massi.data.joins.Ownership;
+import rocks.massi.data.joins.OwnershipsRepository;
 import rocks.massi.exceptions.UserNotFoundException;
 import rocks.massi.services.BoardGameGeek;
 import rocks.massi.utils.DBUtils;
@@ -34,6 +37,12 @@ public class CrawlerController {
 
     @Autowired
     private OwnershipsRepository ownershipsRepository;
+
+    @Autowired
+    private HonorsRepository honorsRepository;
+
+    @Autowired
+    private GameHonorsRepository gameHonorsRepository;
 
     @Autowired
     private CrawlCache crawlCache;
@@ -86,7 +95,12 @@ public class CrawlerController {
 
     @PostMapping("/games/{gameId}")
     public Game crawlGame(@PathVariable("gameId") final int gameId) {
-        return new CollectionCrawler(crawlCache, gamesRepository, ownershipsRepository, null).crawlGame(gameId);
+        return new CollectionCrawler(crawlCache,
+                gamesRepository,
+                ownershipsRepository,
+                honorsRepository,
+                gameHonorsRepository,
+                null).crawlGame(gameId);
     }
 
     @PostMapping("/collection/{user}")
@@ -98,7 +112,12 @@ public class CrawlerController {
             Thread thread;
 
             if (!runningCrawlers().containsKey(user.getBggNick())) {
-                CollectionCrawler collectionCrawler = new CollectionCrawler(crawlCache, gamesRepository, ownershipsRepository, user);
+                CollectionCrawler collectionCrawler = new CollectionCrawler(crawlCache,
+                        gamesRepository,
+                        ownershipsRepository,
+                        honorsRepository,
+                        gameHonorsRepository,
+                        user);
                 thread = new Thread(collectionCrawler);
                 runningCrawlers().put(user.getBggNick(), new AbstractMap.SimpleEntry<>(thread, collectionCrawler));
                 thread.start();

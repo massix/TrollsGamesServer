@@ -9,6 +9,10 @@ import lombok.extern.slf4j.Slf4j;
 import rocks.massi.cache.CrawlCache;
 import rocks.massi.data.*;
 import rocks.massi.data.boardgamegeek.Boardgames;
+import rocks.massi.data.joins.GameHonor;
+import rocks.massi.data.joins.GameHonorsRepository;
+import rocks.massi.data.joins.Ownership;
+import rocks.massi.data.joins.OwnershipsRepository;
 import rocks.massi.services.BoardGameGeek;
 
 import java.io.IOException;
@@ -28,6 +32,8 @@ public class CollectionCrawler implements Runnable {
     private final CrawlCache cache;
     private final GamesRepository gamesRepository;
     private final OwnershipsRepository ownershipsRepository;
+    private final HonorsRepository honorsRepository;
+    private final GameHonorsRepository gameHonorsRepository;
     private final User user;
 
     @Getter
@@ -49,14 +55,22 @@ public class CollectionCrawler implements Runnable {
     private List<Integer> failed;
     private List<Ownership> ownerships;
 
-    public CollectionCrawler(CrawlCache cache, GamesRepository gamesRepository, OwnershipsRepository ownershipsRepository, User user) {
+    public CollectionCrawler(CrawlCache cache,
+                             GamesRepository gamesRepository,
+                             OwnershipsRepository ownershipsRepository,
+                             HonorsRepository honorsRepository,
+                             GameHonorsRepository gameHonorsRepository,
+                             User user) {
         this.cache = cache;
         this.gamesRepository = gamesRepository;
         this.ownershipsRepository = ownershipsRepository;
+        this.honorsRepository = honorsRepository;
+        this.gameHonorsRepository = gameHonorsRepository;
         this.user = user;
 
         crawled = new LinkedList<>();
         failed = new LinkedList<>();
+        ownerships = new LinkedList<>();
         started = new Date();
     }
 
@@ -68,10 +82,20 @@ public class CollectionCrawler implements Runnable {
         // Get only the first result
         Boardgames.Boardgame boardgame = boardgames.getBoardgame().get(0);
         Game toInsert = boardgame.convert();
+
+        // Cache game
         cache.put(gameId, new Date().getTime() / 1000);
 
-        Game inDb = gamesRepository.findById(boardgame.getId());
+        // Save game in DB
         gamesRepository.save(toInsert);
+
+        // If the game has honors, extract and store them in the db
+        if (boardgame.getHonors() != null) {
+            boardgame.getHonors().forEach(honor -> {
+                honorsRepository.save(new Honor(honor.getId(), honor.getDescription()));
+                gameHonorsRepository.save(new GameHonor(honor.getId(), toInsert.getId()));
+            });
+        }
 
         return gamesRepository.findById(gameId);
     }

@@ -1,4 +1,4 @@
-package rocks.massi.data;
+package rocks.massi.data.joins;
 
 import org.springframework.data.repository.Repository;
 
