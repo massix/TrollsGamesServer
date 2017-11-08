@@ -1,6 +1,5 @@
 package rocks.massi.controllers;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -10,39 +9,26 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import rocks.massi.connector.DatabaseConnector;
 import rocks.massi.data.User;
-
-import java.util.List;
+import rocks.massi.data.UsersRepository;
 
 import static org.junit.Assert.*;
 
-@ActiveProfiles("local")
+@ActiveProfiles("dev")
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class UsersControllerTest {
 
     @Autowired
-    private DatabaseConnector connector;
+    private UsersRepository usersRepository;
 
     @Autowired
     private TestRestTemplate restTemplate;
 
     @Before
     public void setUp() throws Exception {
-        connector.baseSelector.dropTableGames();
-        connector.baseSelector.dropTableUsers();
-        connector.baseSelector.createTableUsers();
-        connector.baseSelector.createTableGames();
-
-        connector.userSelector.addUser(new User("bgg_nick", "forum_nick", "1 2 3", ""));
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        connector.baseSelector.dropTableUsers();
-        connector.baseSelector.dropTableGames();
+        usersRepository.deleteAll();
+        usersRepository.save(new User("bgg_nick", "forum_nick"));
     }
 
     @Test
@@ -62,22 +48,22 @@ public class UsersControllerTest {
 
     @Test
     public void addUser() throws Exception {
-        ResponseEntity<User> responseEntity = restTemplate.postForEntity("/v1/users/add", new User("new_bgg", "new_forum", "", ""), User.class);
+        ResponseEntity<User> responseEntity = restTemplate.postForEntity("/v1/users/add", new User("new_bgg", "new_forum"), User.class);
         assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
         assertEquals("new_bgg", responseEntity.getBody().getBggNick());
     }
 
     @Test
     public void addMalformattedUser() throws Exception {
-        ResponseEntity<User> responseEntity = restTemplate.postForEntity("/v1/users/add", new User("", "new_forum", "", ""), User.class);
+        ResponseEntity<User> responseEntity = restTemplate.postForEntity("/v1/users/add", new User("", "new_forum"), User.class);
         assertTrue(responseEntity.getStatusCode().is4xxClientError());
         assertNull(responseEntity.getBody());
 
-        responseEntity = restTemplate.postForEntity("/v1/users/add", new User("new_bgg", "", "", ""), User.class);
+        responseEntity = restTemplate.postForEntity("/v1/users/add", new User("new_bgg", ""), User.class);
         assertTrue(responseEntity.getStatusCode().is4xxClientError());
         assertNull(responseEntity.getBody());
 
-        responseEntity = restTemplate.postForEntity("/v1/users/add", new User("", "", "", ""), User.class);
+        responseEntity = restTemplate.postForEntity("/v1/users/add", new User("", ""), User.class);
         assertTrue(responseEntity.getStatusCode().is4xxClientError());
         assertNull(responseEntity.getBody());
     }

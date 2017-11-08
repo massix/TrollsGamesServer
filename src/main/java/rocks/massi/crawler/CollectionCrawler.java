@@ -7,11 +7,12 @@ import feign.jaxb.JAXBDecoder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import rocks.massi.cache.CrawlCache;
-import rocks.massi.connector.DatabaseConnector;
-import rocks.massi.data.CrawlingProgress;
-import rocks.massi.data.Game;
-import rocks.massi.data.User;
+import rocks.massi.data.*;
 import rocks.massi.data.boardgamegeek.Boardgames;
+import rocks.massi.data.joins.GameHonor;
+import rocks.massi.data.joins.GameHonorsRepository;
+import rocks.massi.data.joins.Ownership;
+import rocks.massi.data.joins.OwnershipsRepository;
 import rocks.massi.services.BoardGameGeek;
 
 import java.io.IOException;
@@ -29,7 +30,10 @@ public class CollectionCrawler implements Runnable {
     public static String BGG_BASE_URL = "https://www.boardgamegeek.com";
 
     private final CrawlCache cache;
-    private final DatabaseConnector connector;
+    private final GamesRepository gamesRepository;
+    private final OwnershipsRepository ownershipsRepository;
+    private final HonorsRepository honorsRepository;
+    private final GameHonorsRepository gameHonorsRepository;
     private final User user;
 
     @Getter
@@ -49,14 +53,24 @@ public class CollectionCrawler implements Runnable {
 
     private List<Game> crawled;
     private List<Integer> failed;
+    private List<Ownership> ownerships;
 
-    public CollectionCrawler(CrawlCache cache, DatabaseConnector connector, User user) {
+    public CollectionCrawler(CrawlCache cache,
+                             GamesRepository gamesRepository,
+                             OwnershipsRepository ownershipsRepository,
+                             HonorsRepository honorsRepository,
+                             GameHonorsRepository gameHonorsRepository,
+                             User user) {
         this.cache = cache;
-        this.connector = connector;
+        this.gamesRepository = gamesRepository;
+        this.ownershipsRepository = ownershipsRepository;
+        this.honorsRepository = honorsRepository;
+        this.gameHonorsRepository = gameHonorsRepository;
         this.user = user;
 
         crawled = new LinkedList<>();
         failed = new LinkedList<>();
+        ownerships = new LinkedList<>();
         started = new Date();
     }
 
@@ -68,27 +82,33 @@ public class CollectionCrawler implements Runnable {
         // Get only the first result
         Boardgames.Boardgame boardgame = boardgames.getBoardgame().get(0);
         Game toInsert = boardgame.convert();
+
+        // Cache game
         cache.put(gameId, new Date().getTime() / 1000);
 
-        Game inDb = connector.gameSelector.findById(boardgame.getId());
+        // Save game in DB
+        gamesRepository.save(toInsert);
 
-        if (inDb != null) {
-            connector.gameSelector.updateGame(toInsert);
-        } else {
-            connector.gameSelector.insertGame(toInsert);
+        // If the game has honors, extract and store them in the db
+        if (boardgame.getHonors() != null) {
+            boardgame.getHonors().forEach(honor -> {
+                honorsRepository.save(new Honor(honor.getId(), honor.getDescription()));
+                gameHonorsRepository.save(new GameHonor(honor.getId(), toInsert.getId()));
+            });
         }
 
-        return connector.gameSelector.findById(gameId);
+        return gamesRepository.findById(gameId);
     }
 
     @Override
     public void run() {
         running = true;
-        user.buildCollection();
+        ownerships = ownershipsRepository.findByUser(user.getBggNick());
         cacheHit = 0;
         cacheMiss = 0;
 
-        for (int gameId : user.getCollection()) {
+        for (Ownership ownership : ownerships) {
+            int gameId = ownership.getGame();
             try {
                 if (cache.isExpired(gameId)) {
                     Game g = crawlGame(gameId);
@@ -168,7 +188,7 @@ public class CollectionCrawler implements Runnable {
                 failed.size(),
                 cacheHit,
                 cacheMiss,
-                user.getCollection() == null ? 0 : user.getCollection().size(),
+                ownerships.size(),
                 getStarted().toString(),
                 running? null : getFinished().toString());
     }

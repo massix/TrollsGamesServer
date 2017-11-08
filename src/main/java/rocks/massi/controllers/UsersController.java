@@ -4,8 +4,8 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import rocks.massi.connector.DatabaseConnector;
 import rocks.massi.data.User;
+import rocks.massi.data.UsersRepository;
 import rocks.massi.exceptions.MalformattedUserException;
 import rocks.massi.exceptions.UserNotFoundException;
 import rocks.massi.utils.DBUtils;
@@ -19,12 +19,12 @@ import static rocks.massi.utils.DBUtils.getUser;
 @RequestMapping("/v1/users")
 public class UsersController {
     @Autowired
-    private DatabaseConnector connector;
+    private UsersRepository usersRepository;
 
     @CrossOrigin
     @GetMapping("/get/{nick}")
     public User getUserByNick(@PathVariable("nick") String nick) {
-        User user = getUser(connector, nick);
+        User user = getUser(usersRepository, nick);
 
         if (user == null) {
             log.error("User {} not found", nick);
@@ -37,7 +37,7 @@ public class UsersController {
     @CrossOrigin
     @GetMapping("/get")
     public List<User> getAllUsers() {
-        return connector.userSelector.getUsers();
+        return usersRepository.findAll();
     }
 
     @PostMapping(value = "/add")
@@ -47,15 +47,15 @@ public class UsersController {
         if (user.getBggNick().isEmpty() || user.getForumNick().isEmpty())
             throw new MalformattedUserException("Missing mandatory field");
 
-        connector.userSelector.addUser(user);
-        return DBUtils.getUser(connector, user.getBggNick());
+        usersRepository.save(user);
+        return DBUtils.getUser(usersRepository, user.getBggNick());
     }
 
     @DeleteMapping("/remove/{nick}")
     public User removeUser(@PathVariable("nick") String nick) {
-        val user = DBUtils.getUser(connector, nick);
+        val user = DBUtils.getUser(usersRepository, nick);
         if (user != null) {
-            connector.userSelector.removeUser(nick);
+            usersRepository.deleteByBggNick(nick);
         }
         else {
             throw new UserNotFoundException(String.format("User %s not found on server.", nick));

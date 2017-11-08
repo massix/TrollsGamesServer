@@ -1,6 +1,6 @@
 package rocks.massi.controllers;
 
-import org.junit.After;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -10,47 +10,39 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
-import rocks.massi.connector.DatabaseConnector;
 import rocks.massi.data.Game;
+import rocks.massi.data.GamesRepository;
 
 import static org.junit.Assert.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("local")
+@ActiveProfiles("dev")
 @RunWith(SpringRunner.class)
+@Slf4j
 public class GamesControllerTest {
 
     @Autowired
-    private DatabaseConnector connector;
+    private GamesRepository gamesRepository;
 
     @Autowired
     private TestRestTemplate restTemplate;
 
     @Before
     public void setUp() throws Exception {
-        connector.baseSelector.dropTableGames();
-        connector.baseSelector.dropTableUsers();
-
-        connector.baseSelector.createTableGames();
-        connector.baseSelector.createTableUsers();
-
-        connector.gameSelector.insertGame(
+        gamesRepository.deleteAll();
+        gamesRepository.save(
                 new Game(1, "Cyclades", "Game of Cyclades", 2, 18, 250,
                         2012, 1, false, "here", "Bruno Cathala", "")
         );
-    }
 
-    @After
-    public void tearDown() throws Exception {
-        connector.baseSelector.dropTableUsers();
-        connector.baseSelector.dropTableGames();
+        gamesRepository.findAll().forEach(game -> log.info("Found game {}", game.getName()));
     }
 
     @Test
     public void getGames() throws Exception {
         ResponseEntity<Game[]> responseEntity = restTemplate.getForEntity("/v1/games/get", Game[].class);
         assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
-        assertTrue(responseEntity.getBody().length == 1);
+        assertEquals(responseEntity.getBody().length, 1);
         assertEquals(responseEntity.getBody()[0].getName(), "Cyclades");
     }
 

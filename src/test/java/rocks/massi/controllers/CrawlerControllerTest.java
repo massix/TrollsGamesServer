@@ -1,7 +1,10 @@
 package rocks.massi.controllers;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
-import org.junit.*;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.FixMethodOrder;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,22 +13,35 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
-import rocks.massi.connector.DatabaseConnector;
 import rocks.massi.crawler.CollectionCrawler;
-import rocks.massi.data.CrawlingProgress;
-import rocks.massi.data.User;
+import rocks.massi.data.*;
+import rocks.massi.data.joins.GameHonorsRepository;
+import rocks.massi.data.joins.Ownership;
+import rocks.massi.data.joins.OwnershipsRepository;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.Assert.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @RunWith(SpringRunner.class)
-@ActiveProfiles("local")
+@ActiveProfiles("dev")
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class CrawlerControllerTest {
 
     @Autowired
-    private DatabaseConnector databaseConnector;
+    private GamesRepository gamesRepository;
+
+    @Autowired
+    private UsersRepository usersRepository;
+
+    @Autowired
+    private OwnershipsRepository ownershipsRepository;
+
+    @Autowired
+    private HonorsRepository honorsRepository;
+
+    @Autowired
+    private GameHonorsRepository gameHonorsRepository;
 
     @Autowired
     private TestRestTemplate restTemplate;
@@ -34,12 +50,13 @@ public class CrawlerControllerTest {
 
     @Before
     public void setUp() throws Exception {
-        databaseConnector.baseSelector.dropTableGames();
-        databaseConnector.baseSelector.dropTableUsers();
-        databaseConnector.baseSelector.createTableGames();
-        databaseConnector.baseSelector.createTableUsers();
+        usersRepository.deleteAll();
+        gamesRepository.deleteAll();
+        honorsRepository.deleteAll();
 
-        databaseConnector.userSelector.addUser(new User("bgg_user", "forum_user", "68448 111661", ""));
+        usersRepository.save(new User("bgg_user", "forum_user"));
+        ownershipsRepository.save(new Ownership("bgg_user", 68448));
+        ownershipsRepository.save(new Ownership("bgg_user", 111661));
 
         // Force purge cache
         restTemplate.delete("/v1/cache/purge");
@@ -69,8 +86,6 @@ public class CrawlerControllerTest {
 
     @After
     public void tearDown() throws Exception {
-        databaseConnector.baseSelector.dropTableUsers();
-        databaseConnector.baseSelector.dropTableGames();
         server.stop();
     }
 
@@ -82,7 +97,16 @@ public class CrawlerControllerTest {
         assertTrue(responseEntity.getHeaders().get("location").get(0).startsWith("/v1/crawler/queue"));
 
         // Wait for the Q to be over.
-        Thread.sleep(1500);
+        Thread.sleep(5000);
+
+        // Check that honors have been inserted in the base
+        Honor honor = honorsRepository.findById(19901);
+        assertEquals(honor.getDescription(), "2012 Ludoteca Ideale Winner");
+        assertEquals(51, honorsRepository.findAll().size());
+        assertEquals(50, gameHonorsRepository.findByGame(68448).size());
+        assertEquals(1, gameHonorsRepository.findByGame(111661).size());
+        assertEquals(honorsRepository.findById(gameHonorsRepository.findByGame(111661).get(0).getHonor()).getDescription(),
+                "2012 Golden Geek Best Board Game Expansion Nominee");
     }
 
     @Test
@@ -108,21 +132,19 @@ public class CrawlerControllerTest {
 
     @Test
     public void test5_crawlUser() throws Exception {
-        databaseConnector.userSelector.addUser(new User("new_user", "forum_user", "", ""));
-        ResponseEntity<User> responseEntity = restTemplate.postForEntity("/v1/crawler/users/new_user", null, User.class);
+        usersRepository.save(new User("new_user", "forum_user_new"));
+        ResponseEntity<Ownership[]> responseEntity = restTemplate.postForEntity("/v1/crawler/users/new_user", null, Ownership[].class);
         assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
         assertNotNull(responseEntity.getBody());
-        responseEntity.getBody().buildCollection();
-        assertEquals(70, responseEntity.getBody().getCollection().size());
+        assertEquals(responseEntity.getBody().length, ownershipsRepository.findByUser("new_user").size());
     }
 
     @Test
     public void test6_timedUser() throws Exception {
-        databaseConnector.userSelector.addUser(new User("timed_user", "forum_user", "", ""));
-        ResponseEntity<User> responseEntity = restTemplate.postForEntity("/v1/crawler/users/timed_user", null, User.class);
+        usersRepository.save(new User("timed_user", "forum_user_new"));
+        ResponseEntity<Ownership[]> responseEntity = restTemplate.postForEntity("/v1/crawler/users/timed_user", null, Ownership[].class);
         assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
         assertNotNull(responseEntity.getBody());
-        responseEntity.getBody().buildCollection();
-        assertEquals(70, responseEntity.getBody().getCollection().size());
+        assertEquals(responseEntity.getBody().length, ownershipsRepository.findByUser("timed_user").size());
     }
 }

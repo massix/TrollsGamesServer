@@ -1,6 +1,5 @@
 package rocks.massi.controllers;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -10,50 +9,54 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
-import rocks.massi.connector.DatabaseConnector;
 import rocks.massi.data.Game;
+import rocks.massi.data.GamesRepository;
 import rocks.massi.data.User;
+import rocks.massi.data.UsersRepository;
+import rocks.massi.data.joins.Ownership;
+import rocks.massi.data.joins.OwnershipsRepository;
 
 import static junit.framework.TestCase.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("local")
+@ActiveProfiles("dev")
 @RunWith(SpringRunner.class)
 public class CollectionControllerTest {
 
     @Autowired
-    private DatabaseConnector connector;
+    private UsersRepository usersRepository;
+
+    @Autowired
+    private GamesRepository gamesRepository;
+
+    @Autowired
+    private OwnershipsRepository ownershipsRepository;
 
     @Autowired
     private TestRestTemplate restTemplate;
 
     @Before
     public void setUp() throws Exception {
-        connector.baseSelector.dropTableGames();
-        connector.baseSelector.dropTableUsers();
-        connector.baseSelector.createTableUsers();
-        connector.baseSelector.createTableGames();
-
-        connector.userSelector.addUser(new User("bgg_nick", "forum_nick", "1 2 3", ""));
-        connector.gameSelector.insertGame(
+        usersRepository.deleteAll();
+        gamesRepository.deleteAll();
+        usersRepository.save(new User("bgg_nick", "forum_nick"));
+        gamesRepository.save(
                 new Game(1, "Cyclades", "", 2, 18, 260, 2012,
                         1, false, "", "Bruno Cathala", "")
         );
-        connector.gameSelector.insertGame(
+        gamesRepository.save(
                 new Game(2, "Cyclades II", "", 2, 18, 260, 2012,
                         1, false, "", "Bruno Cathala", "")
         );
-        connector.gameSelector.insertGame(
+        gamesRepository.save(
                 new Game(3, "Cyclades III", "", 2, 18, 260, 2012,
                         1, false, "", "Bruno Cathala", "")
         );
 
-    }
+        ownershipsRepository.save(new Ownership("bgg_nick", 1));
+        ownershipsRepository.save(new Ownership("bgg_nick", 2));
+        ownershipsRepository.save(new Ownership("bgg_nick", 3));
 
-    @After
-    public void tearDown() throws Exception {
-        connector.baseSelector.dropTableUsers();
-        connector.baseSelector.dropTableGames();
     }
 
     @Test
