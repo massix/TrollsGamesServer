@@ -1,5 +1,6 @@
 package rocks.massi.data.joins;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
@@ -13,6 +14,7 @@ public class GameHonor {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column
+    @JsonIgnore
     private int id;
 
     @Column
