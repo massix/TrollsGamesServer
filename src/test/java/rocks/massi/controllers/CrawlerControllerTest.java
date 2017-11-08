@@ -4,8 +4,8 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.FixMethodOrder;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
@@ -48,8 +48,28 @@ public class CrawlerControllerTest {
     @Autowired
     private TestRestTemplate restTemplate;
 
-    @Rule
-    public WireMockRule wireMockRule = new WireMockRule(8080);
+    @ClassRule
+    public static WireMockRule wireMockRule = new WireMockRule(8080);
+
+    public CrawlerControllerTest() {
+        log.info("--------- Setting up WireMock stubs");
+        stubFor(get((urlEqualTo("/xmlapi/boardgame/68448?stats=1")))
+                .willReturn(aResponse().withStatus(200).withBodyFile("samples/7wonders.xml")));
+        stubFor(get((urlEqualTo("/xmlapi/boardgame/111661?stats=1")))
+                .willReturn(aResponse().withStatus(200).withBodyFile("samples/7wonders_cities.xml")));
+
+        stubFor(get((urlEqualTo("/xmlapi/collection/bgg_user")))
+                .willReturn(aResponse().withStatus(200).withBodyFile("samples/bgg_user.xml")));
+        stubFor(get((urlEqualTo("/xmlapi/collection/bgg_user_two")))
+                .willReturn(aResponse().withStatus(200).withBodyFile("samples/bgg_user.xml")));
+
+        stubFor(get((urlEqualTo("/xmlapi/collection/timed_user"))).inScenario("timed user").whenScenarioStateIs("Started")
+                .willReturn(aResponse().withStatus(202).withBodyFile("samples/please_wait.xml")).willSetStateTo("SECOND"));
+        stubFor(get((urlEqualTo("/xmlapi/collection/timed_user"))).inScenario("timed user").whenScenarioStateIs("SECOND")
+                .willReturn(aResponse().withStatus(202).withBodyFile("samples/please_wait.xml")).willSetStateTo("THIRD"));
+        stubFor(get((urlEqualTo("/xmlapi/collection/timed_user"))).inScenario("timed user").whenScenarioStateIs("THIRD")
+                .willReturn(aResponse().withStatus(200).withBodyFile("samples/bgg_user.xml")).willSetStateTo("END"));
+    }
 
     @Before
     public void setUp() throws Exception {
@@ -67,26 +87,9 @@ public class CrawlerControllerTest {
 
         // Setup WireMock
         CollectionCrawler.BGG_BASE_URL = "http://localhost:8080";
-        stubFor(get((urlEqualTo("/xmlapi/boardgame/68448?stats=1")))
-                .willReturn(aResponse().withStatus(200).withBodyFile("samples/7wonders.xml")));
-        stubFor(get((urlEqualTo("/xmlapi/boardgame/111661?stats=1")))
-                .willReturn(aResponse().withStatus(200).withBodyFile("samples/7wonders_cities.xml")));
-
-        stubFor(get((urlEqualTo("/xmlapi/collection/bgg_user")))
-                .willReturn(aResponse().withStatus(200).withBodyFile("samples/bgg_user.xml")));
-        stubFor(get((urlEqualTo("/xmlapi/collection/bgg_user_two")))
-                .willReturn(aResponse().withStatus(200).withBodyFile("samples/bgg_user.xml")));
-
-        stubFor(get((urlEqualTo("/xmlapi/collection/timed_user"))).inScenario("timed user").whenScenarioStateIs("Started")
-                .willReturn(aResponse().withStatus(202).withBodyFile("samples/please_wait.xml")).willSetStateTo("SECOND"));
-        stubFor(get((urlEqualTo("/xmlapi/collection/timed_user"))).inScenario("timed user").whenScenarioStateIs("SECOND")
-                .willReturn(aResponse().withStatus(202).withBodyFile("samples/please_wait.xml")).willSetStateTo("THIRD"));
-        stubFor(get((urlEqualTo("/xmlapi/collection/timed_user"))).inScenario("timed user").whenScenarioStateIs("THIRD")
-                .willReturn(aResponse().withStatus(200).withBodyFile("samples/bgg_user.xml")).willSetStateTo("END"));
 
         // Wait for server to be ready.
         // This is a bug with WireMock and SpringBoot: https://github.com/tomakehurst/wiremock/issues/97
-        Thread.sleep(5000);
     }
 
     @SneakyThrows
