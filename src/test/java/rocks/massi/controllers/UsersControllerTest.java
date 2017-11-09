@@ -1,5 +1,7 @@
 package rocks.massi.controllers;
 
+import io.jsonwebtoken.Jwts;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -14,6 +16,7 @@ import rocks.massi.data.UsersRepository;
 
 import static org.junit.Assert.*;
 
+@Slf4j
 @ActiveProfiles("dev")
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -44,13 +47,47 @@ public class UsersControllerTest {
         assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
         assertEquals(1, responseEntity.getBody().length);
         assertEquals("bgg_nick", responseEntity.getBody()[0].getBggNick());
+        assertEquals("*", responseEntity.getBody()[0].getPassword());
     }
 
     @Test
     public void addUser() throws Exception {
-        ResponseEntity<User> responseEntity = restTemplate.postForEntity("/v1/users/add", new User("new_bgg", "new_forum"), User.class);
+        User user = new User("new_bgg", "new_forum");
+        user.setPassword("toto");
+        ResponseEntity<User> responseEntity = restTemplate.postForEntity("/v1/users/add", user, User.class);
         assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
         assertEquals("new_bgg", responseEntity.getBody().getBggNick());
+
+        // Login
+        user = new User("new_bgg", "");
+        user.setPassword("toto");
+        responseEntity = restTemplate.postForEntity("/v1/users/login", user, User.class);
+        assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
+        assertTrue(responseEntity.getHeaders().containsKey("Authentication"));
+        log.info("Received header Authentication : {}", responseEntity.getHeaders().get("Authentication"));
+
+        // Check JWT token validity against the 'test' key
+        String token = responseEntity.getHeaders().get("Authentication").get(0).replace("Bearer ", "");
+        assertEquals(Jwts.parser().setSigningKey("test").parseClaimsJws(token).getBody().getSubject(), user.getBggNick());
+    }
+
+    @Test
+    public void testWrongAuthentication() throws Exception {
+        User user = new User("new_bgg", "new_forum");
+        user.setPassword("toto");
+        ResponseEntity<User> responseEntity = restTemplate.postForEntity("/v1/users/add", user, User.class);
+        assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
+        assertEquals("new_bgg", responseEntity.getBody().getBggNick());
+
+        // Wrong password
+        user = new User("new_bgg", "");
+        user.setPassword("dada");
+        ResponseEntity<Void> responseEntityVoid = restTemplate.postForEntity("/v1/users/login", user, Void.class);
+        assertTrue(responseEntityVoid.getStatusCode().is4xxClientError());
+
+        // Wrong login
+        responseEntityVoid = restTemplate.postForEntity("/v1/users/login", new User("not_exists", ""), Void.class);
+        assertTrue(responseEntityVoid.getStatusCode().is4xxClientError());
     }
 
     @Test
