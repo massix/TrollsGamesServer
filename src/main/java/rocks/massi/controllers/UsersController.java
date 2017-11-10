@@ -1,7 +1,5 @@
 package rocks.massi.controllers;
 
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,15 +8,15 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import rocks.massi.authentication.AuthenticationType;
 import rocks.massi.authentication.Role;
+import rocks.massi.authentication.TrollsJwt;
 import rocks.massi.data.User;
 import rocks.massi.data.UsersRepository;
+import rocks.massi.exceptions.AuthenticationException;
 import rocks.massi.exceptions.MalformattedUserException;
 import rocks.massi.exceptions.UserNotFoundException;
-import rocks.massi.exceptions.WrongAuthenticationException;
 import rocks.massi.utils.DBUtils;
 
 import javax.servlet.http.HttpServletResponse;
-import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -34,6 +32,9 @@ public class UsersController {
 
     @Autowired
     private BCryptPasswordEncoder bCryptPasswordEncoder;
+
+    @Autowired
+    private TrollsJwt trollsJwt;
 
     @CrossOrigin
     @GetMapping("/get/{nick}")
@@ -90,18 +91,13 @@ public class UsersController {
         }
 
         if (BCrypt.checkpw(user.getPassword(), dbUser.getPassword())) {
-            String token = Jwts.builder()
-                    .claim("user", dbUser.getBggNick())
-                    .claim("role", dbUser.getRole())
-                    .setExpiration(new Date(System.currentTimeMillis() + 640_000_000L))
-                    .signWith(SignatureAlgorithm.HS512, "test")
-                    .compact();
+            String token = trollsJwt.generateNewTokenForUser(dbUser);
             dbUser.setPassword("*");
             servletResponse.setHeader("Authentication", String.format("Bearer %s", token));
             return dbUser;
         }
 
-        throw new WrongAuthenticationException("Username or password are WRONG");
+        throw new AuthenticationException("Username or password are WRONG");
     }
 
     @DeleteMapping("/remove/{nick}")

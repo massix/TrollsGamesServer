@@ -13,10 +13,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import rocks.massi.authentication.Role;
+import rocks.massi.authentication.TrollsJwt;
 import rocks.massi.data.User;
 import rocks.massi.data.UsersRepository;
 
 import static org.junit.Assert.*;
+import static rocks.massi.authentication.TrollsJwt.ROLE_KEY;
+import static rocks.massi.authentication.TrollsJwt.USER_KEY;
 
 @Slf4j
 @ActiveProfiles("dev")
@@ -29,6 +32,9 @@ public class UsersControllerTest {
 
     @Autowired
     private TestRestTemplate restTemplate;
+
+    @Autowired
+    private TrollsJwt trollsJwt;
 
     @Before
     public void setUp() throws Exception {
@@ -71,8 +77,11 @@ public class UsersControllerTest {
         // Check JWT token validity against the 'test' key
         String token = responseEntity.getHeaders().get("Authentication").get(0).replace("Bearer ", "");
         Claims parsedToken = Jwts.parser().setSigningKey("test").parseClaimsJws(token).getBody();
-        assertEquals(parsedToken.get("user"), user.getBggNick());
-        assertEquals(parsedToken.get("role"), Role.USER.toString());
+        assertEquals(parsedToken.get(USER_KEY), user.getBggNick());
+        assertEquals(parsedToken.get(ROLE_KEY), Role.USER.toString());
+
+        // Check TrollsJwt
+        assertTrue(trollsJwt.checkTokenForUser(user));
     }
 
     @Test
