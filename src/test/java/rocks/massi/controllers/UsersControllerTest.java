@@ -1,5 +1,6 @@
 package rocks.massi.controllers;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
@@ -11,6 +12,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
+import rocks.massi.authentication.Role;
 import rocks.massi.data.User;
 import rocks.massi.data.UsersRepository;
 
@@ -68,7 +70,9 @@ public class UsersControllerTest {
 
         // Check JWT token validity against the 'test' key
         String token = responseEntity.getHeaders().get("Authentication").get(0).replace("Bearer ", "");
-        assertEquals(Jwts.parser().setSigningKey("test").parseClaimsJws(token).getBody().getSubject(), user.getBggNick());
+        Claims parsedToken = Jwts.parser().setSigningKey("test").parseClaimsJws(token).getBody();
+        assertEquals(parsedToken.get("user"), user.getBggNick());
+        assertEquals(parsedToken.get("role"), Role.USER.toString());
     }
 
     @Test

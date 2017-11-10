@@ -91,7 +91,8 @@ public class UsersController {
 
         if (BCrypt.checkpw(user.getPassword(), dbUser.getPassword())) {
             String token = Jwts.builder()
-                    .setSubject(dbUser.getBggNick())
+                    .claim("user", dbUser.getBggNick())
+                    .claim("role", dbUser.getRole())
                     .setExpiration(new Date(System.currentTimeMillis() + 640_000_000L))
                     .signWith(SignatureAlgorithm.HS512, "test")
                     .compact();
