@@ -22,9 +22,12 @@ public class User {
     @NonNull
     private final String forumNick;
 
-    @NonNull
     @Column
+    @NonNull
     private String password = "";
+
+    @Column
+    private final String email;
 
     @Column
     @Enumerated(EnumType.STRING)
@@ -35,6 +38,6 @@ public class User {
     private AuthenticationType authenticationType = AuthenticationType.JWT;
 
     public User() {
-        this("", "");
+        this("", "", "");
     }
 }

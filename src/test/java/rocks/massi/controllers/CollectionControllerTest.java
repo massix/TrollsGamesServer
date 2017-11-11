@@ -39,7 +39,7 @@ public class CollectionControllerTest {
     public void setUp() throws Exception {
         usersRepository.deleteAll();
         gamesRepository.deleteAll();
-        usersRepository.save(new User("bgg_nick", "forum_nick"));
+        usersRepository.save(new User("bgg_nick", "forum_nick", "test@example.com"));
         gamesRepository.save(
                 new Game(1, "Cyclades", "", 2, 18, 260, 2012,
                         1, false, "", "Bruno Cathala", "")

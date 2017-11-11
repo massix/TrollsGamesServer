@@ -14,6 +14,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import rocks.massi.authentication.Role;
 import rocks.massi.authentication.TrollsJwt;
+import rocks.massi.controllers.utils.AuthorizationHandler;
+import rocks.massi.data.LoginInformation;
 import rocks.massi.data.User;
 import rocks.massi.data.UsersRepository;
 
@@ -39,7 +41,8 @@ public class UsersControllerTest {
     @Before
     public void setUp() throws Exception {
         usersRepository.deleteAll();
-        usersRepository.save(new User("bgg_nick", "forum_nick"));
+        usersRepository.save(new User("bgg_nick", "forum_nick", "test@example.com"));
+        AuthorizationHandler.setUp(restTemplate, "admin@example.com", "admin");
     }
 
     @Test
@@ -53,67 +56,66 @@ public class UsersControllerTest {
     public void getAllUsers() throws Exception {
         ResponseEntity<User[]> responseEntity = restTemplate.getForEntity("/v1/users/get", User[].class);
         assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
-        assertEquals(1, responseEntity.getBody().length);
+        assertEquals(2, responseEntity.getBody().length);
         assertEquals("bgg_nick", responseEntity.getBody()[0].getBggNick());
         assertEquals("*", responseEntity.getBody()[0].getPassword());
     }
 
     @Test
     public void addUser() throws Exception {
-        User user = new User("new_bgg", "new_forum");
+        User user = new User("new_bgg", "new_forum", "test_user_new@example.com");
         user.setPassword("toto");
         ResponseEntity<User> responseEntity = restTemplate.postForEntity("/v1/users/add", user, User.class);
         assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
         assertEquals("new_bgg", responseEntity.getBody().getBggNick());
 
         // Login
-        user = new User("new_bgg", "");
+        user = new User("new_bgg", "", "test_user_new@example.com");
         user.setPassword("toto");
         responseEntity = restTemplate.postForEntity("/v1/users/login", user, User.class);
         assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
-        assertTrue(responseEntity.getHeaders().containsKey("Authentication"));
-        log.info("Received header Authentication : {}", responseEntity.getHeaders().get("Authentication"));
+        assertTrue(responseEntity.getHeaders().containsKey("Authorization"));
+        log.info("Received header Authentication : {}", responseEntity.getHeaders().get("Authorization"));
 
         // Check JWT token validity against the 'test' key
-        String token = responseEntity.getHeaders().get("Authentication").get(0).replace("Bearer ", "");
+        String token = responseEntity.getHeaders().get("Authorization").get(0).replace("Bearer ", "");
         Claims parsedToken = Jwts.parser().setSigningKey("test").parseClaimsJws(token).getBody();
         assertEquals(parsedToken.get(USER_KEY), user.getBggNick());
         assertEquals(parsedToken.get(ROLE_KEY), Role.USER.toString());
 
         // Check TrollsJwt
-        assertTrue(trollsJwt.checkTokenForUser(user));
+        assertTrue(trollsJwt.checkTokenForUser(user.getBggNick()));
     }
 
     @Test
     public void testWrongAuthentication() throws Exception {
-        User user = new User("new_bgg", "new_forum");
+        User user = new User("new_bgg", "new_forum", "test_wrong_user@example.com");
         user.setPassword("toto");
         ResponseEntity<User> responseEntity = restTemplate.postForEntity("/v1/users/add", user, User.class);
         assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
         assertEquals("new_bgg", responseEntity.getBody().getBggNick());
 
         // Wrong password
-        user = new User("new_bgg", "");
-        user.setPassword("dada");
-        ResponseEntity<Void> responseEntityVoid = restTemplate.postForEntity("/v1/users/login", user, Void.class);
+        LoginInformation loginInformation = new LoginInformation("test_wrong_user@example.com", "dada");
+        ResponseEntity<Void> responseEntityVoid = restTemplate.postForEntity("/v1/users/login", loginInformation, Void.class);
         assertTrue(responseEntityVoid.getStatusCode().is4xxClientError());
 
         // Wrong login
-        responseEntityVoid = restTemplate.postForEntity("/v1/users/login", new User("not_exists", ""), Void.class);
+        responseEntityVoid = restTemplate.postForEntity("/v1/users/login", new LoginInformation("test_non_existing@example.com", "pass"), Void.class);
         assertTrue(responseEntityVoid.getStatusCode().is4xxClientError());
     }
 
     @Test
     public void addMalformattedUser() throws Exception {
-        ResponseEntity<User> responseEntity = restTemplate.postForEntity("/v1/users/add", new User("", "new_forum"), User.class);
+        ResponseEntity<User> responseEntity = restTemplate.postForEntity("/v1/users/add", new User("", "new_forum", "test@example.com"), User.class);
         assertTrue(responseEntity.getStatusCode().is4xxClientError());
         assertNull(responseEntity.getBody());
 
-        responseEntity = restTemplate.postForEntity("/v1/users/add", new User("new_bgg", ""), User.class);
+        responseEntity = restTemplate.postForEntity("/v1/users/add", new User("new_bgg", "", "test@example.com"), User.class);
         assertTrue(responseEntity.getStatusCode().is4xxClientError());
         assertNull(responseEntity.getBody());
 
-        responseEntity = restTemplate.postForEntity("/v1/users/add", new User("", ""), User.class);
+        responseEntity = restTemplate.postForEntity("/v1/users/add", new User("", "", "test@example.com"), User.class);
         assertTrue(responseEntity.getStatusCode().is4xxClientError());
         assertNull(responseEntity.getBody());
     }

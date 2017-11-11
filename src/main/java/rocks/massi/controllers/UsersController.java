@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import rocks.massi.authentication.AuthenticationType;
 import rocks.massi.authentication.Role;
 import rocks.massi.authentication.TrollsJwt;
+import rocks.massi.data.LoginInformation;
 import rocks.massi.data.User;
 import rocks.massi.data.UsersRepository;
 import rocks.massi.exceptions.AuthenticationException;
@@ -80,21 +81,29 @@ public class UsersController {
     }
 
     @PostMapping(value = "/login")
-    public User login(@RequestBody User user, HttpServletResponse servletResponse) {
-        log.info("Requested login for user {}", user.getBggNick());
+    public User login(@RequestBody LoginInformation loginInformation, HttpServletResponse servletResponse) {
+        log.info("Requested login for user {}", loginInformation.getEmail());
 
-        // Login will be forced using BGGNick, so we won't use the DBUtils!
-        User dbUser = usersRepository.findByBggNick(user.getBggNick());
+        // Login will be forced using email, so we won't use the DBUtils!
+        User dbUser = usersRepository.findByEmail(loginInformation.getEmail());
 
         if (dbUser == null) {
             throw new UserNotFoundException("User doesn't exist in database.");
         }
 
-        if (BCrypt.checkpw(user.getPassword(), dbUser.getPassword())) {
-            String token = trollsJwt.generateNewTokenForUser(dbUser);
-            dbUser.setPassword("*");
-            servletResponse.setHeader("Authentication", String.format("Bearer %s", token));
-            return dbUser;
+        try {
+            if (BCrypt.checkpw(loginInformation.getPassword(), dbUser.getPassword())) {
+                String token = trollsJwt.getTokenForUser(dbUser);
+                if (token.isEmpty()) {
+                    token = trollsJwt.generateNewTokenForUser(dbUser);
+                }
+
+                dbUser.setPassword("*");
+                servletResponse.setHeader("Authorization", String.format("Bearer %s", token));
+                return dbUser;
+            }
+        } catch (IllegalArgumentException exception) {
+            log.error("User {} failed to login because: {}", loginInformation.getEmail(), exception.getMessage());
         }
 
         throw new AuthenticationException("Username or password are WRONG");

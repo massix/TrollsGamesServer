@@ -10,6 +10,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
+import rocks.massi.controllers.utils.AuthorizationHandler;
 import rocks.massi.data.Game;
 import rocks.massi.data.GamesRepository;
 
@@ -36,6 +37,7 @@ public class GamesControllerTest {
         );
 
         gamesRepository.findAll().forEach(game -> log.info("Found game {}", game.getName()));
+        AuthorizationHandler.setUp(restTemplate, "email@example.com", "admin");
     }
 
     @Test

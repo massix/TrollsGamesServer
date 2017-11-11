@@ -15,6 +15,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
+import rocks.massi.controllers.utils.AuthorizationHandler;
 import rocks.massi.crawler.CollectionCrawler;
 import rocks.massi.data.*;
 import rocks.massi.data.joins.GameHonorsRepository;
@@ -78,15 +79,17 @@ public class CrawlerControllerTest {
         honorsRepository.deleteAll();
         ownershipsRepository.deleteAll();
 
-        usersRepository.save(new User("bgg_user", "forum_user"));
-        usersRepository.save(new User("bgg_user_two", "forum_user_two"));
-        usersRepository.save(new User("timed_user", "timed_forum_user"));
+        usersRepository.save(new User("bgg_user", "forum_user", "test_user1@example.com"));
+        usersRepository.save(new User("bgg_user_two", "forum_user_two", "test_user2@example.com"));
+        usersRepository.save(new User("timed_user", "timed_forum_user", "test_user3@example.com"));
 
         // Force purge cache
         restTemplate.delete("/v1/cache/purge");
 
         // Setup WireMock
         CollectionCrawler.BGG_BASE_URL = "http://localhost:8080";
+
+        AuthorizationHandler.setUp(restTemplate, "test@example.com", "authorized_user");
     }
 
     @SneakyThrows

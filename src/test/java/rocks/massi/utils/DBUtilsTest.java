@@ -22,8 +22,8 @@ public class DBUtilsTest {
 
     @Before
     public void setUp() throws Exception {
-        usersRepository.save(new User("bgg_nick", "forum_nick"));
-        usersRepository.save(new User("bgg_nick_2", "forum_nick_2"));
+        usersRepository.save(new User("bgg_nick", "forum_nick", "test@example.com"));
+        usersRepository.save(new User("bgg_nick_2", "forum_nick_2", "test@example.com"));
     }
 
     @After
