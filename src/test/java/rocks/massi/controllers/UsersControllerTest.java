@@ -3,6 +3,7 @@ package rocks.massi.controllers;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -40,9 +41,13 @@ public class UsersControllerTest {
 
     @Before
     public void setUp() throws Exception {
-        usersRepository.deleteAll();
         usersRepository.save(new User("bgg_nick", "forum_nick", "test@example.com"));
         AuthorizationHandler.setUp(restTemplate, "admin@example.com", "admin");
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        usersRepository.deleteAll();
     }
 
     @Test

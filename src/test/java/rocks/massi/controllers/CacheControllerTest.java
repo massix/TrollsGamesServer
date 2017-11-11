@@ -1,5 +1,6 @@
 package rocks.massi.controllers;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -12,6 +13,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import rocks.massi.controllers.utils.AuthorizationHandler;
 import rocks.massi.data.CacheOperation;
+import rocks.massi.data.UsersRepository;
 
 import static org.junit.Assert.assertTrue;
 
@@ -23,9 +25,17 @@ public class CacheControllerTest {
     @Autowired
     private TestRestTemplate restTemplate;
 
+    @Autowired
+    private UsersRepository usersRepository;
+
     @Before
     public void setUp() throws Exception {
         AuthorizationHandler.setUp(restTemplate, "test@example.com", "user");
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        usersRepository.deleteAll();
     }
 
     @Test

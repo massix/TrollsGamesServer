@@ -3,10 +3,7 @@ package rocks.massi.controllers;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,11 +71,6 @@ public class CrawlerControllerTest {
 
     @Before
     public void setUp() throws Exception {
-        usersRepository.deleteAll();
-        gamesRepository.deleteAll();
-        honorsRepository.deleteAll();
-        ownershipsRepository.deleteAll();
-
         usersRepository.save(new User("bgg_user", "forum_user", "test_user1@example.com"));
         usersRepository.save(new User("bgg_user_two", "forum_user_two", "test_user2@example.com"));
         usersRepository.save(new User("timed_user", "timed_forum_user", "test_user3@example.com"));
@@ -90,6 +82,14 @@ public class CrawlerControllerTest {
         CollectionCrawler.BGG_BASE_URL = "http://localhost:8080";
 
         AuthorizationHandler.setUp(restTemplate, "test@example.com", "authorized_user");
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        usersRepository.deleteAll();
+        gamesRepository.deleteAll();
+        honorsRepository.deleteAll();
+        ownershipsRepository.deleteAll();
     }
 
     @SneakyThrows

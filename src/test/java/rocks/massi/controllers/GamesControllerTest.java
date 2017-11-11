@@ -1,6 +1,7 @@
 package rocks.massi.controllers;
 
 import lombok.extern.slf4j.Slf4j;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,14 +31,17 @@ public class GamesControllerTest {
 
     @Before
     public void setUp() throws Exception {
-        gamesRepository.deleteAll();
         gamesRepository.save(
                 new Game(1, "Cyclades", "Game of Cyclades", 2, 18, 250,
                         2012, 1, false, "here", "Bruno Cathala", "")
         );
 
-        gamesRepository.findAll().forEach(game -> log.info("Found game {}", game.getName()));
         AuthorizationHandler.setUp(restTemplate, "email@example.com", "admin");
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        gamesRepository.deleteAll();
     }
 
     @Test

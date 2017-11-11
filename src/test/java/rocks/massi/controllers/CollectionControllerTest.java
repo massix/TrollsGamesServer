@@ -1,5 +1,6 @@
 package rocks.massi.controllers;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,8 +38,6 @@ public class CollectionControllerTest {
 
     @Before
     public void setUp() throws Exception {
-        usersRepository.deleteAll();
-        gamesRepository.deleteAll();
         usersRepository.save(new User("bgg_nick", "forum_nick", "test@example.com"));
         gamesRepository.save(
                 new Game(1, "Cyclades", "", 2, 18, 260, 2012,
@@ -57,6 +56,12 @@ public class CollectionControllerTest {
         ownershipsRepository.save(new Ownership("bgg_nick", 2));
         ownershipsRepository.save(new Ownership("bgg_nick", 3));
 
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        usersRepository.deleteAll();
+        gamesRepository.deleteAll();
     }
 
     @Test
