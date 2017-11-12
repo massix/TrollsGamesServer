@@ -35,6 +35,14 @@ public class TrollsJwt {
         private final String username;
     }
 
+    @Getter
+    @RequiredArgsConstructor
+    private class KeyUserTokenTriple {
+        private final String key;
+        private final User user;
+        private final String token;
+    }
+
     public enum KeyRetrievalMethod {
         DEV,
         RANDOM,
@@ -54,6 +62,9 @@ public class TrollsJwt {
     // token -> (key username)
     private Map<String, KeyUsernamePair> tokenToKeyUsernameMap;
 
+    // email -> (key user token)
+    private Map<String, KeyUserTokenTriple> oneUseRegistrationTokensMap;
+
     @Bean
     @Primary
     public static TrollsJwt makeTokenCreator(@Value("${token.key.retrieval}") final String retrieval,
@@ -62,6 +73,7 @@ public class TrollsJwt {
         token.keys = new LinkedList<>();
         token.usernameToKeyTokenMap = new HashMap<>();
         token.tokenToKeyUsernameMap = new HashMap<>();
+        token.oneUseRegistrationTokensMap = new HashMap<>();
         log.info("Create new TrollsJwt using method {} with {} iterations", retrieval, iterations);
 
         for (int i = 0; i < iterations; i++) {
@@ -135,4 +147,31 @@ public class TrollsJwt {
         else
             return "";
     }
+
+    public String generateRegistrationTokenForUser(final User user) {
+        String key = keys.get(new Random().nextInt(keys.size()));
+        String generatedToken = Jwts.builder()
+                .claim("TEMP", true)
+                .claim("EMAIL", user.getEmail())
+                .setExpiration(new Date(System.currentTimeMillis() + 200_000_000L))
+                .signWith(SignatureAlgorithm.HS512, key)
+                .compact();
+
+        oneUseRegistrationTokensMap.put(user.getEmail(), new KeyUserTokenTriple(key, user, generatedToken));
+        return generatedToken;
+    }
+
+    public User confirmRegistrationTokenForEmail(final String email, final String token) {
+        if (oneUseRegistrationTokensMap.containsKey(email)) {
+            KeyUserTokenTriple userTokenTriple = oneUseRegistrationTokensMap.get(email);
+            String decodedEmail = (String) Jwts.parser().setSigningKey(userTokenTriple.getKey()).parseClaimsJws(token).getBody().get("EMAIL");
+            if (decodedEmail.equalsIgnoreCase(userTokenTriple.getUser().getEmail())) {
+                oneUseRegistrationTokensMap.remove(email);
+                return userTokenTriple.getUser();
+            }
+        }
+
+        return null;
+    }
+
 }

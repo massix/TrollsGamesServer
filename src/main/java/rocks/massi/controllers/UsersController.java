@@ -3,6 +3,8 @@ package rocks.massi.controllers;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -37,6 +39,9 @@ public class UsersController {
     @Autowired
     private TrollsJwt trollsJwt;
 
+    @Autowired
+    private JavaMailSender mailSender;
+
     @CrossOrigin
     @GetMapping("/get/{nick}")
     public User getUserByNick(@PathVariable("nick") String nick) {
@@ -64,6 +69,55 @@ public class UsersController {
         return ret;
     }
 
+    @CrossOrigin
+    @GetMapping(value = "/confirm")
+    public User confirmRegistration(@RequestParam("email") final String email, @RequestParam("token") final String token) {
+        User ret = trollsJwt.confirmRegistrationTokenForEmail(email, token);
+
+        if (ret == null) {
+            throw new AuthenticationException("Can't go any further.");
+        }
+
+        ret.setRole(Role.USER);
+        ret.setAuthenticationType(AuthenticationType.JWT);
+
+        usersRepository.save(ret);
+        return usersRepository.findByEmail(email);
+    }
+
+    @CrossOrigin
+    @PostMapping(value = "/register")
+    public User registerNewUser(@RequestBody User user) {
+        // Check that the user exists on bgg
+
+        // Check that the user doesn't already exist
+        if (usersRepository.findByEmail(user.getEmail()) != null || usersRepository.findByBggNick(user.getBggNick()) != null) {
+            throw new AuthenticationException("User already exist. Please ask for a password reset.");
+        }
+
+        // New users are by default unable to login to the server.
+        user.setAuthenticationType(AuthenticationType.NONE);
+        user.setRole(Role.USER);
+
+        // Encrypt password
+        user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
+
+        // Generate a OT token for user
+        String host = System.getenv("VIRTUAL_HOST");
+        String token = trollsJwt.generateRegistrationTokenForUser(user);
+
+        // Send email asking user to verify their email address
+        SimpleMailMessage mailMessage = new SimpleMailMessage();
+        mailMessage.setFrom("Trolls De Jeux <noreply@massi.rocks>");
+        mailMessage.setReplyTo("massi@massi.rocks");
+        mailMessage.setTo(user.getEmail());
+        mailMessage.setSubject("Verify your subscription to the service!");
+        mailMessage.setText("Confirmez votre blabla @ https://" + host + "/confirm?email=" + user.getEmail() + "&token=" + token);
+        mailSender.send(mailMessage);
+
+        return user;
+    }
+
     @PostMapping(value = "/add")
     public User addUser(@RequestBody User user) {
         log.info("Got user {}", user.getBggNick());
@@ -80,6 +134,7 @@ public class UsersController {
         return DBUtils.getUser(usersRepository, user.getBggNick());
     }
 
+    @CrossOrigin
     @PostMapping(value = "/login")
     public User login(@RequestBody LoginInformation loginInformation, HttpServletResponse servletResponse) {
         log.info("Requested login for user {}", loginInformation.getEmail());
