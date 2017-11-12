@@ -62,6 +62,7 @@ public class CollectionControllerTest {
     public void tearDown() throws Exception {
         usersRepository.deleteAll();
         gamesRepository.deleteAll();
+        ownershipsRepository.deleteAll();
     }
 
     @Test

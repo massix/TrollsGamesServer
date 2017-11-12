@@ -51,7 +51,11 @@ public class UsersControllerTest {
 
     @After
     public void tearDown() throws Exception {
-        usersRepository.deleteAll();
+        try {
+            usersRepository.deleteAll();
+        } catch (Exception e) {
+            /* Do nothing */
+        }
     }
 
     @Test
