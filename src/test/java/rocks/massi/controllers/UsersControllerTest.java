@@ -13,6 +13,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
+import rocks.massi.authentication.AuthenticationType;
 import rocks.massi.authentication.Role;
 import rocks.massi.authentication.TrollsJwt;
 import rocks.massi.controllers.utils.AuthorizationHandler;
@@ -108,6 +109,14 @@ public class UsersControllerTest {
         // Wrong login
         responseEntityVoid = restTemplate.postForEntity("/v1/users/login", new LoginInformation("test_non_existing@example.com", "pass"), Void.class);
         assertTrue(responseEntityVoid.getStatusCode().is4xxClientError());
+
+        // Wrong authentication type
+        user = usersRepository.findByEmail("test_wrong_user@example.com");
+        user.setAuthenticationType(AuthenticationType.NONE);
+        usersRepository.save(user);
+        responseEntityVoid = restTemplate.postForEntity("/v1/users/login", new LoginInformation("test_wrong_user@example.com", "toto"), Void.class);
+        assertTrue(responseEntityVoid.getStatusCode().is4xxClientError());
+
     }
 
     @Test

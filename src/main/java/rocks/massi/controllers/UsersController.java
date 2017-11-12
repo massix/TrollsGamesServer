@@ -88,7 +88,13 @@ public class UsersController {
         User dbUser = usersRepository.findByEmail(loginInformation.getEmail());
 
         if (dbUser == null) {
+            log.error("User {} does not exist", loginInformation.getEmail());
             throw new UserNotFoundException("User doesn't exist in database.");
+        }
+
+        if (dbUser.getAuthenticationType() == AuthenticationType.NONE) {
+            log.error("User {} authType = NONE", dbUser.getEmail());
+            throw new AuthenticationException("User authentication type is none, missing registration.");
         }
 
         try {
