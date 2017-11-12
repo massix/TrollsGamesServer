@@ -26,4 +26,11 @@ public class ExceptionsHandler extends ResponseEntityExceptionHandler {
     protected ResponseEntity<Object> handleMalformattedUser(RuntimeException exception, WebRequest request) {
         return handleExceptionInternal(exception, null, null, HttpStatus.BAD_REQUEST, request);
     }
+
+    @ExceptionHandler(value = {
+            AuthenticationException.class
+    })
+    protected ResponseEntity<Object> handleWrongAuthentication(RuntimeException exception, WebRequest request) {
+        return handleExceptionInternal(exception, exception.getMessage(), null, HttpStatus.FORBIDDEN, request);
+    }
 }

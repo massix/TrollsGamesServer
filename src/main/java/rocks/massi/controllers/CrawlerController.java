@@ -4,11 +4,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.*;
+import rocks.massi.authentication.TrollsJwt;
 import rocks.massi.cache.CrawlCache;
 import rocks.massi.crawler.CollectionCrawler;
 import rocks.massi.data.*;
 import rocks.massi.data.joins.GameHonorsRepository;
 import rocks.massi.data.joins.OwnershipsRepository;
+import rocks.massi.exceptions.AuthenticationException;
 import rocks.massi.utils.DBUtils;
 
 import javax.servlet.http.HttpServletResponse;
@@ -36,6 +38,9 @@ public class CrawlerController {
     @Autowired
     private CrawlCache crawlCache;
 
+    @Autowired
+    private TrollsJwt trollsJwt;
+
     private HashMap<String, Map.Entry<Thread, Runnable>> runningCrawlers;
 
     private HashMap<String, Map.Entry<Thread, Runnable>> runningCrawlers() {
@@ -44,7 +49,12 @@ public class CrawlerController {
     }
 
     @PostMapping("/games/{gameId}")
-    public Game crawlGame(@PathVariable("gameId") final int gameId) {
+    public Game crawlGame(@RequestHeader("Authorization") final String authorization,
+                          @PathVariable("gameId") final int gameId) {
+        if (!trollsJwt.checkHeaderWithToken(authorization)) {
+            throw new AuthenticationException("User not authorized.");
+        }
+
         return new CollectionCrawler(crawlCache,
                 gamesRepository,
                 ownershipsRepository,
@@ -54,7 +64,12 @@ public class CrawlerController {
     }
 
     @PostMapping("/collection/{user}")
-    public void crawlCollectionForUser(@PathVariable("user") final String nick, HttpServletResponse response) {
+    public void crawlCollectionForUser(@RequestHeader("Authorization") final String authorization,
+                                       @PathVariable("user") final String nick, HttpServletResponse response) {
+        if (!trollsJwt.checkHeaderWithToken(authorization)) {
+            throw new AuthenticationException("User not authorized.");
+        }
+
         User user = DBUtils.getUser(usersRepository, nick);
 
         if (user != null) {
@@ -84,7 +99,11 @@ public class CrawlerController {
     }
 
     @GetMapping("/queues")
-    public List<CrawlingProgress> getQueues() {
+    public List<CrawlingProgress> getQueues(@RequestHeader("Authorization") final String authorization) {
+        if (!trollsJwt.checkHeaderWithToken(authorization)) {
+            throw new AuthenticationException("User not authorized.");
+        }
+
         final List<CrawlingProgress> ret = new LinkedList<>();
 
         runningCrawlers().forEach((k, v) -> {
@@ -98,7 +117,11 @@ public class CrawlerController {
     }
 
     @DeleteMapping("/queues")
-    public List<CrawlingProgress> purgeFinishedQueues() {
+    public List<CrawlingProgress> purgeFinishedQueues(@RequestHeader("Authorization") final String authorization) {
+        if (!trollsJwt.checkHeaderWithToken(authorization)) {
+            throw new AuthenticationException("User not authorized.");
+        }
+
         List<CrawlingProgress> ret = new LinkedList<>();
         LinkedList<String> toBeRemoved = new LinkedList<>();
 
@@ -117,7 +140,12 @@ public class CrawlerController {
     }
 
     @GetMapping("/queue/{id}")
-    public CrawlingProgress getProgress(@PathVariable("id") final long id, HttpServletResponse response) {
+    public CrawlingProgress getProgress(@RequestHeader("Authorization") final String authorization,
+                                        @PathVariable("id") final long id, HttpServletResponse response) {
+        if (!trollsJwt.checkHeaderWithToken(authorization)) {
+            throw new AuthenticationException("User not authorized.");
+        }
+
         final CrawlingProgress[] progress = {null};
         runningCrawlers().forEach((k, v) -> {
             if (v.getKey().getId() == id) {
@@ -135,8 +163,13 @@ public class CrawlerController {
     }
 
     @DeleteMapping("/queue/{id}")
-    public void deleteQueue(@PathVariable("id") final long id, HttpServletResponse response) {
-        CrawlingProgress progress = getProgress(id, response);
+    public void deleteQueue(@RequestHeader("Authorization") final String authorization,
+                            @PathVariable("id") final long id, HttpServletResponse response) {
+        if (!trollsJwt.checkHeaderWithToken(authorization)) {
+            throw new AuthenticationException("User not authorized.");
+        }
+
+        CrawlingProgress progress = getProgress(authorization, id, response);
         if (progress != null && ! progress.isRunning()) {
             runningCrawlers().remove(progress.getUser());
         }

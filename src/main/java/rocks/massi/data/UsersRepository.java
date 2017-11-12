@@ -9,6 +9,8 @@ public interface UsersRepository extends Repository<User, String> {
     User save(final User user);
     User findByBggNick(final String bggNick);
     User findByForumNick(final String forumNick);
+
+    User findByEmail(final String email);
     List<User> findAll();
     User delete(final User user);
     User deleteByBggNick(final String bggNick);
