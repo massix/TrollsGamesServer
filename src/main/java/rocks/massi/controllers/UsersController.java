@@ -112,7 +112,7 @@ public class UsersController {
         mailMessage.setReplyTo("massi@massi.rocks");
         mailMessage.setTo(user.getEmail());
         mailMessage.setSubject("Verify your subscription to the service!");
-        mailMessage.setText("Confirmez votre blabla @ https://" + host + "/confirm?email=" + user.getEmail() + "&token=" + token);
+        mailMessage.setText("Confirmez votre blabla @ https://" + host + "/v1/users/confirm?email=" + user.getEmail() + "&token=" + token);
         mailSender.send(mailMessage);
 
         return user;
