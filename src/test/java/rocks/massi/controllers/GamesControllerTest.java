@@ -14,6 +14,10 @@ import org.springframework.test.context.junit4.SpringRunner;
 import rocks.massi.controllers.utils.AuthorizationHandler;
 import rocks.massi.data.Game;
 import rocks.massi.data.GamesRepository;
+import rocks.massi.data.User;
+import rocks.massi.data.UsersRepository;
+import rocks.massi.data.joins.Ownership;
+import rocks.massi.data.joins.OwnershipsRepository;
 
 import static org.junit.Assert.*;
 
@@ -27,6 +31,12 @@ public class GamesControllerTest {
     private GamesRepository gamesRepository;
 
     @Autowired
+    private OwnershipsRepository ownershipsRepository;
+
+    @Autowired
+    private UsersRepository usersRepository;
+
+    @Autowired
     private TestRestTemplate restTemplate;
 
     @Before
@@ -36,12 +46,20 @@ public class GamesControllerTest {
                         2012, 1, false, "here", "Bruno Cathala", "")
         );
 
+        usersRepository.save(new User("user_1", "", ""));
+        usersRepository.save(new User("user_2", "", ""));
+
+        ownershipsRepository.save(new Ownership("user_1", 1));
+        ownershipsRepository.save(new Ownership("user_2", 1));
+
         AuthorizationHandler.setUp(restTemplate, "email@example.com", "admin");
     }
 
     @After
     public void tearDown() throws Exception {
+        ownershipsRepository.deleteAll();
         gamesRepository.deleteAll();
+        usersRepository.deleteAll();
     }
 
     @Test
@@ -96,6 +114,14 @@ public class GamesControllerTest {
     @Test
     public void removeGame() throws Exception {
         restTemplate.delete("/v1/games/remove/2");
+    }
+
+    @Test
+    public void getOwnersForGame() throws Exception {
+        // Existing game, 2 users own it
+        ResponseEntity<String[]> responseEntity = restTemplate.getForEntity("/v1/games/owners/1", String[].class);
+        assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
+        assertEquals(2, responseEntity.getBody().length);
     }
 
 }
