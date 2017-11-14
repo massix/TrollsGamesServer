@@ -1,47 +1,43 @@
-import { Component, OnInit } from "@angular/core";
-import { LoginService } from "./login.service";
-import { Login } from "./login";
-import { HttpResponse } from "@angular/common/http";
-import { User } from "./user";
+import { Component, OnInit } from '@angular/core';
+import { LoginService } from './login.service';
+import { Login } from './login';
+import { HttpResponse } from '@angular/common/http';
+import { User } from './user';
+import { error } from 'util';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Router } from '@angular/router';
 
 @Component({
-    selector: 'component',
     templateUrl: './login.component.html',
     styleUrls: ['./login.component.css']
 })
-export class LoginComponent implements OnInit {
+export class LoginComponent {
     login: Login = new Login();
-
-    ngOnInit(): void {
-    }
+    error: string;
 
     onSubmit(): void {
-        console.log("Submit button clicked");
-        console.log("login: " + this.login.email);
-        console.log("password: " + this.login.password);
+        this.error = null;
+        console.log('Submit button clicked');
+        console.log('login: ' + this.login.email);
+        console.log('password: ' + this.login.password);
 
         this.loginService.login(this.login).subscribe((data: HttpResponse<User>) => {
-            console.log(data);
-            console.log(data.status);
-
             if (data.headers.has('authorization')) {
-                console.log('ok');
+                data.body.token = data.headers.get('authorization').replace('Bearer ', '');
+                this.loginService.loggedUser = data.body;
+                this.router.navigate(['/admin']);
+            } else {
+                this.error = 'Authentication failed';
             }
+        },
 
-            else if (data.headers.has('Authorization')) {
-                console.log('ok upper case');
-            }
+        (err: HttpErrorResponse) => {
+            this.error = err.error;
 
-            else {
-                console.log('nope');
-            }
-
-            console.log(data.headers.keys().forEach(key => console.log(key)));
-            console.log(data.body.bggNick);
+            this.login.email = '';
+            this.login.password = '';
         });
     }
 
-    constructor(private loginService: LoginService) {
-
-    }
+    constructor(private loginService: LoginService, private router: Router) {}
 }

@@ -134,7 +134,7 @@ public class UsersController {
         return DBUtils.getUser(usersRepository, user.getBggNick());
     }
 
-    @CrossOrigin
+    @CrossOrigin(exposedHeaders = {"Authorization"})
     @PostMapping(value = "/login")
     public User login(@RequestBody LoginInformation loginInformation, HttpServletResponse servletResponse) {
         log.info("Requested login for user {}", loginInformation.getEmail());

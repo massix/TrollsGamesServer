@@ -8,8 +8,8 @@
 
                 <form #loginForm="ngForm" role="login">
                     <img src="http://i.imgur.com/RcmcLv4.png" class="img-responsive" alt="" />
-                    <input [(ngModel)]="login.email" type="email" name="email" placeholder="Email" required class="form-control input-lg" />
-                    <input [(ngModel)]="login.password" type="password" name="password" class="form-control input-lg" id="password" placeholder="Password" required />
+                    <input [(ngModel)]="login.email" type="email" name="email" placeholder="Email" required class="form-control input-lg" id="email" />
+                    <input [(ngModel)]="login.password" type="password" name="password" class="form-control input-lg" id="password" placeholder="Password" required id="password" />
 
                     <div class="pwstrength_viewport_progress"></div>
 
@@ -17,6 +17,9 @@
                     <div>
                         <a href="/register">Create account</a> or
                         <a href="/reset">reset password</a>
+                    </div>
+                    <div *ngIf="error">
+                        <span class="error">{{error}}</span>
                     </div>
                 </form>
 

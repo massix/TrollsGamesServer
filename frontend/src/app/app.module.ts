@@ -5,18 +5,17 @@ import { HttpClientModule } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 
 import { AppComponent } from './app.component';
-import { UsersComponent } from './users.component';
 
-import { UsersService } from './users.service';
-import { GamesService } from './games.service';
 import { LoginService } from './login.service';
 import { LoginComponent } from './login.component';
+import { AdminComponent } from './admin.component';
+import { User } from './user';
 
 @NgModule({
   declarations: [
     AppComponent,
-    UsersComponent,
-    LoginComponent
+    LoginComponent,
+    AdminComponent
   ],
   imports: [
     BrowserModule,
@@ -24,12 +23,12 @@ import { LoginComponent } from './login.component';
     HttpClientModule,
     RouterModule.forRoot([
       {
-        path: 'users',
-        component: UsersComponent
-      },
-      {
         path: 'login',
         component: LoginComponent
+      },
+      {
+        path: 'admin',
+        component: AdminComponent
       },
       {
         path: '',
@@ -38,7 +37,7 @@ import { LoginComponent } from './login.component';
       }
     ])
   ],
-  providers: [UsersService, GamesService, LoginService],
+  providers: [LoginService, User],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
