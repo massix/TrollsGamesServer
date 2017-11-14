@@ -1,0 +1,33 @@
+<div class="container">
+
+    <div class="row" id="pwd-container">
+        <div class="col-md-4"></div>
+
+        <div class="col-md-4">
+            <section class="login-form">
+
+                <form #loginForm="ngForm" role="login">
+                    <img src="http://i.imgur.com/RcmcLv4.png" class="img-responsive" alt="" />
+                    <input [(ngModel)]="login.email" type="email" name="email" placeholder="Email" required class="form-control input-lg" />
+                    <input [(ngModel)]="login.password" type="password" name="password" class="form-control input-lg" id="password" placeholder="Password" required />
+
+                    <div class="pwstrength_viewport_progress"></div>
+
+                    <button (click)="onSubmit()" class="btn btn-lg btn-primary btn-block">Sign in</button>
+                    <div>
+                        <a href="/register">Create account</a> or
+                        <a href="/reset">reset password</a>
+                    </div>
+                </form>
+
+                <div class="form-links">
+                    <a href="#">www.website.com</a>
+                </div>
+            </section>
+        </div>
+
+        <div class="col-md-4"></div>
+
+
+    </div>
+</div>
