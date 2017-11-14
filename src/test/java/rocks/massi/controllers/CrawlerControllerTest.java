@@ -111,7 +111,6 @@ public class CrawlerControllerTest {
         assertTrue(responseEntity.getHeaders().get("location").get(0).startsWith("/v1/crawler/queue"));
 
         waitForQ();
-        Thread.sleep(10000);
 
         // Check that honors have been inserted in the base
         Honor honor = honorsRepository.findById(19901);
@@ -153,7 +152,6 @@ public class CrawlerControllerTest {
 
         waitForQ();
 
-        Thread.sleep(10000);
         assertEquals(2, ownershipsRepository.findByUser("timed_user").size());
         restTemplate.delete("/v1/crawler/queues");
     }
@@ -163,12 +161,10 @@ public class CrawlerControllerTest {
         restTemplate.postForEntity("/v1/crawler/collection/bgg_user", null, Void.class);
         waitForQ();
 
-        Thread.sleep(10000);
         restTemplate.delete("/v1/crawler/queues");
         restTemplate.postForEntity("/v1/crawler/collection/bgg_user_two", null, Void.class);
         waitForQ();
 
-        Thread.sleep(10000);
         assertEquals(2, ownershipsRepository.findByUser("bgg_user").size());
         assertEquals(2, ownershipsRepository.findByUser("bgg_user_two").size());
     }
