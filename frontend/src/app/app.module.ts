@@ -10,12 +10,21 @@ import { LoginService } from './login.service';
 import { LoginComponent } from './login.component';
 import { AdminComponent } from './admin.component';
 import { User } from './user';
+import { UsersComponent } from './users.component';
+import { AlertService } from './alert.service';
+import { AlertComponent } from './alert.component';
+import { LogoutComponent } from './logout.component';
+import { UsersService } from './users.service';
+import { AuthGuard } from './auth.guard';
 
 @NgModule({
   declarations: [
     AppComponent,
     LoginComponent,
-    AdminComponent
+    AdminComponent,
+    UsersComponent,
+    AlertComponent,
+    LogoutComponent
   ],
   imports: [
     BrowserModule,
@@ -27,8 +36,21 @@ import { User } from './user';
         component: LoginComponent
       },
       {
+        path: 'logout',
+        component: LogoutComponent
+      },
+      {
         path: 'admin',
-        component: AdminComponent
+        component: AdminComponent,
+        canActivate: [AuthGuard],
+        children: [
+          {
+            path: 'users',
+            component: UsersComponent,
+            outlet: 'adminoutlet',
+            canActivate: [AuthGuard]
+          }
+        ]
       },
       {
         path: '',
@@ -37,7 +59,7 @@ import { User } from './user';
       }
     ])
   ],
-  providers: [LoginService, User],
+  providers: [LoginService, AlertService, UsersService, AuthGuard],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

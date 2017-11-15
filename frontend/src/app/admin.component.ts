@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { User } from './user';
 import { LoginService } from './login.service';
+import { AlertService } from './alert.service';
+import { Router } from '@angular/router';
 
 declare var jquery: any;
 declare var $: any;
@@ -11,28 +13,15 @@ declare var $: any;
     styleUrls: ['./admin.component.css']
 })
 export class AdminComponent implements OnInit {
+    activeRoute: string = '';
+
     ngOnInit(): void {
-        console.log(this.login.loggedUser);
-        $(document).ready(function() {
-            $('.navbar-nav [data-toggle="tooltip"]').tooltip();
-            $('.navbar-twitch-toggle').on('click', function(event) {
-                event.preventDefault();
-                $('.navbar-twitch').toggleClass('open');
-            });
-            $('.nav-style-toggle').on('click', function(event) {
-                event.preventDefault();
-                const $current = $('.nav-style-toggle.disabled');
-                $(this).addClass('disabled');
-                $current.removeClass('disabled');
-                $('.navbar-twitch').removeClass('navbar-' + $current.data('type'));
-                $('.navbar-twitch').addClass('navbar-' + $(this).data('type'));
-            });
-        });
     }
 
-    onNavbarToggle(): void {
-        event.preventDefault();
+    setActiveRoute(activeRoute: string) {
+        console.log('setting active route: ' + activeRoute);
+        this.activeRoute = activeRoute;
     }
 
-    constructor(private login: LoginService) {}
+    constructor(private alert: AlertService, private router: Router) {}
 }

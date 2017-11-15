@@ -6,6 +6,7 @@ import { User } from './user';
 import { error } from 'util';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { AlertService } from './alert.service';
 
 @Component({
     templateUrl: './login.component.html',
@@ -23,21 +24,25 @@ export class LoginComponent {
 
         this.loginService.login(this.login).subscribe((data: HttpResponse<User>) => {
             if (data.headers.has('authorization')) {
-                data.body.token = data.headers.get('authorization').replace('Bearer ', '');
-                this.loginService.loggedUser = data.body;
+                localStorage.setItem('token', data.headers.get('authorization').replace('Bearer ', ''));
+                this.alertService.success('Logged in', true);
                 this.router.navigate(['/admin']);
             } else {
-                this.error = 'Authentication failed';
+                this.alertService.error('Missing header?');
             }
         },
 
         (err: HttpErrorResponse) => {
-            this.error = err.error;
+            if (err.status == 404) {
+                this.alertService.error("User not found");
+            } else {
+                this.alertService.error(err.error);
+            }
 
             this.login.email = '';
             this.login.password = '';
         });
     }
 
-    constructor(private loginService: LoginService, private router: Router) {}
+    constructor(private loginService: LoginService, private router: Router, private alertService: AlertService) {}
 }

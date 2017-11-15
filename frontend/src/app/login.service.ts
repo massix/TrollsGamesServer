@@ -8,8 +8,6 @@ import { Observable } from 'rxjs/Observable';
 @Injectable()
 export class LoginService {
     apiBase = 'http://localhost:8180';
-    loggedUser: User;
-
     constructor(private httpClient: HttpClient) {}
 
     login(login: Login): Observable<any> {
