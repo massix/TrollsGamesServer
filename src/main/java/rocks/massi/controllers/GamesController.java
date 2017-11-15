@@ -6,10 +6,13 @@ import org.springframework.web.bind.annotation.*;
 import rocks.massi.authentication.TrollsJwt;
 import rocks.massi.data.Game;
 import rocks.massi.data.GamesRepository;
+import rocks.massi.data.joins.Ownership;
+import rocks.massi.data.joins.OwnershipsRepository;
 import rocks.massi.exceptions.AuthenticationException;
 import rocks.massi.exceptions.GameNotFoundException;
 import rocks.massi.exceptions.MalformattedGameException;
 
+import java.util.LinkedList;
 import java.util.List;
 
 @RestController
@@ -18,6 +21,9 @@ public class GamesController {
 
     @Autowired
     private GamesRepository gamesRepository;
+
+    @Autowired
+    private OwnershipsRepository ownershipsRepository;
 
     @Autowired
     private TrollsJwt trollsJwt;
@@ -68,5 +74,18 @@ public class GamesController {
         }
 
         return g;
+    }
+
+    @CrossOrigin
+    @GetMapping("/owners/{id}")
+    public List<String> getOwnersForGame(@PathVariable("id") final int id) {
+        List<Ownership> ret = ownershipsRepository.findByGame(id);
+        List<String> users = new LinkedList<>();
+
+        for (Ownership ownership : ret) {
+            users.add(ownership.getUser());
+        }
+
+        return users;
     }
 }

@@ -11,5 +11,7 @@ public interface OwnershipsRepository extends Repository<Ownership, Integer> {
 
     void deleteAll();
     List<Ownership> findByUser(final String user);
+
+    List<Ownership> findByGame(final int game);
     List<Ownership> findAll();
 }
