@@ -8,6 +8,7 @@ import { AppComponent } from './app.component';
 
 import { LoginService } from './login.service';
 import { LoginComponent } from './login.component';
+import { GamesComponent } from './games.component';
 import { AdminComponent } from './admin.component';
 import { User } from './user';
 import { UsersComponent } from './users.component';
@@ -24,7 +25,8 @@ import { AuthGuard } from './auth.guard';
     AdminComponent,
     UsersComponent,
     AlertComponent,
-    LogoutComponent
+    LogoutComponent,
+    GamesComponent
   ],
   imports: [
     BrowserModule,
@@ -47,6 +49,12 @@ import { AuthGuard } from './auth.guard';
           {
             path: 'users',
             component: UsersComponent,
+            outlet: 'adminoutlet',
+            canActivate: [AuthGuard]
+          },
+          {
+            path: 'games',
+            component: GamesComponent,
             outlet: 'adminoutlet',
             canActivate: [AuthGuard]
           }

@@ -19,7 +19,7 @@
                         </a>
                     </li>
                     <li>
-                        <a [routerLink]="['/admin']" (click)="setActiveRoute('games')" [ngClass]="{ 'active' : this.activeRoute === 'games' }">Games</a>
+                        <a [routerLink]="['/admin', {outlets: {adminoutlet: 'games'}}]" (click)="setActiveRoute('games')" [ngClass]="{ 'active' : this.activeRoute === 'games' }">Games</a>
                     </li>
                     <li>
                         <a [routerLink]="['/admin']" (click)="setActiveRoute('crawler')" [ngClass]="{ 'active' : this.activeRoute === 'crawler' }">Crawler</a>
@@ -42,6 +42,10 @@
     </div>
 
     <div class="row">
-        <router-outlet name="adminoutlet"></router-outlet>
+        <router-outlet name="adminoutlet">
+            <div *ngIf="activeRoute === ''" class="row">
+                Select an endpoint to start with.
+            </div>
+        </router-outlet>
     </div>
 </div>
