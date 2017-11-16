@@ -1,12 +1,12 @@
 import { Component, OnInit } from '@angular/core';
-import { GamesService } from './games.service';
-import { Game } from './game';
+import { GamesService } from '../services/games.service';
+import { Game } from '../data/game';
 import { HttpErrorResponse } from '@angular/common/http';
-import { AlertService } from './alert.service';
+import { AlertService } from '../services/alert.service';
 
 @Component({
-    templateUrl: './games.component.html',
-    styleUrls: ['./games.component.css']
+    templateUrl: '../views/games.component.html',
+    styleUrls: ['../styles/games.component.css']
 })
 export class GamesComponent implements OnInit {
     games: Game[];

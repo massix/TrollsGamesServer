@@ -5,21 +5,22 @@ import { HttpClientModule } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { NgxPaginationModule } from 'ngx-pagination';
 
-import { AppComponent } from './app.component';
+import { AppComponent } from './components/app.component';
 
-import { LoginService } from './login.service';
-import { LoginComponent } from './login.component';
-import { GamesComponent } from './games.component';
-import { AdminComponent } from './admin.component';
-import { User } from './user';
-import { UsersComponent } from './users.component';
-import { AlertService } from './alert.service';
-import { AlertComponent } from './alert.component';
-import { LogoutComponent } from './logout.component';
-import { UsersService } from './users.service';
+import { LoginService } from './services/login.service';
+import { LoginComponent } from './components/login.component';
+import { GamesComponent } from './components/games.component';
+import { AdminComponent } from './components/admin.component';
+import { User } from './data/user';
+import { UsersComponent } from './components/users.component';
+import { AlertService } from './services/alert.service';
+import { AlertComponent } from './components/alert.component';
+import { LogoutComponent } from './components/logout.component';
+import { UsersService } from './services/users.service';
 import { AuthGuard } from './auth.guard';
-import { GamesService } from './games.service';
-import { GameDetailsComponent } from './game_details.component';
+import { GamesService } from './services/games.service';
+import { GameDetailsComponent } from './components/game_details.component';
+import { CrawlerComponent } from './components/crawler.component';
 
 @NgModule({
   declarations: [
@@ -30,6 +31,7 @@ import { GameDetailsComponent } from './game_details.component';
     AlertComponent,
     LogoutComponent,
     GamesComponent,
+    CrawlerComponent,
     GameDetailsComponent
   ],
   imports: [
@@ -60,6 +62,12 @@ import { GameDetailsComponent } from './game_details.component';
           {
             path: 'games',
             component: GamesComponent,
+            outlet: 'adminoutlet',
+            canActivate: [AuthGuard]
+          },
+          {
+            path: 'crawler',
+            component: CrawlerComponent,
             outlet: 'adminoutlet',
             canActivate: [AuthGuard]
           }

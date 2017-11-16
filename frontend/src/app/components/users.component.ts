@@ -1,12 +1,12 @@
 import { Component, OnInit } from '@angular/core';
-import { LoginService } from './login.service';
-import { UsersService } from './users.service';
-import { User } from './user';
+import { LoginService } from '../services/login.service';
+import { UsersService } from '../services/users.service';
+import { User } from '../data/user';
 import { Md5 } from 'ts-md5/dist/md5';
 
 @Component({
-    templateUrl: './users.component.html',
-    styleUrls: ['./users.component.css']
+    templateUrl: '../views/users.component.html',
+    styleUrls: ['../styles/users.component.css']
 })
 export class UsersComponent implements OnInit {
     constructor(private usersService: UsersService) {}

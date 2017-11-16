@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { User } from './user';
-import { LoginService } from './login.service';
-import { AlertService } from './alert.service';
+import { User } from '../data/user';
+import { LoginService } from '../services/login.service';
+import { AlertService } from '../services/alert.service';
 import { Router } from '@angular/router';
 
 declare var jquery: any;
@@ -9,9 +9,8 @@ declare var $: any;
 
 
 @Component({
-    moduleId: module.id,
-    templateUrl: 'admin.component.html',
-    styleUrls: ['admin.component.css']
+    templateUrl: '../views/admin.component.html',
+    styleUrls: ['../styles/admin.component.css']
 })
 export class AdminComponent implements OnInit {
     activeRoute = '';

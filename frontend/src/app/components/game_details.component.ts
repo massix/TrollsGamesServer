@@ -1,8 +1,8 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { Game } from './game';
-import { GamesService } from './games.service';
+import { Game } from '../data/game';
+import { GamesService } from '../services/games.service';
 import { HttpErrorResponse } from '@angular/common/http';
-import { AlertService } from './alert.service';
+import { AlertService } from '../services/alert.service';
 
 @Component({
     selector: 'game-details',

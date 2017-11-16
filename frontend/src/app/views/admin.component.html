@@ -22,7 +22,7 @@
                         <a [routerLink]="['/admin', {outlets: {adminoutlet: 'games'}}]" (click)="setActiveRoute('games')" [ngClass]="{ 'active' : this.activeRoute === 'games' }">Games</a>
                     </li>
                     <li>
-                        <a [routerLink]="['/admin']" (click)="setActiveRoute('crawler')" [ngClass]="{ 'active' : this.activeRoute === 'crawler' }">Crawler</a>
+                        <a [routerLink]="['/admin', {outlets: {adminoutlet: 'crawler'}}]" (click)="setActiveRoute('crawler')" [ngClass]="{ 'active' : this.activeRoute === 'crawler' }">Crawler</a>
                     </li>
                     <li>
                         <a [routerLink]="['/admin']" (click)="setActiveRoute('cache')" [ngClass]="{ 'active' : this.activeRoute === 'cache' }">Cache</a>

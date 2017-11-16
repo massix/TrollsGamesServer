@@ -1,16 +1,16 @@
 import { Component, OnInit } from '@angular/core';
-import { LoginService } from './login.service';
-import { Login } from './login';
+import { LoginService } from '../services/login.service';
+import { Login } from '../data/login';
 import { HttpResponse } from '@angular/common/http';
-import { User } from './user';
+import { User } from '../data/user';
 import { error } from 'util';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { AlertService } from './alert.service';
+import { AlertService } from '../services/alert.service';
 
 @Component({
-    templateUrl: './login.component.html',
-    styleUrls: ['./login.component.css']
+    templateUrl: '../views/login.component.html',
+    styleUrls: ['../styles/login.component.css']
 })
 export class LoginComponent {
     login: Login = new Login();
