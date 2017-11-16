@@ -19,7 +19,6 @@ export class AdminComponent implements OnInit {
     }
 
     setActiveRoute(activeRoute: string) {
-        console.log('setting active route: ' + activeRoute);
         this.activeRoute = activeRoute;
     }
 

@@ -18,17 +18,12 @@ export class UsersComponent implements OnInit {
     }
 
     submitUser() {
-        console.log('submitting user');
-        console.log(this.newUser);
         this.usersService.addUser(this.newUser).subscribe(data => {
             this.refreshUsersList();
         });
     }
 
     removeUser(user: User) {
-        console.log('removing user');
-        console.log(user);
-
         this.usersService.removeUser(user).subscribe(data => {
             this.refreshUsersList();
         });
@@ -40,20 +35,15 @@ export class UsersComponent implements OnInit {
             this.users = data;
             data.forEach(user => {
                 user.gravatarHash = Md5.hashStr(user.email);
-                console.log(user);
             });
         });
     }
 
     editUser(user: User) {
-        console.log('editing');
         this.newUser = user;
-        console.log(user);
     }
 
     lookupUser(user: User) {
-        console.log('display games for user');
-        console.log(user);
     }
 
     resetForm() {

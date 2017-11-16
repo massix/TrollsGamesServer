@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { Game } from '../data/game';
 
 @Component({
     template:
@@ -6,8 +7,8 @@ import { Component } from '@angular/core';
         <div class="row">
             crawler here
         </div>
-    `
+    `,
+    moduleId: module.id
 })
 export class CrawlerComponent {
-
 }

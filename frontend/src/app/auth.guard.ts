@@ -5,7 +5,6 @@ import { AlertService } from './services/alert.service';
 @Injectable()
 export class AuthGuard implements CanActivate {
     canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot) {
-        console.log('can activate?');
         if (localStorage.getItem('token')) {
             return true;
         }
