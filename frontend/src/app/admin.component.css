@@ -27,7 +27,7 @@ ul li:hover {
 }
 
 .active {
-	background-color: #FF8040;
+    border-bottom: 3px solid rgb(210, 223, 230);
 }
 
 

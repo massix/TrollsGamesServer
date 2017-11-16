@@ -13,28 +13,28 @@
                 <ul class="nav navbar-nav">
                     <li>
                         <a  [routerLink]="['/admin', {outlets: {adminoutlet: 'users'}}]"
-                            (click)="setActiveRoute('users')"
-                            [ngClass]="{ 'active' : activeRoute === 'users' }">
+                            [ngClass]="{ 'active' : this.activeRoute === 'users' }"
+                            (click)="setActiveRoute('users')">
                             Users
                         </a>
                     </li>
                     <li>
-                        <a [routerLink]="['/admin']">Games</a>
+                        <a [routerLink]="['/admin']" (click)="setActiveRoute('games')" [ngClass]="{ 'active' : this.activeRoute === 'games' }">Games</a>
                     </li>
                     <li>
-                        <a [routerLink]="['/admin']">Crawler</a>
+                        <a [routerLink]="['/admin']" (click)="setActiveRoute('crawler')" [ngClass]="{ 'active' : this.activeRoute === 'crawler' }">Crawler</a>
                     </li>
                     <li>
-                        <a [routerLink]="['/admin']">Cache</a>
+                        <a [routerLink]="['/admin']" (click)="setActiveRoute('cache')" [ngClass]="{ 'active' : this.activeRoute === 'cache' }">Cache</a>
                     </li>
                     <li>
-                        <a [routerLink]="['/admin']">Collection</a>
+                        <a [routerLink]="['/admin']" (click)="setActiveRoute('collection')" [ngClass]="{ 'active' : this.activeRoute === 'collection' }">Collection</a>
                     </li>
                     <li>
-                        <a [routerLink]="['/admin']">Information</a>
+                        <a [routerLink]="['/admin']" (click)="setActiveRoute('information')" [ngClass]="{ 'active' : this.activeRoute === 'information' }">Information</a>
                     </li>
                     <li>
-                        <a [routerLink]="['/logout']">Logout</a>
+                        <a [routerLink]="['/logout']" (click)="setActiveRoute('logout')" [ngClass]="{ 'active' : this.activeRoute === 'logout' }">Logout</a>
                     </li>
                 </ul>
             </div>
