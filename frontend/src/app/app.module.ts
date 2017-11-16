@@ -19,6 +19,7 @@ import { LogoutComponent } from './logout.component';
 import { UsersService } from './users.service';
 import { AuthGuard } from './auth.guard';
 import { GamesService } from './games.service';
+import { GameDetailsComponent } from './game_details.component';
 
 @NgModule({
   declarations: [
@@ -28,7 +29,8 @@ import { GamesService } from './games.service';
     UsersComponent,
     AlertComponent,
     LogoutComponent,
-    GamesComponent
+    GamesComponent,
+    GameDetailsComponent
   ],
   imports: [
     NgxPaginationModule,

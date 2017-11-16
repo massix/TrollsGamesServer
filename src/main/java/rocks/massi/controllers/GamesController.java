@@ -8,6 +8,7 @@ import rocks.massi.authentication.TrollsJwt;
 import rocks.massi.data.Game;
 import rocks.massi.data.GamesRepository;
 import rocks.massi.data.PagesInformation;
+import rocks.massi.data.joins.GameHonorsRepository;
 import rocks.massi.data.joins.Ownership;
 import rocks.massi.data.joins.OwnershipsRepository;
 import rocks.massi.exceptions.AuthenticationException;
@@ -26,6 +27,9 @@ public class GamesController {
 
     @Autowired
     private OwnershipsRepository ownershipsRepository;
+
+    @Autowired
+    private GameHonorsRepository gameHonorsRepository;
 
     @Autowired
     private TrollsJwt trollsJwt;
@@ -75,6 +79,7 @@ public class GamesController {
         return gamesRepository.findById(game.getId());
     }
 
+    @CrossOrigin(allowedHeaders = {"Authorization"})
     @DeleteMapping("/remove/{id}")
     public Game removeGame(@RequestHeader("Authorization") final String authorization,
                            @PathVariable("id") final int id) {
@@ -85,7 +90,12 @@ public class GamesController {
         val g = gamesRepository.findById(id);
 
         if (g != null) {
+            gameHonorsRepository.deleteByGame(id);
+            ownershipsRepository.deleteByGame(id);
             gamesRepository.delete(g);
+        }
+        else {
+            throw new GameNotFoundException();
         }
 
         return g;

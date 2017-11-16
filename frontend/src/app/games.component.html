@@ -12,12 +12,17 @@
             <tbody>
                 <tr *ngFor="let game of games | paginate: { itemsPerPage: 20, currentPage: currentPage, totalItems: totalItems }">
                     <th scope="row">{{game.id}}</th>
-                    <td>{{game.name}}</td>
+                    <td>
+                        <span class="fa fa-search" (click)="showHideGame(game)"></span>&nbsp;
+                        <span class="fa fa-remove" (click)="removeGame(game)"></span>&nbsp;
+                        &nbsp;{{game.name}}</td>
                     <td>{{game.rank}}</td>
                 </tr>
             </tbody>
         </table>
     </div>
 
+    <game-details *ngIf="selectedGame" [game]="selectedGame"></game-details>
+    <!-- <button *ngIf="selectedGame" class="btn-sm btn-primary" (click)="selectedGame = null">Hide</button> -->
     <pagination-controls (pageChange)="pageChange($event)"></pagination-controls>
 </div>

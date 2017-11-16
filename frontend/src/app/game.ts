@@ -4,4 +4,7 @@ export class Game {
     thumbnail: string;
     description: string;
     rank: number;
+    authors: string;
+    minPlayers: number;
+    maxPlayers: number;
 }
