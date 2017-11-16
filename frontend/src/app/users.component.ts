@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { LoginService } from "./login.service";
+import { LoginService } from './login.service';
 import { UsersService } from './users.service';
 import { User } from './user';
 import { Md5 } from 'ts-md5/dist/md5';
@@ -22,7 +22,7 @@ export class UsersComponent implements OnInit {
         console.log(this.newUser);
         this.usersService.addUser(this.newUser).subscribe(data => {
             this.refreshUsersList();
-        })
+        });
     }
 
     removeUser(user: User) {
@@ -31,7 +31,7 @@ export class UsersComponent implements OnInit {
 
         this.usersService.removeUser(user).subscribe(data => {
             this.refreshUsersList();
-        })
+        });
     }
 
     refreshUsersList() {
@@ -40,9 +40,9 @@ export class UsersComponent implements OnInit {
             this.users = data;
             data.forEach(user => {
                 user.gravatarHash = Md5.hashStr(user.email);
-                console.log(user)
+                console.log(user);
             });
-        })
+        });
     }
 
     editUser(user: User) {

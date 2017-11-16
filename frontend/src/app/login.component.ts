@@ -33,8 +33,8 @@ export class LoginComponent {
         },
 
         (err: HttpErrorResponse) => {
-            if (err.status == 404) {
-                this.alertService.error("User not found");
+            if (err.status === 404) {
+                this.alertService.error('User not found');
             } else {
                 this.alertService.error(err.error);
             }

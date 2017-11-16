@@ -13,7 +13,7 @@ declare var $: any;
     styleUrls: ['./admin.component.css']
 })
 export class AdminComponent implements OnInit {
-    activeRoute: string = '';
+    activeRoute = '';
 
     ngOnInit(): void {
     }

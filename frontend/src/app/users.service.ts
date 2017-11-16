@@ -1,7 +1,7 @@
-import { Injectable } from "@angular/core";
-import { HttpClient, HttpHeaders } from "@angular/common/http";
-import { Observable } from "rxjs/Observable";
-import { User } from "./user";
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable } from 'rxjs/Observable';
+import { User } from './user';
 
 @Injectable()
 export class UsersService {
@@ -12,8 +12,7 @@ export class UsersService {
     }
 
     addUser(body: User): Observable<User> {
-        var headers = new HttpHeaders();
-        headers.append('Content-Type', 'application/json;charset=UTF-8');
+        const headers = new HttpHeaders().append('Content-Type', 'application/json;charset=UTF-8');
         return this.httpClient.post<User>(this.apiBase + '/v1/users/add', body, {headers: headers});
     }
 
