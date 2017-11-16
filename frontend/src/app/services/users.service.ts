@@ -2,10 +2,11 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs/Observable';
 import { User } from '../data/user';
+import { Server } from '../constants/server';
 
 @Injectable()
 export class UsersService {
-    apiBase = 'http://localhost:8180';
+    apiBase = Server.apiBase;
 
     getAllUsers(): Observable<User[]> {
         return this.httpClient.get<User[]>(this.apiBase + '/v1/users/get');

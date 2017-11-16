@@ -3,10 +3,11 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs/Observable';
 import { Game } from '../data/game';
 import { PagesInformation } from '../data/pagesinformation';
+import { Server } from '../constants/server';
 
 @Injectable()
 export class GamesService {
-    apiBase = 'http://localhost:8180';
+    apiBase = Server.apiBase;
 
     getGame(id: number): Observable<Game> {
         return this.httpClient.get<Game>(this.apiBase + '/v1/games/get/' + id);
