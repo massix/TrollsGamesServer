@@ -1,3 +1,23 @@
-<div col="col-sm-12 col-xs-12 col-md-12 col-lg-12">
-    Games here
+
+<div class="container">
+    <div class="table">
+        <table class="table table-dark table-hover table-condensed">
+            <thead class="thead-light">
+                <tr>
+                    <th scope="col">Id</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Rank</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let game of games | paginate: { itemsPerPage: 20, currentPage: currentPage, totalItems: totalItems }">
+                    <th scope="row">{{game.id}}</th>
+                    <td>{{game.name}}</td>
+                    <td>{{game.rank}}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <pagination-controls (pageChange)="pageChange($event)"></pagination-controls>
 </div>

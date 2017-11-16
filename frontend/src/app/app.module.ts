@@ -3,6 +3,7 @@ import { NgModule } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { HttpClientModule } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
+import { NgxPaginationModule } from 'ngx-pagination';
 
 import { AppComponent } from './app.component';
 
@@ -17,6 +18,7 @@ import { AlertComponent } from './alert.component';
 import { LogoutComponent } from './logout.component';
 import { UsersService } from './users.service';
 import { AuthGuard } from './auth.guard';
+import { GamesService } from './games.service';
 
 @NgModule({
   declarations: [
@@ -29,6 +31,7 @@ import { AuthGuard } from './auth.guard';
     GamesComponent
   ],
   imports: [
+    NgxPaginationModule,
     BrowserModule,
     FormsModule,
     HttpClientModule,
@@ -67,7 +70,7 @@ import { AuthGuard } from './auth.guard';
       }
     ])
   ],
-  providers: [LoginService, AlertService, UsersService, AuthGuard],
+  providers: [LoginService, AlertService, UsersService, GamesService ,AuthGuard],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
