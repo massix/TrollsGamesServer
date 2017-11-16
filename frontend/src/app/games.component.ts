@@ -55,5 +55,21 @@ export class GamesComponent implements OnInit {
         }
     }
 
+    recrawlGame(game: Game) {
+        game.name = 'recrawling';
+        game.description = 'recrawling';
+        this.gamesService.recrawlGame(game.id).subscribe(
+            data => {
+                this.gamesService.getGame(game.id).subscribe(data => {
+                    game.name = data.name;
+                    game.description = data.description;
+                });
+            },
+            (error: HttpErrorResponse) => {
+                this.alertService.error('Code ' + error.status + ' - ' + error.error);
+            }
+        )
+    }
+
     constructor(private gamesService: GamesService, private alertService: AlertService) {}
 }

@@ -48,6 +48,7 @@ public class CrawlerController {
         return runningCrawlers;
     }
 
+    @CrossOrigin(allowedHeaders = {"Authorization"})
     @PostMapping("/games/{gameId}")
     public Game crawlGame(@RequestHeader("Authorization") final String authorization,
                           @PathVariable("gameId") final int gameId) {

@@ -33,5 +33,10 @@ export class GamesService {
         return this.httpClient.delete(this.apiBase + '/v1/games/remove/' + gameId, {headers: headers});
     }
 
+    recrawlGame(gameId: number): Observable<any> {
+        const headers = new HttpHeaders().set('Authorization', 'Bearer ' + localStorage.getItem('token'));
+        return this.httpClient.post(this.apiBase + '/v1/crawler/games/' + gameId, null, {headers: headers});
+    }
+
     constructor(private httpClient: HttpClient) {}
 }
