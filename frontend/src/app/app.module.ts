@@ -21,6 +21,8 @@ import { AuthGuard } from './auth.guard';
 import { GamesService } from './services/games.service';
 import { GameDetailsComponent } from './components/game_details.component';
 import { CrawlerComponent } from './components/crawler.component';
+import { CrawlService } from './services/crawl.service';
+import { SimpleTimer } from 'ng2-simple-timer';
 
 @NgModule({
   declarations: [
@@ -80,7 +82,7 @@ import { CrawlerComponent } from './components/crawler.component';
       }
     ])
   ],
-  providers: [LoginService, AlertService, UsersService, GamesService ,AuthGuard],
+  providers: [LoginService, AlertService, UsersService, GamesService, CrawlService, AuthGuard, SimpleTimer],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

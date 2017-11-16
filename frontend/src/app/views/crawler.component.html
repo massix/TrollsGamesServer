@@ -1,0 +1,29 @@
+<div class="container">
+    <div class="col-lg-3 col-xs-12 col-sm-12 col-md-3">
+        <div *ngFor="let queue of queues" class="queue" id="queue-{{queue.queue}}">
+            <span class="queue-id">Queue #{{queue.queue}} <span class="fa fa-remove pull-right" (click)="removeQueue(queue)"></span> <span class="fa fa-caret-down pull-right" data-toggle="collapse" [attr.data-target]="'#queue-' + queue.queue + '-accordion'"></span></span><br />
+            <div class="collapse" id="queue-{{queue.queue}}-accordion">
+                <span class="queue-user"><strong>{{queue.user}}</strong></span><br />
+                <span [ngClass]="{'queue-active': queue.running, 'queue-inactive': !queue.running}">{{queue.running}}</span><br />
+                <span class="queue-games">{{queue.crawled + queue.cacheHit}}</span>/<span class="queue-total">{{queue.total}}</span><br />
+                <span class="queue-cache-hit">{{queue.cacheHit}} Hit</span><br />
+                <span class="queue-cache-miss">{{queue.cacheMiss}} Miss</span><br />
+                <span class="queue-started">{{queue.started}}</span><br />
+                <span class="queue-finished">{{queue.finished}}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 
+    "user": "Chakado",
+    "running": true,
+    "crawled": 7,
+    "failed": 0,
+    "cacheHit": 7,
+    "cacheMiss": 7,
+    "total": 165,
+    "started": "Thu Nov 16 22:57:57 CET 2017",
+    "finished": "Thu Nov 16 22:57:57 CET 2017",
+    "queue": 38 
+-->
