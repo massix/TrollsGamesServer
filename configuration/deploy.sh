@@ -8,7 +8,7 @@ function build_and_deploy_backoffice() {
     npm install -g @angular/cli
     cd frontend
     npm install
-    ng build --${DEPLOY_ENV}
+    ng build --prod -e ${DEPLOY_ENV}
     tar czf dist.tar.gz dist/
 
     scp dist.tar.gz prod:trolls-admin-${DEPLOY_ENV}/archive/dist-${now}.tar.gz
