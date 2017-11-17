@@ -11,7 +11,7 @@ import { AlertService } from '../services/alert.service';
     `
         <div class="col-md-3 col-lg-3 col-xs-12 col-sm-12">
             <small>
-                <img src="{{game.thumbnail}}"> <br />
+                <img class="img-responsive img-rounded" src="{{game.thumbnail}}"> <br />
                 A game for {{game.minPlayers}} to {{game.maxPlayers}} players.<br />
                 Designed by {{game.authors}}<br />
                 Ranked @ {{game.rank}}<br />
