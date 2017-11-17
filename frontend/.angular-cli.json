@@ -26,7 +26,7 @@
       "environments": {
         "local": "environments/environment.local.ts",
         "dev": "environments/environment.dev.ts",
-        "staging": "environments/environment.staging.ts",
+        "preprod": "environments/environment.preprod.ts",
         "prod": "environments/environment.prod.ts"
       }
     }
