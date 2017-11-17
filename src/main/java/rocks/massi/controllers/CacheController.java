@@ -24,6 +24,7 @@ public class CacheController {
     @Autowired
     private TrollsJwt trollsJwt;
 
+    @CrossOrigin(allowedHeaders = {"Authorization"})
     @DeleteMapping("/purge")
     public CacheOperation purgeCache(@RequestHeader("Authorization") final String authorization) {
         if (!trollsJwt.checkHeaderWithToken(authorization)) {
@@ -39,6 +40,7 @@ public class CacheController {
         }
     }
 
+    @CrossOrigin(allowedHeaders = {"Authorization"})
     @DeleteMapping("/expired")
     public CacheOperation purgeExpired(@RequestHeader("Authorization") final String authorization) {
         if (!trollsJwt.checkHeaderWithToken(authorization)) {
@@ -54,6 +56,7 @@ public class CacheController {
         }
     }
 
+    @CrossOrigin(allowedHeaders = {"Authorization"})
     @GetMapping("/get")
     public CacheOperation getMemoryCache(@RequestHeader("Authorization") final String authorization) {
         if (!trollsJwt.checkHeaderWithToken(authorization)) {

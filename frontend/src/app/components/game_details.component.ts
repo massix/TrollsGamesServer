@@ -13,6 +13,7 @@ import { AlertService } from '../services/alert.service';
                 <img src="{{game.thumbnail}}"> <br />
                 A game for {{game.minPlayers}} to {{game.maxPlayers}} players.<br />
                 Designed by {{game.authors}}<br />
+                Ranked @ {{game.rank}}<br />
                 Owned by 
                 <ul>
                     <li *ngFor="let owner of owners">{{owner}}</li>

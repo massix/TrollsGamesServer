@@ -14,6 +14,7 @@ import { Router, NavigationStart } from '@angular/router';
 })
 export class CrawlerComponent implements OnInit {
     queues: Queue[];
+    subscriptionId: string;
 
     getAllQueues() {
         this.crawlService.getQueues().subscribe(
@@ -26,7 +27,6 @@ export class CrawlerComponent implements OnInit {
         
         this.queues.forEach(q => {
             if (q.running) {
-                console.log('updating queue ' + q.queue);
                 this.crawlService.getQueue(q.queue).subscribe(newQueue => {
                     q.total = newQueue.total;
                     q.crawled = newQueue.crawled;
@@ -41,13 +41,12 @@ export class CrawlerComponent implements OnInit {
 
     ngOnInit() {
         this.getAllQueues();
-        this.timerService.newTimer('5sec', 10);
-        this.timerService.subscribe('5sec', () => this.updateQueues());
+        this.timerService.newTimer('3sec', 3);
+        this.subscriptionId = this.timerService.subscribe('3sec', () => this.updateQueues());
 
         this.router.events.subscribe(event => {
             if (event instanceof NavigationStart) {
-                console.log('Unsubscribe timer');
-                this.timerService.unsubscribe('5sec');
+                this.timerService.unsubscribe(this.subscriptionId);
             }
         });
     }

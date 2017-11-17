@@ -1,7 +1,8 @@
 <div class="container">
     <div class="col-lg-3 col-xs-12 col-sm-12 col-md-3">
+        <span class="bg-warning" *ngIf="queues == null || queues.length == 0">No crawl in progress.</span>
         <div *ngFor="let queue of queues" class="queue" id="queue-{{queue.queue}}">
-            <span class="queue-id">Queue #{{queue.queue}} <span class="fa fa-remove pull-right" (click)="removeQueue(queue)"></span> <span class="fa fa-caret-down pull-right" data-toggle="collapse" [attr.data-target]="'#queue-' + queue.queue + '-accordion'"></span></span><br />
+            <span class="queue-id" [ngClass]="{'bg-success': queue.running}">Queue #{{queue.queue}} ({{queue.user}})<span class="fa fa-remove pull-right" (click)="removeQueue(queue)"></span> <span class="fa fa-caret-down pull-right" data-toggle="collapse" [attr.data-target]="'#queue-' + queue.queue + '-accordion'"></span></span><br />
             <div class="collapse" id="queue-{{queue.queue}}-accordion">
                 <span class="queue-user"><strong>{{queue.user}}</strong></span><br />
                 <span [ngClass]="{'queue-active': queue.running, 'queue-inactive': !queue.running}">{{queue.running}}</span><br />

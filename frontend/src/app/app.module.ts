@@ -23,6 +23,8 @@ import { GameDetailsComponent } from './components/game_details.component';
 import { CrawlerComponent } from './components/crawler.component';
 import { CrawlService } from './services/crawl.service';
 import { SimpleTimer } from 'ng2-simple-timer';
+import { CacheComponent } from './components/cache.component';
+import { CacheService } from './services/cache.service';
 
 @NgModule({
   declarations: [
@@ -34,7 +36,8 @@ import { SimpleTimer } from 'ng2-simple-timer';
     LogoutComponent,
     GamesComponent,
     CrawlerComponent,
-    GameDetailsComponent
+    GameDetailsComponent,
+    CacheComponent
   ],
   imports: [
     NgxPaginationModule,
@@ -72,6 +75,12 @@ import { SimpleTimer } from 'ng2-simple-timer';
             component: CrawlerComponent,
             outlet: 'adminoutlet',
             canActivate: [AuthGuard]
+          },
+          {
+            path: 'cache',
+            component: CacheComponent,
+            outlet: 'adminoutlet',
+            canActivate: [AuthGuard]
           }
         ]
       },
@@ -82,7 +91,16 @@ import { SimpleTimer } from 'ng2-simple-timer';
       }
     ])
   ],
-  providers: [LoginService, AlertService, UsersService, GamesService, CrawlService, AuthGuard, SimpleTimer],
+  providers: [
+    LoginService, 
+    AlertService, 
+    UsersService, 
+    GamesService, 
+    CrawlService,
+    CacheService,
+    AuthGuard,
+    SimpleTimer
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

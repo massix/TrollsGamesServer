@@ -25,7 +25,7 @@
                         <a [routerLink]="['/admin', {outlets: {adminoutlet: 'crawler'}}]" (click)="setActiveRoute('crawler')" [ngClass]="{ 'active' : this.activeRoute === 'crawler' }">Crawler</a>
                     </li>
                     <li>
-                        <a [routerLink]="['/admin']" (click)="setActiveRoute('cache')" [ngClass]="{ 'active' : this.activeRoute === 'cache' }">Cache</a>
+                        <a [routerLink]="['/admin', {outlets: {adminoutlet: 'cache'}}]" (click)="setActiveRoute('cache')" [ngClass]="{ 'active' : this.activeRoute === 'cache' }">Cache</a>
                     </li>
                     <li>
                         <a [routerLink]="['/admin']" (click)="setActiveRoute('collection')" [ngClass]="{ 'active' : this.activeRoute === 'collection' }">Collection</a>
