@@ -12,7 +12,7 @@ function build_and_deploy_backoffice() {
     tar czf dist.tar.gz dist/
 
     scp dist.tar.gz prod:trolls-admin-${DEPLOY_ENV}/archive/dist-${now}.tar.gz
-    ssh prod -- cd trolls-admin-${DEPLOY_ENV} && tar xzf archive/dist-${now}.tar.gz -C .
+    ssh prod -- cd trolls-admin-${DEPLOY_ENV} \&\& tar xzf archive/dist-${now}.tar.gz -C .
 }
 
 function deploy_files() {
