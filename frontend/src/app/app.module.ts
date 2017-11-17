@@ -25,6 +25,8 @@ import { CrawlService } from './services/crawl.service';
 import { SimpleTimer } from 'ng2-simple-timer';
 import { CacheComponent } from './components/cache.component';
 import { CacheService } from './services/cache.service';
+import { CollectionComponent } from './components/collection.component';
+import { CollectionService } from './services/collection.service';
 
 @NgModule({
   declarations: [
@@ -37,7 +39,8 @@ import { CacheService } from './services/cache.service';
     GamesComponent,
     CrawlerComponent,
     GameDetailsComponent,
-    CacheComponent
+    CacheComponent,
+    CollectionComponent
   ],
   imports: [
     NgxPaginationModule,
@@ -81,6 +84,12 @@ import { CacheService } from './services/cache.service';
             component: CacheComponent,
             outlet: 'adminoutlet',
             canActivate: [AuthGuard]
+          },
+          {
+            path: 'collection',
+            component: CollectionComponent,
+            outlet: 'adminoutlet',
+            canActivate: [AuthGuard]
           }
         ]
       },
@@ -98,6 +107,7 @@ import { CacheService } from './services/cache.service';
     GamesService, 
     CrawlService,
     CacheService,
+    CollectionService,
     AuthGuard,
     SimpleTimer
   ],

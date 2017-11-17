@@ -1,5 +1,7 @@
 package rocks.massi.data.joins;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.Repository;
 
 import javax.transaction.Transactional;
@@ -20,6 +22,7 @@ public interface OwnershipsRepository extends Repository<Ownership, Integer> {
     void deleteByGame(final int game);
 
     List<Ownership> findByUser(final String user);
+    Page<Ownership> findByUser(final String user, final Pageable pageable);
 
     List<Ownership> findByGame(final int game);
     List<Ownership> findAll();

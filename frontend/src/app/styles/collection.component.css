@@ -1,0 +1,27 @@
+.user {
+    border-bottom: 1px dotted black;
+    margin: 2px;
+}
+
+.user:hover {
+    background-color: rgb(231, 230, 222);
+}
+
+.active {
+    background-color: lightgray;
+}
+
+.user-nick {
+    font-size: 1.2em;
+    font-weight: 900;
+}
+
+.user-display {
+    font-size: 0.8em;
+    font-weight: 300;
+}
+
+.user-email {
+    font-size: 0.8em;
+    font-weight: 800;
+}
