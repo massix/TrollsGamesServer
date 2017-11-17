@@ -1,0 +1,35 @@
+.queue {
+    margin-top: 8px;
+    margin-bottom: 8px;
+}
+
+.queue-id {
+    font-weight: 300;
+}
+
+.queue-active {
+    color: green;
+}
+
+.queue-user, 
+.queue-active, 
+.queue-games, 
+.queue-total,
+.queue-cache-hit,
+.queue-cache-miss,
+.queue-started, 
+.queue-finished, 
+.queue-inactive {
+    font-size: 0.8em;
+}
+
+.queue-user {
+    text-decoration: underline;
+}
+.queue-active {
+    color: green;
+}
+
+.queue-inactive {
+    color: red;
+}

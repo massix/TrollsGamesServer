@@ -48,6 +48,7 @@ public class CrawlerController {
         return runningCrawlers;
     }
 
+    @CrossOrigin(allowedHeaders = {"Authorization"})
     @PostMapping("/games/{gameId}")
     public Game crawlGame(@RequestHeader("Authorization") final String authorization,
                           @PathVariable("gameId") final int gameId) {
@@ -63,6 +64,7 @@ public class CrawlerController {
                 null).crawlGame(gameId);
     }
 
+    @CrossOrigin(allowedHeaders = {"Authorization"})
     @PostMapping("/collection/{user}")
     public void crawlCollectionForUser(@RequestHeader("Authorization") final String authorization,
                                        @PathVariable("user") final String nick, HttpServletResponse response) {
@@ -98,6 +100,7 @@ public class CrawlerController {
         }
     }
 
+    @CrossOrigin(allowedHeaders = {"Authorization"})
     @GetMapping("/queues")
     public List<CrawlingProgress> getQueues(@RequestHeader("Authorization") final String authorization) {
         if (!trollsJwt.checkHeaderWithToken(authorization)) {
@@ -116,6 +119,7 @@ public class CrawlerController {
         return ret;
     }
 
+    @CrossOrigin(allowedHeaders = {"Authorization"})
     @DeleteMapping("/queues")
     public List<CrawlingProgress> purgeFinishedQueues(@RequestHeader("Authorization") final String authorization) {
         if (!trollsJwt.checkHeaderWithToken(authorization)) {
@@ -139,6 +143,7 @@ public class CrawlerController {
         return ret;
     }
 
+    @CrossOrigin(allowedHeaders = {"Authorization"})
     @GetMapping("/queue/{id}")
     public CrawlingProgress getProgress(@RequestHeader("Authorization") final String authorization,
                                         @PathVariable("id") final long id, HttpServletResponse response) {
@@ -162,6 +167,7 @@ public class CrawlerController {
         return progress[0];
     }
 
+    @CrossOrigin(allowedHeaders = {"Authorization"})
     @DeleteMapping("/queue/{id}")
     public void deleteQueue(@RequestHeader("Authorization") final String authorization,
                             @PathVariable("id") final long id, HttpServletResponse response) {

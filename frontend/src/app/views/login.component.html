@@ -1,0 +1,37 @@
+<div class="container">
+
+    <div class="row" id="pwd-container">
+        <div class="col-md-4"></div>
+
+        <div class="col-md-4">
+            <section class="login-form">
+
+                <form #loginForm="ngForm" role="login" name="form" (ngSubmit)="loginForm.form.valid && onSubmit()">
+                    <img src="http://i.imgur.com/RcmcLv4.png" class="img-responsive" alt="" />
+                    <input [(ngModel)]="login.email" type="email" name="email" placeholder="Email" required class="form-control input-lg" #email="ngModel" />
+                    <div *ngIf="loginForm.submitted && !email.valid" class="help-block">Email is required</div>
+
+                    <input [(ngModel)]="login.password" type="password" name="password" class="form-control input-lg" id="password" placeholder="Password" required #password="ngModel" />
+                    <div *ngIf="loginForm.submitted && !password.valid" class="help-block">Password can not be empty</div>
+
+                    <button class="btn btn-lg btn-primary btn-block">Sign in</button>
+                    <div>
+                        <a href="/register">Create account</a> or
+                        <a href="/reset">reset password</a>
+                    </div>
+                    <div *ngIf="error">
+                        <span class="error">{{error}}</span>
+                    </div>
+                </form>
+
+                <div class="form-links">
+                    <a href="#">www.website.com</a>
+                </div>
+            </section>
+        </div>
+
+        <div class="col-md-4"></div>
+
+
+    </div>
+</div>

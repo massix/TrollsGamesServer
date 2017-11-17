@@ -14,6 +14,7 @@ import rocks.massi.authentication.TrollsJwt;
 import rocks.massi.data.LoginInformation;
 import rocks.massi.data.User;
 import rocks.massi.data.UsersRepository;
+import rocks.massi.data.joins.OwnershipsRepository;
 import rocks.massi.exceptions.AuthenticationException;
 import rocks.massi.exceptions.MalformattedUserException;
 import rocks.massi.exceptions.UserNotFoundException;
@@ -32,6 +33,9 @@ public class UsersController {
 
     @Autowired
     private UsersRepository usersRepository;
+
+    @Autowired
+    private OwnershipsRepository ownershipsRepository;
 
     @Autowired
     private BCryptPasswordEncoder bCryptPasswordEncoder;
@@ -118,6 +122,7 @@ public class UsersController {
         return user;
     }
 
+    @CrossOrigin
     @PostMapping(value = "/add")
     public User addUser(@RequestBody User user) {
         log.info("Got user {}", user.getBggNick());
@@ -134,7 +139,7 @@ public class UsersController {
         return DBUtils.getUser(usersRepository, user.getBggNick());
     }
 
-    @CrossOrigin
+    @CrossOrigin(exposedHeaders = {"Authorization"})
     @PostMapping(value = "/login")
     public User login(@RequestBody LoginInformation loginInformation, HttpServletResponse servletResponse) {
         log.info("Requested login for user {}", loginInformation.getEmail());
@@ -170,10 +175,17 @@ public class UsersController {
         throw new AuthenticationException("Username or password are WRONG");
     }
 
+    @CrossOrigin(allowedHeaders = {"Authorization"})
     @DeleteMapping("/remove/{nick}")
-    public User removeUser(@PathVariable("nick") String nick) {
+    public User removeUser(@RequestHeader("Authorization") final String authorization,
+                           @PathVariable("nick") String nick) {
+        if (!trollsJwt.checkHeaderWithToken(authorization)) {
+            throw new AuthenticationException("User not logged in");
+        }
+
         val user = DBUtils.getUser(usersRepository, nick);
         if (user != null) {
+            ownershipsRepository.deleteByUser(nick);
             usersRepository.deleteByBggNick(nick);
         }
         else {

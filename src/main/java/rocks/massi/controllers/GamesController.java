@@ -2,10 +2,13 @@ package rocks.massi.controllers;
 
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.*;
 import rocks.massi.authentication.TrollsJwt;
 import rocks.massi.data.Game;
 import rocks.massi.data.GamesRepository;
+import rocks.massi.data.PagesInformation;
+import rocks.massi.data.joins.GameHonorsRepository;
 import rocks.massi.data.joins.Ownership;
 import rocks.massi.data.joins.OwnershipsRepository;
 import rocks.massi.exceptions.AuthenticationException;
@@ -24,6 +27,9 @@ public class GamesController {
 
     @Autowired
     private OwnershipsRepository ownershipsRepository;
+
+    @Autowired
+    private GameHonorsRepository gameHonorsRepository;
 
     @Autowired
     private TrollsJwt trollsJwt;
@@ -45,6 +51,19 @@ public class GamesController {
         return g;
     }
 
+    @CrossOrigin
+    @GetMapping("/get/page/{number}")
+    public List<Game> getPagedGames(@PathVariable("number") final int pageNumber) {
+        return gamesRepository.findAllByOrderByNameAsc(new PageRequest(pageNumber, 20)).getContent();
+    }
+
+    @CrossOrigin
+    @GetMapping("/get/page/total")
+    public PagesInformation getTotalPages() {
+        return new PagesInformation(gamesRepository.findAll(new PageRequest(0, 20)).getTotalPages(), 20);
+    }
+
+    @CrossOrigin(allowedHeaders = {"Authorization"})
     @PostMapping("/add")
     public Game insertGame(@RequestHeader("Authorization") final String authorization,
                            @RequestBody final Game game) {
@@ -60,6 +79,7 @@ public class GamesController {
         return gamesRepository.findById(game.getId());
     }
 
+    @CrossOrigin(allowedHeaders = {"Authorization"})
     @DeleteMapping("/remove/{id}")
     public Game removeGame(@RequestHeader("Authorization") final String authorization,
                            @PathVariable("id") final int id) {
@@ -70,7 +90,12 @@ public class GamesController {
         val g = gamesRepository.findById(id);
 
         if (g != null) {
+            gameHonorsRepository.deleteByGame(id);
+            ownershipsRepository.deleteByGame(id);
             gamesRepository.delete(g);
+        }
+        else {
+            throw new GameNotFoundException();
         }
 
         return g;

@@ -1,0 +1,51 @@
+<div class="container">
+    <div class="row">
+        <nav class="navbar navbar-default">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                    <span class="sr-only">Navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+            </div>
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul class="nav navbar-nav">
+                    <li>
+                        <a  [routerLink]="['/admin', {outlets: {adminoutlet: 'users'}}]"
+                            [ngClass]="{ 'active' : this.activeRoute === 'users' }"
+                            (click)="setActiveRoute('users')">
+                            Users
+                        </a>
+                    </li>
+                    <li>
+                        <a [routerLink]="['/admin', {outlets: {adminoutlet: 'games'}}]" (click)="setActiveRoute('games')" [ngClass]="{ 'active' : this.activeRoute === 'games' }">Games</a>
+                    </li>
+                    <li>
+                        <a [routerLink]="['/admin', {outlets: {adminoutlet: 'crawler'}}]" (click)="setActiveRoute('crawler')" [ngClass]="{ 'active' : this.activeRoute === 'crawler' }">Crawler</a>
+                    </li>
+                    <li>
+                        <a [routerLink]="['/admin', {outlets: {adminoutlet: 'cache'}}]" (click)="setActiveRoute('cache')" [ngClass]="{ 'active' : this.activeRoute === 'cache' }">Cache</a>
+                    </li>
+                    <li>
+                        <a [routerLink]="['/admin', {outlets: {adminoutlet: 'collection'}}]" (click)="setActiveRoute('collection')" [ngClass]="{ 'active' : this.activeRoute === 'collection' }">Collection</a>
+                    </li>
+                    <li>
+                        <a [routerLink]="['/admin']" (click)="setActiveRoute('information')" [ngClass]="{ 'active' : this.activeRoute === 'information' }">Information</a>
+                    </li>
+                    <li>
+                        <a [routerLink]="['/logout']" (click)="setActiveRoute('logout')" [ngClass]="{ 'active' : this.activeRoute === 'logout' }">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </div>
+
+    <div class="row">
+        <router-outlet name="adminoutlet">
+            <div *ngIf="activeRoute === ''" class="row">
+                Select an endpoint to start with.
+            </div>
+        </router-outlet>
+    </div>
+</div>
