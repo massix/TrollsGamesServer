@@ -1,10 +1,11 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, style } from '@angular/core';
 import { Game } from '../data/game';
 import { GamesService } from '../services/games.service';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AlertService } from '../services/alert.service';
 
 @Component({
+    styles: ['img { width: 100% }'],
     selector: 'game-details',
     template:
     `
