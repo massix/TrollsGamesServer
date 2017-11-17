@@ -1,3 +1,3 @@
 export class Server {
-    static apiBase = 'http://localhost:8180';
+    static apiBase = 'http://dev.massi.rocks';
 }
