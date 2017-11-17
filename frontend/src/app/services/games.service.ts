@@ -3,40 +3,38 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs/Observable';
 import { Game } from '../data/game';
 import { PagesInformation } from '../data/pagesinformation';
-import { Server } from '../constants/server';
+import { environment } from '../../environments/environment';
 
 @Injectable()
 export class GamesService {
-    apiBase = Server.apiBase;
-
     getGame(id: number): Observable<Game> {
-        return this.httpClient.get<Game>(this.apiBase + '/v1/games/get/' + id);
+        return this.httpClient.get<Game>(environment.apiBase + '/v1/games/get/' + id);
     }
 
     getGames(): Observable<Game[]> {
-        return this.httpClient.get<Game[]>(this.apiBase + '/v1/games/get');
+        return this.httpClient.get<Game[]>(environment.apiBase + '/v1/games/get');
     }
 
     getTotalPages(): Observable<PagesInformation> {
-        return this.httpClient.get<PagesInformation>(this.apiBase + '/v1/games/get/page/total');
+        return this.httpClient.get<PagesInformation>(environment.apiBase + '/v1/games/get/page/total');
     }
 
     getPageNumber(page: number): Observable<Game[]> {
-        return this.httpClient.get<Game[]>(this.apiBase + '/v1/games/get/page/' + page);
+        return this.httpClient.get<Game[]>(environment.apiBase + '/v1/games/get/page/' + page);
     }
 
     getOwners(gameId: number): Observable<string[]> {
-        return this.httpClient.get<string[]>(this.apiBase + '/v1/games/owners/' + gameId);
+        return this.httpClient.get<string[]>(environment.apiBase + '/v1/games/owners/' + gameId);
     }
 
     removeGame(gameId: number): Observable<any> {
         const headers = new HttpHeaders().set('Authorization', 'Bearer ' + localStorage.getItem('token'));
-        return this.httpClient.delete(this.apiBase + '/v1/games/remove/' + gameId, {headers: headers});
+        return this.httpClient.delete(environment.apiBase + '/v1/games/remove/' + gameId, {headers: headers});
     }
 
     recrawlGame(gameId: number): Observable<any> {
         const headers = new HttpHeaders().set('Authorization', 'Bearer ' + localStorage.getItem('token'));
-        return this.httpClient.post(this.apiBase + '/v1/crawler/games/' + gameId, null, {headers: headers});
+        return this.httpClient.post(environment.apiBase + '/v1/crawler/games/' + gameId, null, {headers: headers});
     }
 
     constructor(private httpClient: HttpClient) {}
