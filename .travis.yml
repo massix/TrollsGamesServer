@@ -1,5 +1,5 @@
 language: java
-script: mvn clean package
+script: mvn clean package -Dmaven.test.skip=true
 
 before_deploy:
 - mkdir -p $HOME/.ssh
@@ -23,3 +23,9 @@ deploy:
   on:
     branch: master
     tags: true
+- provider: script
+  skip_cleanup: true
+  script: ./configuration/deploy.sh dev
+  on:
+    all_branches: true
+    condition: "$TRAVIS_BRANCH =~ ^feature/.*$"

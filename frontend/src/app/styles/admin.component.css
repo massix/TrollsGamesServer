@@ -1,0 +1,35 @@
+.navbar {
+    margin-bottom:0;
+    border-radius:0;
+}
+
+.navbar-default {
+    background-color:#006fad;
+    border-color:#fff;
+}
+
+.navbar-default .navbar-nav li a {
+    color:#fff;
+    font-family: 'Raleway', sans-serif;
+}
+
+.navbar-default .navbar-nav li a:hover {
+    color:#fff;
+}
+
+.navbar-collapse {
+    padding-left:0;
+    padding-right:0;
+}
+
+ul li:hover {
+    background-color:#FF8040;
+}
+
+.active {
+    border-top: 3px solid rgb(210, 223, 230);
+    border-bottom: 3px solid rgb(210, 223, 230);
+}
+
+
+

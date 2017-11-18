@@ -7,47 +7,45 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.sqlite.SQLiteException;
-import rocks.massi.connector.DatabaseConnector;
+import rocks.massi.controllers.utils.AuthorizationHandler;
 import rocks.massi.data.CacheOperation;
+import rocks.massi.data.UsersRepository;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
-@ActiveProfiles("local")
+@ActiveProfiles("dev")
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class CacheControllerTest {
 
     @Autowired
-    private DatabaseConnector connector;
+    private TestRestTemplate restTemplate;
 
     @Autowired
-    private TestRestTemplate restTemplate;
+    private UsersRepository usersRepository;
 
     @Before
     public void setUp() throws Exception {
-        connector.baseSelector.dropTableGames();
-        connector.baseSelector.dropTableUsers();
-        connector.baseSelector.createTableGames();
-        connector.baseSelector.createTableUsers();
+        AuthorizationHandler.setUp(restTemplate, "test@example.com", "user");
     }
 
     @After
     public void tearDown() throws Exception {
-        connector.baseSelector.dropTableUsers();
-        connector.baseSelector.dropTableGames();
+        usersRepository.deleteAll();
     }
 
     @Test
-    public void purgeCache() throws Exception {
-        restTemplate.delete("/v1/cache/purge");
+    public void purgeCache() {
+        ResponseEntity<Void> responseEntity = restTemplate.exchange("/v1/cache/purge", HttpMethod.DELETE, null, Void.class);
+        assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
     }
 
     @Test
-    public void purgeExpired() throws Exception {
+    public void purgeExpired() {
         restTemplate.delete("/v1/cache/expired");
     }
 

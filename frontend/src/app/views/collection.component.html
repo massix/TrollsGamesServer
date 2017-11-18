@@ -1,0 +1,48 @@
+<div class="container">
+    <div class="shownGame" id="modalGame" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+            <div *ngIf="focusedGame" class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">{{focusedGame.name}}</h4>
+                </div>
+                <div class="modal-body">
+                    <game-details [game]="focusedGame"></game-details>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-sm" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 col-lg-3 col-sm-12">
+        <div *ngFor="let user of users" class="user" [ngClass]="{'active': selectedUser === user}" (click)="selectUser(user)">
+            <span class="user-nick">{{user.bggNick}}</span><br />
+            <span class="user-display">{{user.forumNick}}</span><br />
+            <span class="user-email">{{user.email}}</span><br />
+        </div>
+    </div>
+    <div *ngIf="shownGames" class="col-md-8 col-lg-8 col-sm-12">
+        <table class="table table-condensed table-hover">
+            <thead class="thead-light">
+                <tr>
+                    <th scope="col">Id</th>
+                    <th>Name</th>
+                    <th>Rank</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let game of shownGames  | paginate: { itemsPerPage: 20, currentPage: currentPage, totalItems: totalItems }">
+                    <th scope="row"><button class="btn btn-sm fa fa-search" 
+                        data-toggle="modal"
+                        data-target="#modalGame"
+                        (click)="focusedGame = game"></button>{{game.id}}</th>
+                    <td>{{game.name}}</td>
+                    <td>{{game.rank}}</td>
+                </tr>
+            </tbody>
+        </table>
+        <pagination-controls (pageChange)="pageChange($event)"></pagination-controls>
+    </div>
+</div>

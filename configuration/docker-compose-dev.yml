@@ -1,0 +1,13 @@
+version: '2'
+
+services:
+  trolls-server:
+    image: openjdk:8-jre
+    expose:
+      - "8180"
+    environment:
+      - VIRTUAL_HOST=dev.massi.rocks
+    volumes:
+      - ./java/:/opt/tg/
+    command: java -Dspring.profiles.active=local -jar /opt/tg/TrollsGames.jar
+    restart: always

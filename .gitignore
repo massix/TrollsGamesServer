@@ -1,6 +1,5 @@
 target/
 *.iml
-*.db
 .idea/
 recentlyCrawled.cache
 travis-key

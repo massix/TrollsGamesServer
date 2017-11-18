@@ -2,23 +2,27 @@ package rocks.massi.crawler;
 
 import feign.Feign;
 import feign.FeignException;
-import feign.gson.GsonDecoder;
+import feign.Response;
+import feign.jaxb.JAXBContextFactory;
+import feign.jaxb.JAXBDecoder;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 import rocks.massi.cache.CrawlCache;
-import rocks.massi.connector.DatabaseConnector;
-import rocks.massi.data.CrawlingProgress;
-import rocks.massi.data.Game;
-import rocks.massi.data.User;
-import rocks.massi.data.bgg.BGGGame;
-import rocks.massi.data.bgg.Collection;
-import rocks.massi.services.BGGJsonProxy;
+import rocks.massi.data.*;
+import rocks.massi.data.boardgamegeek.Boardgames;
+import rocks.massi.data.boardgamegeek.Collection;
+import rocks.massi.data.joins.GameHonor;
+import rocks.massi.data.joins.GameHonorsRepository;
+import rocks.massi.data.joins.Ownership;
+import rocks.massi.data.joins.OwnershipsRepository;
+import rocks.massi.services.BoardGameGeek;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 @Slf4j
 public class CollectionCrawler implements Runnable {
@@ -26,10 +30,13 @@ public class CollectionCrawler implements Runnable {
     private final int INITIAL_TIMEOUT = 1000;
     private final int TIMEOUT_INCREASE = 3000;
     private final int MAXIMUM_TIMEOUT = 10000;
-    public static String BASE_URL = "https://bgg-json.azurewebsites.net";
+    public static String BGG_BASE_URL = "https://www.boardgamegeek.com";
 
     private final CrawlCache cache;
-    private final DatabaseConnector connector;
+    private final GamesRepository gamesRepository;
+    private final OwnershipsRepository ownershipsRepository;
+    private final HonorsRepository honorsRepository;
+    private final GameHonorsRepository gameHonorsRepository;
     private final User user;
 
     @Getter
@@ -47,64 +54,111 @@ public class CollectionCrawler implements Runnable {
     @Getter
     private Date finished;
 
+    @Getter
+    private int totalGames = 0;
+
     private List<Game> crawled;
     private List<Integer> failed;
+    private List<Ownership> ownerships;
 
-    public CollectionCrawler(CrawlCache cache, DatabaseConnector connector, User user) {
+    JAXBContextFactory contextFactory;
+    BoardGameGeek boardGameGeek;
+
+    public CollectionCrawler(CrawlCache cache,
+                             GamesRepository gamesRepository,
+                             OwnershipsRepository ownershipsRepository,
+                             HonorsRepository honorsRepository,
+                             GameHonorsRepository gameHonorsRepository,
+                             User user) {
         this.cache = cache;
-        this.connector = connector;
+        this.gamesRepository = gamesRepository;
+        this.ownershipsRepository = ownershipsRepository;
+        this.honorsRepository = honorsRepository;
+        this.gameHonorsRepository = gameHonorsRepository;
         this.user = user;
 
         crawled = new LinkedList<>();
         failed = new LinkedList<>();
+        ownerships = new LinkedList<>();
         started = new Date();
+        finished = new Date();
+        contextFactory = new JAXBContextFactory.Builder().build();
+        boardGameGeek = Feign.builder().decoder(new JAXBDecoder(contextFactory)).target(BoardGameGeek.class, BGG_BASE_URL);
     }
 
     public Game crawlGame(final int gameId) {
-        BGGJsonProxy bggJsonProxy = Feign.builder().decoder(new GsonDecoder()).target(BGGJsonProxy.class, BASE_URL);
+        Boardgames boardgames = boardGameGeek.getGameForId(gameId);
 
-        BGGGame game = bggJsonProxy.getGameForId(gameId);
+        // Get only the first result
+        Boardgames.Boardgame boardgame = boardgames.getBoardgame().get(0);
+        Game toInsert = boardgame.convert();
+
+        // Cache game
         cache.put(gameId, new Date().getTime() / 1000);
-        ArrayList<String> expands = new ArrayList<>();
 
-        if (game.getExpands() != null)
-            game.getExpands().forEach(expandsL -> expands.add(String.valueOf(expandsL.getGameId())));
+        // Save game in DB
+        gamesRepository.save(toInsert);
 
-        Game toInsert = new Game(game.getGameId(), game.getName(), game.getDescription(),
-                game.getMinPlayers(), game.getMaxPlayers(), game.getPlayingTime(),
-                game.getYearPublished(), game.getRank(), game.isExpansion(),
-                game.getThumbnail(), String.join(", ", game.getDesigners()),
-                String.join(" ", expands));
-
-        Game inDb = connector.gameSelector.findById(game.getGameId());
-
-        if (inDb != null) {
-            connector.gameSelector.updateGame(toInsert);
-        } else {
-            connector.gameSelector.insertGame(toInsert);
+        // If the game has honors, extract and store them in the db
+        if (boardgame.getHonors() != null) {
+            boardgame.getHonors().forEach(honor -> {
+                honorsRepository.save(new Honor(honor.getId(), honor.getDescription()));
+                gameHonorsRepository.save(new GameHonor(honor.getId(), toInsert.getId()));
+            });
         }
 
-        return connector.gameSelector.findById(gameId);
+        return gamesRepository.findById(gameId);
     }
 
+    @SneakyThrows
     @Override
     public void run() {
         running = true;
-        user.buildCollection();
         cacheHit = 0;
         cacheMiss = 0;
+        Response response = null;
+        LinkedList<Integer> integers = new LinkedList<>();
 
-        for (int gameId : user.getCollection()) {
+        int status = 0;
+        while (status != 200) {
+            response = boardGameGeek.getCollectionForUser(user.getBggNick());
+            status = response.status();
+
+            if (status != 200) {
+                log.info("Have to wait... status code {}", status);
+                Thread.sleep(2000);
+            }
+
+        }
+
+        Collection collection = (Collection) new JAXBDecoder(contextFactory).decode(response, Collection.class);
+
+        log.info("Original collection {}", collection.toString());
+        log.info("Collection {}", collection.ownedAsString());
+        log.info("Wanted {}", collection.wantedAsString());
+        collection.getItemList().forEach(item -> {
+            if (item.getStatus().isOwn()) {
+                integers.add(item.getId());
+            }
+        });
+
+        totalGames = integers.size();
+
+        for (int gameId : integers) {
             try {
                 if (cache.isExpired(gameId)) {
                     Game g = crawlGame(gameId);
                     crawled.add(g);
                     log.info("Added game {} for user {}", g.getName(), user.getBggNick());
                     cacheMiss++;
+                    Thread.sleep(550);
                 } else {
                     log.info("No need to recrawl game {}", gameId);
                     cacheHit++;
                 }
+
+                ownershipsRepository.save(new Ownership(user.getBggNick(), gameId));
+
             } catch (FeignException exception) {
                 log.warn("Could not download game id {} ({})", gameId, exception.status());
                 log.warn("Sleeping for {}s", FAILURE_TIMEOUT / 1000);
@@ -115,7 +169,7 @@ public class CollectionCrawler implements Runnable {
                     log.warn("Couldn't sleep.");
                 }
             } catch (final Exception exception) {
-                log.warn("Generic exception caught: {}. Leaving!");
+                log.warn("Generic exception caught: {}. Leaving!", exception.getMessage());
                 break;
             }
         }
@@ -138,16 +192,16 @@ public class CollectionCrawler implements Runnable {
                 log.info("Added game {} for user {}", g.getName(), user.getBggNick());
                 it.remove();
                 timeout = INITIAL_TIMEOUT;
-            }
-            catch (final FeignException exception) {
+                Thread.sleep(550);
+                ownershipsRepository.save(new Ownership(user.getBggNick(), gameId));
+            } catch (final FeignException exception) {
                 log.warn("Could not download game id {} ({}), timeout = {}", gameId, exception.status(), timeout);
                 it = failed.iterator();
                 timeout += TIMEOUT_INCREASE;
                 if (timeout > MAXIMUM_TIMEOUT) timeout = MAXIMUM_TIMEOUT;
             } catch (final InterruptedException e) {
                 log.error("Could not sleep because {}", e.getMessage());
-            }
-            catch (final Exception exception) {
+            } catch (final Exception exception) {
                 log.error("Generic exception caught: {}. Leaving!", exception.getMessage());
                 break;
             }
@@ -172,8 +226,8 @@ public class CollectionCrawler implements Runnable {
                 failed.size(),
                 cacheHit,
                 cacheMiss,
-                user.getCollection() == null ? 0 : user.getCollection().size(),
+                totalGames,
                 getStarted().toString(),
-                running? null : getFinished().toString());
+                getFinished().toString());
     }
 }

@@ -1,100 +1,106 @@
 package rocks.massi.controllers;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.tomakehurst.wiremock.WireMockServer;
-import com.github.tomakehurst.wiremock.client.WireMock;
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.*;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
-import rocks.massi.connector.DatabaseConnector;
+import rocks.massi.controllers.utils.AuthorizationHandler;
 import rocks.massi.crawler.CollectionCrawler;
-import rocks.massi.data.CrawlingProgress;
-import rocks.massi.data.User;
-import rocks.massi.data.bgg.BGGGame;
-import rocks.massi.data.bgg.Collection;
-import rocks.massi.services.BGGJsonProxy;
-
-import javax.xml.ws.Response;
-import java.util.ArrayList;
+import rocks.massi.data.*;
+import rocks.massi.data.joins.GameHonorsRepository;
+import rocks.massi.data.joins.OwnershipsRepository;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.Assert.*;
-import static org.mockito.BDDMockito.given;
 
+@Slf4j
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @RunWith(SpringRunner.class)
-@ActiveProfiles("local")
+@ActiveProfiles("dev")
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class CrawlerControllerTest {
 
     @Autowired
-    private DatabaseConnector databaseConnector;
+    private GamesRepository gamesRepository;
+
+    @Autowired
+    private UsersRepository usersRepository;
+
+    @Autowired
+    private OwnershipsRepository ownershipsRepository;
+
+    @Autowired
+    private HonorsRepository honorsRepository;
+
+    @Autowired
+    private GameHonorsRepository gameHonorsRepository;
 
     @Autowired
     private TestRestTemplate restTemplate;
 
-    WireMockServer server;
+    @ClassRule
+    public static WireMockRule wireMockRule = new WireMockRule(8080);
+
+    public CrawlerControllerTest() {
+        log.info("--------- Setting up WireMock stubs");
+        stubFor(get((urlEqualTo("/xmlapi/boardgame/68448?stats=1")))
+                .willReturn(aResponse().withStatus(200).withBodyFile("samples/7wonders.xml")));
+        stubFor(get((urlEqualTo("/xmlapi/boardgame/111661?stats=1")))
+                .willReturn(aResponse().withStatus(200).withBodyFile("samples/7wonders_cities.xml")));
+
+        stubFor(get((urlEqualTo("/xmlapi/collection/bgg_user")))
+                .willReturn(aResponse().withStatus(200).withBodyFile("samples/bgg_user.xml")));
+        stubFor(get((urlEqualTo("/xmlapi/collection/bgg_user_two")))
+                .willReturn(aResponse().withStatus(200).withBodyFile("samples/bgg_user.xml")));
+
+        stubFor(get((urlEqualTo("/xmlapi/collection/timed_user"))).inScenario("timed user").whenScenarioStateIs("Started")
+                .willReturn(aResponse().withStatus(202).withBodyFile("samples/please_wait.xml")).willSetStateTo("SECOND"));
+        stubFor(get((urlEqualTo("/xmlapi/collection/timed_user"))).inScenario("timed user").whenScenarioStateIs("SECOND")
+                .willReturn(aResponse().withStatus(202).withBodyFile("samples/please_wait.xml")).willSetStateTo("THIRD"));
+        stubFor(get((urlEqualTo("/xmlapi/collection/timed_user"))).inScenario("timed user").whenScenarioStateIs("THIRD")
+                .willReturn(aResponse().withStatus(200).withBodyFile("samples/bgg_user.xml")).willSetStateTo("END"));
+    }
 
     @Before
     public void setUp() throws Exception {
-        databaseConnector.baseSelector.dropTableGames();
-        databaseConnector.baseSelector.dropTableUsers();
-        databaseConnector.baseSelector.createTableGames();
-        databaseConnector.baseSelector.createTableUsers();
-
-        Collection collection = new Collection();
-        collection.add(new Collection.Item(1, "Cyclades", "", "", 2, 210,
-            180, false, 2012, 9.9, 9.9, 1, 150, 9.9,
-                true, false, false, false, false, false, false, false,
-                "Best game ever."));
-        collection.add(new Collection.Item(2, "Cyclades II", "", "", 2, 210,
-                180, false, 2012, 9.9, 9.9, 1, 150, 9.9,
-                true, false, false, false, false, false, false, false,
-                "Best game ever."));
-
-        // TODO: Yeah, I don't like this.
-        String[] mechanics = {"mech"};
-        ArrayList<BGGGame.Expands> expands = new ArrayList<>();
-        BGGGame cyclades = new BGGGame(1, "Cyclades", "Cyclades", "", "",
-                2, 20, 250, mechanics, 2012, 8.9, 9.9, 1, mechanics, expands);
-        BGGGame cyclades2 = new BGGGame(2, "Cyclades 2", "Cyclades", "", "",
-                2, 20, 250, mechanics, 2012, 8.9, 9.9, 1, mechanics, expands);;
-
-        server = new WireMockServer(8080);
-        server.start();
-
-        ObjectMapper mapper = new ObjectMapper();
-
-        CollectionCrawler.BASE_URL = "http://localhost:8080";
-        server.stubFor(get((urlEqualTo("/collection/bgg_user")))
-                .willReturn(aResponse().withStatus(200).withBody(mapper.writeValueAsString(collection))));
-
-        // TODO: THERE HAS TO BE A BETTER WAY TO DO THIS
-        server.stubFor(get((urlMatching("/thing/1")))
-                .willReturn(aResponse().withStatus(200).withBody(mapper.writeValueAsString(cyclades))));
-        server.stubFor(get((urlMatching("/thing/2")))
-                .willReturn(aResponse().withStatus(200).withBody(mapper.writeValueAsString(cyclades2))));
-
-        databaseConnector.userSelector.addUser(new User("bgg_user", "forum_user", "1 2", ""));
+        usersRepository.save(new User("bgg_user", "forum_user", "test_user1@example.com"));
+        usersRepository.save(new User("bgg_user_two", "forum_user_two", "test_user2@example.com"));
+        usersRepository.save(new User("timed_user", "timed_forum_user", "test_user3@example.com"));
 
         // Force purge cache
         restTemplate.delete("/v1/cache/purge");
+
+        // Setup WireMock
+        CollectionCrawler.BGG_BASE_URL = "http://localhost:8080";
+
+        AuthorizationHandler.setUp(restTemplate, "test@example.com", "authorized_user");
     }
 
     @After
     public void tearDown() throws Exception {
-        databaseConnector.baseSelector.dropTableUsers();
-        databaseConnector.baseSelector.dropTableGames();
-        server.stop();
+        usersRepository.deleteAll();
+        gamesRepository.deleteAll();
+        honorsRepository.deleteAll();
+        ownershipsRepository.deleteAll();
+    }
+
+    @SneakyThrows
+    private void waitForQ() {
+        // Wait for the Q to be over.
+        ResponseEntity<CrawlingProgress[]> progress = restTemplate.getForEntity("/v1/crawler/queues", CrawlingProgress[].class);
+        while (progress.getBody()[0].isRunning()) {
+            Thread.sleep(1000);
+            progress = restTemplate.getForEntity("/v1/crawler/queues", CrawlingProgress[].class);
+            log.info("Still running {}", progress.getBody());
+        }
     }
 
     @Test
@@ -104,8 +110,16 @@ public class CrawlerControllerTest {
         assertTrue(responseEntity.getHeaders().containsKey("location"));
         assertTrue(responseEntity.getHeaders().get("location").get(0).startsWith("/v1/crawler/queue"));
 
-        // Wait for the Q to be over.
-        Thread.sleep(2000);
+        waitForQ();
+
+        // Check that honors have been inserted in the base
+        Honor honor = honorsRepository.findById(19901);
+        assertEquals(honor.getDescription(), "2012 Ludoteca Ideale Winner");
+        assertEquals(51, honorsRepository.findAll().size());
+        assertEquals(50, gameHonorsRepository.findByGame(68448).size());
+        assertEquals(1, gameHonorsRepository.findByGame(111661).size());
+        assertEquals(honorsRepository.findById(gameHonorsRepository.findByGame(111661).get(0).getHonor()).getDescription(),
+                "2012 Golden Geek Best Board Game Expansion Nominee");
     }
 
     @Test
@@ -113,6 +127,7 @@ public class CrawlerControllerTest {
         ResponseEntity<CrawlingProgress[]> responseEntity = restTemplate.getForEntity("/v1/crawler/queues", CrawlingProgress[].class);
         assertEquals(1, responseEntity.getBody().length);
         assertFalse(responseEntity.getBody()[0].isRunning());
+        assertEquals(2, responseEntity.getBody()[0].getTotal());
     }
 
     @Test
@@ -124,8 +139,33 @@ public class CrawlerControllerTest {
 
     @Test
     public void test4_crawlNonExistingUser() throws Exception {
-        ResponseEntity<User> responseEntity = restTemplate.postForEntity("/v1/crawler/users/non_existing", null, User.class);
+        ResponseEntity<User> responseEntity = restTemplate.postForEntity("/v1/crawler/collection/non_existing", null, User.class);
         assertTrue(responseEntity.getStatusCode().is4xxClientError());
         assertNull(responseEntity.getBody());
+    }
+
+    @Test
+    public void test5_timedUser() throws Exception {
+        restTemplate.delete("/v1/crawler/queues");
+        ResponseEntity<Void> responseEntity = restTemplate.postForEntity("/v1/crawler/collection/timed_user", null, Void.class);
+        assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
+
+        waitForQ();
+
+        assertEquals(2, ownershipsRepository.findByUser("timed_user").size());
+        restTemplate.delete("/v1/crawler/queues");
+    }
+
+    @Test
+    public void test6_multipleUsersSameGame() throws Exception {
+        restTemplate.postForEntity("/v1/crawler/collection/bgg_user", null, Void.class);
+        waitForQ();
+
+        restTemplate.delete("/v1/crawler/queues");
+        restTemplate.postForEntity("/v1/crawler/collection/bgg_user_two", null, Void.class);
+        waitForQ();
+
+        assertEquals(2, ownershipsRepository.findByUser("bgg_user").size());
+        assertEquals(2, ownershipsRepository.findByUser("bgg_user_two").size());
     }
 }

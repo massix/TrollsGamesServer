@@ -1,20 +1,16 @@
 package rocks.massi.controllers;
 
-import feign.Feign;
-import feign.gson.GsonDecoder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.*;
+import rocks.massi.authentication.TrollsJwt;
 import rocks.massi.cache.CrawlCache;
-import rocks.massi.connector.DatabaseConnector;
 import rocks.massi.crawler.CollectionCrawler;
-import rocks.massi.data.CrawlingProgress;
-import rocks.massi.data.Game;
-import rocks.massi.data.User;
-import rocks.massi.data.bgg.Collection;
-import rocks.massi.exceptions.UserNotFoundException;
-import rocks.massi.services.BGGJsonProxy;
+import rocks.massi.data.*;
+import rocks.massi.data.joins.GameHonorsRepository;
+import rocks.massi.data.joins.OwnershipsRepository;
+import rocks.massi.exceptions.AuthenticationException;
 import rocks.massi.utils.DBUtils;
 
 import javax.servlet.http.HttpServletResponse;
@@ -24,13 +20,26 @@ import java.util.*;
 @RestController
 @RequestMapping("/v1/crawler")
 public class CrawlerController {
-    private final String BASE_URL = "https://bgg-json.azurewebsites.net";
+    @Autowired
+    private UsersRepository usersRepository;
 
     @Autowired
-    private DatabaseConnector connector;
+    private GamesRepository gamesRepository;
+
+    @Autowired
+    private OwnershipsRepository ownershipsRepository;
+
+    @Autowired
+    private HonorsRepository honorsRepository;
+
+    @Autowired
+    private GameHonorsRepository gameHonorsRepository;
 
     @Autowired
     private CrawlCache crawlCache;
+
+    @Autowired
+    private TrollsJwt trollsJwt;
 
     private HashMap<String, Map.Entry<Thread, Runnable>> runningCrawlers;
 
@@ -39,52 +48,43 @@ public class CrawlerController {
         return runningCrawlers;
     }
 
-    @PostMapping("/users/{user}")
-    public User crawlUser(@PathVariable("user") String user) {
-        User userFromDb = DBUtils.getUser(connector, user);
-
-        if (userFromDb == null) {
-            throw new UserNotFoundException(String.format("User %s not found in DB.", user));
+    @CrossOrigin(allowedHeaders = {"Authorization"})
+    @PostMapping("/games/{gameId}")
+    public Game crawlGame(@RequestHeader("Authorization") final String authorization,
+                          @PathVariable("gameId") final int gameId) {
+        if (!trollsJwt.checkHeaderWithToken(authorization)) {
+            throw new AuthenticationException("User not authorized.");
         }
 
-        BGGJsonProxy bggJsonProxy = Feign.builder()
-                .decoder(new GsonDecoder())
-                .target(BGGJsonProxy.class, BASE_URL);
-
-        Collection ownedGames = bggJsonProxy.getCollectionForUser(user);
-        log.info("Original collection {}", ownedGames.toString());
-
-        // Keep only wanted Games
-        Collection wantedGames = (Collection) ownedGames.clone();
-        wantedGames.removeIf(item -> ! item.isWantToPlay());
-
-        // Remove non-owned games
-        ownedGames.removeIf(item -> ! item.isOwned());
-
-        log.info("Collection {}", ownedGames.toString());
-        log.info("Wanted {}", wantedGames.toString());
-
-        User updated = new User(userFromDb.getBggNick(), userFromDb.getForumNick(), ownedGames.toString(), wantedGames.toString());
-        connector.userSelector.updateCollectionForUser(updated);
-
-        return connector.userSelector.findByBggNick(updated.getBggNick());
+        return new CollectionCrawler(crawlCache,
+                gamesRepository,
+                ownershipsRepository,
+                honorsRepository,
+                gameHonorsRepository,
+                null).crawlGame(gameId);
     }
 
-    @PostMapping("/games/{gameId}")
-    public Game crawlGame(@PathVariable("gameId") final int gameId) {
-        return new CollectionCrawler(crawlCache, connector, null).crawlGame(gameId);
-    }
-
+    @CrossOrigin(allowedHeaders = {"Authorization"})
     @PostMapping("/collection/{user}")
-    public void crawlCollectionForUser(@PathVariable("user") final String nick, HttpServletResponse response) {
-        User user = DBUtils.getUser(connector, nick);
+    public void crawlCollectionForUser(@RequestHeader("Authorization") final String authorization,
+                                       @PathVariable("user") final String nick, HttpServletResponse response) {
+        if (!trollsJwt.checkHeaderWithToken(authorization)) {
+            throw new AuthenticationException("User not authorized.");
+        }
+
+        User user = DBUtils.getUser(usersRepository, nick);
 
         if (user != null) {
             response.setStatus(HttpServletResponse.SC_ACCEPTED);
             Thread thread;
 
             if (!runningCrawlers().containsKey(user.getBggNick())) {
-                CollectionCrawler collectionCrawler = new CollectionCrawler(crawlCache, connector, user);
+                CollectionCrawler collectionCrawler = new CollectionCrawler(crawlCache,
+                        gamesRepository,
+                        ownershipsRepository,
+                        honorsRepository,
+                        gameHonorsRepository,
+                        user);
                 thread = new Thread(collectionCrawler);
                 runningCrawlers().put(user.getBggNick(), new AbstractMap.SimpleEntry<>(thread, collectionCrawler));
                 thread.start();
@@ -100,8 +100,13 @@ public class CrawlerController {
         }
     }
 
+    @CrossOrigin(allowedHeaders = {"Authorization"})
     @GetMapping("/queues")
-    public List<CrawlingProgress> getQueues() {
+    public List<CrawlingProgress> getQueues(@RequestHeader("Authorization") final String authorization) {
+        if (!trollsJwt.checkHeaderWithToken(authorization)) {
+            throw new AuthenticationException("User not authorized.");
+        }
+
         final List<CrawlingProgress> ret = new LinkedList<>();
 
         runningCrawlers().forEach((k, v) -> {
@@ -114,8 +119,13 @@ public class CrawlerController {
         return ret;
     }
 
+    @CrossOrigin(allowedHeaders = {"Authorization"})
     @DeleteMapping("/queues")
-    public List<CrawlingProgress> purgeFinishedQueues() {
+    public List<CrawlingProgress> purgeFinishedQueues(@RequestHeader("Authorization") final String authorization) {
+        if (!trollsJwt.checkHeaderWithToken(authorization)) {
+            throw new AuthenticationException("User not authorized.");
+        }
+
         List<CrawlingProgress> ret = new LinkedList<>();
         LinkedList<String> toBeRemoved = new LinkedList<>();
 
@@ -133,8 +143,14 @@ public class CrawlerController {
         return ret;
     }
 
+    @CrossOrigin(allowedHeaders = {"Authorization"})
     @GetMapping("/queue/{id}")
-    public CrawlingProgress getProgress(@PathVariable("id") final long id, HttpServletResponse response) {
+    public CrawlingProgress getProgress(@RequestHeader("Authorization") final String authorization,
+                                        @PathVariable("id") final long id, HttpServletResponse response) {
+        if (!trollsJwt.checkHeaderWithToken(authorization)) {
+            throw new AuthenticationException("User not authorized.");
+        }
+
         final CrawlingProgress[] progress = {null};
         runningCrawlers().forEach((k, v) -> {
             if (v.getKey().getId() == id) {
@@ -151,9 +167,15 @@ public class CrawlerController {
         return progress[0];
     }
 
+    @CrossOrigin(allowedHeaders = {"Authorization"})
     @DeleteMapping("/queue/{id}")
-    public void deleteQueue(@PathVariable("id") final long id, HttpServletResponse response) {
-        CrawlingProgress progress = getProgress(id, response);
+    public void deleteQueue(@RequestHeader("Authorization") final String authorization,
+                            @PathVariable("id") final long id, HttpServletResponse response) {
+        if (!trollsJwt.checkHeaderWithToken(authorization)) {
+            throw new AuthenticationException("User not authorized.");
+        }
+
+        CrawlingProgress progress = getProgress(authorization, id, response);
         if (progress != null && ! progress.isRunning()) {
             runningCrawlers().remove(progress.getUser());
         }

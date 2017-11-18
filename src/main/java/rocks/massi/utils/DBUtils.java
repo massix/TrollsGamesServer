@@ -1,14 +1,14 @@
 package rocks.massi.utils;
 
-import rocks.massi.connector.DatabaseConnector;
 import rocks.massi.data.User;
+import rocks.massi.data.UsersRepository;
 
 public class DBUtils {
-    public static User getUser(final DatabaseConnector connector, final String nick) {
-        User u = connector.userSelector.findByBggNick(nick);
+    public static User getUser(final UsersRepository usersRepository, final String nick) {
+        User u = usersRepository.findByBggNick(nick);
 
         if (u == null)
-            return connector.userSelector.findByForumNick(nick);
+            return usersRepository.findByForumNick(nick);
 
         return u;
     }
