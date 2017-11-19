@@ -124,4 +124,11 @@ public class GamesControllerTest {
         assertEquals(2, responseEntity.getBody().length);
     }
 
+    @Test
+    public void getFuzzySearch() throws Exception {
+        ResponseEntity<Game[]> responseEntity = restTemplate.getForEntity("/v1/games/search?q=cycl", Game[].class);
+        assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
+        assertEquals(1, responseEntity.getBody().length);
+        assertEquals("Cyclades", responseEntity.getBody()[0].getName());
+    }
 }
