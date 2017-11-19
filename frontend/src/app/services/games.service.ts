@@ -37,5 +37,9 @@ export class GamesService {
         return this.httpClient.post(environment.apiBase + '/v1/crawler/games/' + gameId, null, {headers: headers});
     }
 
+    searchGame(term: string): Observable<Game[]> {
+        return this.httpClient.get<Game[]>(environment.apiBase + '/v1/games/search?q=' + term);
+    }
+
     constructor(private httpClient: HttpClient) {}
 }

@@ -1,5 +1,19 @@
 
 <div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <div id="custom-search-input">
+                <div class="input-group col-md-12">
+                    <input type="text" class="form-control input-sm" placeholder="Search" name="search" [(ngModel)]="searchTerm" (ngModelChange)="searchTermChange()" />
+                    <span class="input-group-btn">
+                        <button class="btn btn-info btn-sm" type="button">
+                            <i class="glyphicon glyphicon-search"></i>
+                        </button>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="table">
         <table class="table table-dark table-hover table-condensed">
             <thead class="thead-light">
