@@ -31,7 +31,9 @@
                         <a [routerLink]="['/admin', {outlets: {adminoutlet: 'collection'}}]" (click)="setActiveRoute('collection')" [ngClass]="{ 'active' : this.activeRoute === 'collection' }">Collection</a>
                     </li>
                     <li>
-                        <a [routerLink]="['/admin']" (click)="setActiveRoute('information')" [ngClass]="{ 'active' : this.activeRoute === 'information' }">Information</a>
+                      <a [routerLink]="['/admin', {outlets: {adminoutlet: 'information'}}]"
+                         (click)="setActiveRoute('information')"
+                         [ngClass]="{ 'active' : this.activeRoute === 'information' }">Information</a>
                     </li>
                     <li>
                         <a [routerLink]="['/logout']" (click)="setActiveRoute('logout')" [ngClass]="{ 'active' : this.activeRoute === 'logout' }">Logout</a>

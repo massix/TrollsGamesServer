@@ -16,6 +16,7 @@ import rocks.massi.data.joins.OwnershipsRepository;
 import rocks.massi.exceptions.AuthenticationException;
 import rocks.massi.exceptions.GameNotFoundException;
 import rocks.massi.exceptions.MalformattedGameException;
+import rocks.massi.utils.StatsLogger;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -36,6 +37,9 @@ public class GamesController {
 
     @Autowired
     private TrollsJwt trollsJwt;
+
+    @Autowired
+    private StatsLogger statsLogger;
 
     @CrossOrigin
     @GetMapping("/get")
@@ -118,7 +122,11 @@ public class GamesController {
 
     @CrossOrigin
     @GetMapping("/search")
-    public List<Game> searchGame(@RequestParam("q") final String query, @Param("user") final String user) {
+    public List<Game> searchGame(@RequestHeader("User-Agent") String userAgent,
+                                 @RequestParam("q") final String query,
+                                 @Param("user") final String user) {
+
+        statsLogger.logStat("games/search - " + query, userAgent);
         return gamesRepository.findByNameContainingIgnoreCase(query);
     }
 }

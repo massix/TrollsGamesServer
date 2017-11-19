@@ -16,6 +16,7 @@ import { UsersComponent } from './components/users.component';
 import { AlertService } from './services/alert.service';
 import { AlertComponent } from './components/alert.component';
 import { LogoutComponent } from './components/logout.component';
+import { InformationComponent } from './components/information.component';
 import { UsersService } from './services/users.service';
 import { AuthGuard } from './auth.guard';
 import { GamesService } from './services/games.service';
@@ -27,6 +28,7 @@ import { CacheComponent } from './components/cache.component';
 import { CacheService } from './services/cache.service';
 import { CollectionComponent } from './components/collection.component';
 import { CollectionService } from './services/collection.service';
+import { StatsService } from './services/stats.service';
 
 @NgModule({
   declarations: [
@@ -40,7 +42,8 @@ import { CollectionService } from './services/collection.service';
     CrawlerComponent,
     GameDetailsComponent,
     CacheComponent,
-    CollectionComponent
+    CollectionComponent,
+    InformationComponent
   ],
   imports: [
     NgxPaginationModule,
@@ -90,6 +93,12 @@ import { CollectionService } from './services/collection.service';
             component: CollectionComponent,
             outlet: 'adminoutlet',
             canActivate: [AuthGuard]
+          },
+          {
+            path: 'information',
+            component: InformationComponent,
+            outlet: 'adminoutlet',
+            canActivate: [AuthGuard]
           }
         ]
       },
@@ -108,6 +117,7 @@ import { CollectionService } from './services/collection.service';
     CrawlService,
     CacheService,
     CollectionService,
+    StatsService,
     AuthGuard,
     SimpleTimer
   ],
