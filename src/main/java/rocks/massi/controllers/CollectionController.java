@@ -12,6 +12,7 @@ import rocks.massi.data.UsersRepository;
 import rocks.massi.data.joins.Ownership;
 import rocks.massi.data.joins.OwnershipsRepository;
 import rocks.massi.exceptions.UserNotFoundException;
+import rocks.massi.utils.StatsLogger;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -22,6 +23,7 @@ import static rocks.massi.utils.DBUtils.getUser;
 @RestController
 @RequestMapping("/v1/collection")
 public class CollectionController {
+
     @Autowired
     private GamesRepository gamesRepository;
 
@@ -31,11 +33,16 @@ public class CollectionController {
     @Autowired
     private OwnershipsRepository ownershipsRepository;
 
+    @Autowired
+    private StatsLogger statsLogger;
+
     @CrossOrigin
     @GetMapping("/get/{nick}")
-    public List<Game> getCollection(@PathVariable("nick") final String nick) {
+    public List<Game> getCollection(@RequestHeader("User-Agent") final String userAgent,
+                                    @PathVariable("nick") final String nick) {
         val user = getUser(usersRepository, nick);
         LinkedList<Game> collection = new LinkedList<>();
+        statsLogger.logStat("games/get/" + nick, userAgent);
 
         if (user != null) {
             List<Ownership> ownerships = ownershipsRepository.findByUser(user.getBggNick());
