@@ -1,8 +1,10 @@
 package rocks.massi.controllers;
 
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.repository.query.Param;
 import org.springframework.web.bind.annotation.*;
 import rocks.massi.authentication.TrollsJwt;
 import rocks.massi.data.Game;
@@ -18,6 +20,7 @@ import rocks.massi.exceptions.MalformattedGameException;
 import java.util.LinkedList;
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/v1/games")
 public class GamesController {
@@ -93,8 +96,7 @@ public class GamesController {
             gameHonorsRepository.deleteByGame(id);
             ownershipsRepository.deleteByGame(id);
             gamesRepository.delete(g);
-        }
-        else {
+        } else {
             throw new GameNotFoundException();
         }
 
@@ -112,5 +114,11 @@ public class GamesController {
         }
 
         return users;
+    }
+
+    @CrossOrigin
+    @GetMapping("/search")
+    public List<Game> searchGame(@RequestParam("q") final String query, @Param("user") final String user) {
+        return gamesRepository.findByNameContainingIgnoreCase(query);
     }
 }

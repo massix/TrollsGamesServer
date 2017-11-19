@@ -13,6 +13,8 @@ public interface GamesRepository extends Repository<Game, Integer> {
     List<Game> findAll();
     Page<Game> findAll(Pageable page);
     Page<Game> findAllByOrderByNameAsc(Pageable page);
+
+    List<Game> findByNameContainingIgnoreCase(final String name);
     Game delete(final Game game);
     void deleteAll();
 }
