@@ -35,10 +35,15 @@
             </thead>
             <tbody>
                 <tr *ngFor="let game of shownGames  | paginate: { itemsPerPage: 20, currentPage: currentPage, totalItems: totalItems }">
-                    <th scope="row"><button class="btn btn-sm fa fa-search" 
-                        data-toggle="modal"
-                        data-target="#modalGame"
-                        (click)="focusedGame = game"></button>{{game.id}}</th>
+                    <th scope="row">
+                        <button class="btn btn-sm fa fa-search" 
+                                data-toggle="modal"
+                                data-target="#modalGame"
+                                (click)="focusedGame = game">
+                        </button>
+                        <button class="btn btn-sm fa fa-remove" (click)="removeGame(game)"></button>
+                        {{game.id}}
+                    </th>
                     <td>{{game.name}}</td>
                     <td>{{game.rank}}</td>
                 </tr>

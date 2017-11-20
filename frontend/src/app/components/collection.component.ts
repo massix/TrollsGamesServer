@@ -4,6 +4,8 @@ import { CollectionService } from '../services/collection.service';
 import { Component, OnInit } from '@angular/core';
 import { User } from '../data/user';
 import { Game } from '../data/game';
+import { AlertService } from '../services/alert.service';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
     templateUrl: '../views/collection.component.html',
@@ -19,6 +21,7 @@ export class CollectionComponent implements OnInit {
 
     constructor(private usersService: UsersService, 
         private gamesService: GamesService, 
+        private alertService: AlertService,
         private collectionService: CollectionService) {}
 
     ngOnInit() {
@@ -39,5 +42,22 @@ export class CollectionComponent implements OnInit {
     pageChange(newPage: number) {
         this.collectionService.getPageForUser(this.selectedUser.bggNick, newPage - 1).subscribe(data => this.shownGames = data);
         this.currentPage = newPage;
+    }
+
+    removeGame(game: Game) {
+        this.collectionService.removeGameForUser(this.selectedUser.bggNick, game.id).subscribe(
+            data => {
+                this.alertService.success('Removed game ' + data.game + ' for user ' + data.user);
+                this.collectionService.getPageForUser(this.selectedUser.bggNick, this.currentPage).subscribe(data => this.shownGames = data);
+            },
+            (err: HttpErrorResponse) => {
+                if (err.status == 200) {
+                    this.alertService.success('Removed game ' + game.id + ' for user ' + this.selectedUser.bggNick);
+                    this.collectionService.getPageForUser(this.selectedUser.bggNick, this.currentPage).subscribe(data => this.shownGames = data);
+                } else {
+                    this.alertService.error('Can\'t remove game (' + err.status + ')');
+                }
+            }
+        );
     }
 }

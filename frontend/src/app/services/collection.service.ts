@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
 import { PagesInformation } from '../data/pagesinformation';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { Game } from '../data/game';
 import { CollectionInformation } from '../data/collectioninformation';
+import { Ownership } from '../data/ownership';
 
 @Injectable()
 export class CollectionService {
@@ -20,5 +21,10 @@ export class CollectionService {
 
     getTotalGamesForUser(user: string) : Observable<CollectionInformation> {
         return this.httpClient.get<CollectionInformation>(environment.apiBase + '/v1/collection/get/' + user + '/total');
+    }
+
+    removeGameForUser(user: string, game: number): Observable<any> {
+        const headers = new HttpHeaders().set('Authorization', 'Bearer ' + localStorage.getItem('token'));
+        return this.httpClient.delete<any>(environment.apiBase + '/v1/collection/remove/' + user + '/' + game, {headers: headers});
     }
 }
