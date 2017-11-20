@@ -5,5 +5,7 @@ export class User {
   password: string;
   role: string;
   authenticationType: string;
+  bggHandled: boolean = true;
   gravatarHash: string | Int32Array;
+  collectionSize: number;
 }

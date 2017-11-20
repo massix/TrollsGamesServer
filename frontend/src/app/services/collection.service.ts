@@ -4,6 +4,7 @@ import { PagesInformation } from '../data/pagesinformation';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { Game } from '../data/game';
+import { CollectionInformation } from '../data/collectioninformation';
 
 @Injectable()
 export class CollectionService {
@@ -15,5 +16,9 @@ export class CollectionService {
 
     getPageForUser(user: string, page: number): Observable<Game[]> {
         return this.httpClient.get<Game[]>(environment.apiBase + '/v1/collection/get/' + user + '/page/' + page);
+    }
+
+    getTotalGamesForUser(user: string) : Observable<CollectionInformation> {
+        return this.httpClient.get<CollectionInformation>(environment.apiBase + '/v1/collection/get/' + user + '/total');
     }
 }

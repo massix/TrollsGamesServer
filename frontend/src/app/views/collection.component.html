@@ -19,8 +19,9 @@
     <div class="col-md-3 col-lg-3 col-sm-12">
         <div *ngFor="let user of users" class="user" [ngClass]="{'active': selectedUser === user}" (click)="selectUser(user)">
             <span class="user-nick">{{user.bggNick}}</span><br />
-            <span class="user-display">{{user.forumNick}}</span><br />
+            <span class="user-display">{{user.forumNick}} ({{user.collectionSize}} games)</span><br />
             <span class="user-email">{{user.email}}</span><br />
+            <span class="user-bgg">{{user.bggHandled? "Handled on BGG" : "Handled manually"}}</span>
         </div>
     </div>
     <div *ngIf="shownGames" class="col-md-8 col-lg-8 col-sm-12">

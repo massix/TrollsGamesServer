@@ -21,6 +21,7 @@ export class UsersComponent implements OnInit {
     }
 
     submitUser() {
+        console.log(this.newUser);
         this.usersService.addUser(this.newUser).subscribe(data => {
             this.refreshUsersList();
         });

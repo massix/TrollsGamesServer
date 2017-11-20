@@ -22,7 +22,12 @@ export class CollectionComponent implements OnInit {
         private collectionService: CollectionService) {}
 
     ngOnInit() {
-        this.usersService.getAllUsers().subscribe(data => this.users = data);
+        this.usersService.getAllUsers().subscribe(data => {
+            this.users = data;
+            this.users.forEach(user => {
+                this.collectionService.getTotalGamesForUser(user.bggNick).subscribe(data => user.collectionSize = data.totalGames);
+            });
+        });
     }
 
     selectUser(user: User) {
