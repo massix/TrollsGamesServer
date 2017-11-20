@@ -2,10 +2,7 @@ package rocks.massi.controllers;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import rocks.massi.data.Game;
 import rocks.massi.data.boardgamegeek.Boardgames;
 import rocks.massi.services.BoardGameGeek;
@@ -21,6 +18,7 @@ public class BGGConverterController {
     @Autowired
     private BoardGameGeek connector;
 
+    @CrossOrigin
     @GetMapping("/search")
     public List<Game> searchGame(@RequestParam("q") String query) {
         List<Game> games = new LinkedList<>();

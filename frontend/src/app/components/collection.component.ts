@@ -18,6 +18,8 @@ export class CollectionComponent implements OnInit {
     totalItems: number;
     currentPage: number = 0;
     focusedGame: Game;
+    searchTerm: string;
+    searchResult: Game[];
 
     constructor(private usersService: UsersService, 
         private gamesService: GamesService, 
@@ -48,16 +50,32 @@ export class CollectionComponent implements OnInit {
         this.collectionService.removeGameForUser(this.selectedUser.bggNick, game.id).subscribe(
             data => {
                 this.alertService.success('Removed game ' + data.game + ' for user ' + data.user);
-                this.collectionService.getPageForUser(this.selectedUser.bggNick, this.currentPage).subscribe(data => this.shownGames = data);
+                this.collectionService.getPageForUser(this.selectedUser.bggNick, this.currentPage - 1).subscribe(data => this.shownGames = data);
+                this.collectionService.getTotalGamesForUser(this.selectedUser.bggNick).subscribe(data => this.selectedUser.collectionSize = data.totalGames);
             },
             (err: HttpErrorResponse) => {
                 if (err.status == 200) {
                     this.alertService.success('Removed game ' + game.id + ' for user ' + this.selectedUser.bggNick);
                     this.collectionService.getPageForUser(this.selectedUser.bggNick, this.currentPage).subscribe(data => this.shownGames = data);
+                    this.collectionService.getTotalGamesForUser(this.selectedUser.bggNick).subscribe(data => this.selectedUser.collectionSize = data.totalGames);
                 } else {
                     this.alertService.error('Can\'t remove game (' + err.status + ')');
                 }
             }
         );
+    }
+
+    startSearch() {
+        this.collectionService.searchGame(this.searchTerm).subscribe(data => this.searchResult = data);
+    }
+
+    addGame(game: Game) {
+        this.collectionService.addGameForUser(this.selectedUser.bggNick, game.id).subscribe(
+            data => {
+                this.alertService.success('added game for user');
+                this.collectionService.getTotalGamesForUser(this.selectedUser.bggNick).subscribe(data => this.selectedUser.collectionSize = data.totalGames);
+                this.collectionService.getPageForUser(this.selectedUser.bggNick, this.currentPage).subscribe(data => this.shownGames = data);
+            }
+        )
     }
 }

@@ -27,4 +27,13 @@ export class CollectionService {
         const headers = new HttpHeaders().set('Authorization', 'Bearer ' + localStorage.getItem('token'));
         return this.httpClient.delete<any>(environment.apiBase + '/v1/collection/remove/' + user + '/' + game, {headers: headers});
     }
+
+    addGameForUser(user: string, game: number): Observable<Ownership> {
+        const headers = new HttpHeaders().set('Authorization', 'Bearer ' + localStorage.getItem('token'));
+        return this.httpClient.put<Ownership>(environment.apiBase + '/v1/collection/add/' + user + '/' + game, null, {headers: headers});
+    }
+
+    searchGame(query: string): Observable<Game[]> {
+        return this.httpClient.get<Game[]>(environment.apiBase + '/v1/bggconverter/search?q=' + query);
+    }
 }

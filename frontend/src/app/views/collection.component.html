@@ -25,6 +25,22 @@
         </div>
     </div>
     <div *ngIf="shownGames" class="col-md-8 col-lg-8 col-sm-12">
+      <div class="input-group col-md-12">
+        <input type="text" class="form-control input-sm" placeholder="Search" name="search" [(ngModel)]="searchTerm"/>
+        <span class="input-group-btn" (click)="startSearch()">
+                <button class="btn btn-info btn-sm" type="button">
+                    <i class="glyphicon glyphicon-search"></i>
+                </button>
+            </span>
+      </div>
+      <div *ngIf="searchResult" class="row">
+        <button class="btn btn-lg fa fa-eye" (click)="searchResult = null"></button>
+        <div *ngFor="let game of searchResult" class="row">
+          <div class="col-md-3"><a (click)="addGame(game)">{{game.id}}</a></div>
+          <div class="col-md-6">{{game.name}}</div>
+          <div class="col-md-3">{{game.yearPublished}}</div>
+        </div>
+      </div>
         <table class="table table-condensed table-hover">
             <thead class="thead-light">
                 <tr>
@@ -36,7 +52,7 @@
             <tbody>
                 <tr *ngFor="let game of shownGames  | paginate: { itemsPerPage: 20, currentPage: currentPage, totalItems: totalItems }">
                     <th scope="row">
-                        <button class="btn btn-sm fa fa-search" 
+                        <button class="btn btn-sm fa fa-search"
                                 data-toggle="modal"
                                 data-target="#modalGame"
                                 (click)="focusedGame = game">
