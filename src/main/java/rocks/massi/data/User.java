@@ -37,6 +37,9 @@ public class User {
     @Enumerated(EnumType.STRING)
     private AuthenticationType authenticationType = AuthenticationType.JWT;
 
+    @Column
+    private boolean bggHandled = true;
+
     public User() {
         this("", "", "");
     }

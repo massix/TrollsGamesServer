@@ -33,4 +33,11 @@ public class ExceptionsHandler extends ResponseEntityExceptionHandler {
     protected ResponseEntity<Object> handleWrongAuthentication(RuntimeException exception, WebRequest request) {
         return handleExceptionInternal(exception, exception.getMessage(), null, HttpStatus.FORBIDDEN, request);
     }
+
+    @ExceptionHandler(value = {
+            UserNotCrawlableException.class
+    })
+    protected ResponseEntity<Object> handleUserNotCrawlable(RuntimeException exception, WebRequest request) {
+        return handleExceptionInternal(exception, exception.getMessage(), null, HttpStatus.CONFLICT, request);
+    }
 }

@@ -11,6 +11,8 @@ import rocks.massi.data.*;
 import rocks.massi.data.joins.GameHonorsRepository;
 import rocks.massi.data.joins.OwnershipsRepository;
 import rocks.massi.exceptions.AuthenticationException;
+import rocks.massi.exceptions.UserNotCrawlableException;
+import rocks.massi.exceptions.UserNotFoundException;
 import rocks.massi.utils.DBUtils;
 
 import javax.servlet.http.HttpServletResponse;
@@ -74,7 +76,7 @@ public class CrawlerController {
 
         User user = DBUtils.getUser(usersRepository, nick);
 
-        if (user != null) {
+        if (user != null && user.isBggHandled()) {
             response.setStatus(HttpServletResponse.SC_ACCEPTED);
             Thread thread;
 
@@ -93,10 +95,10 @@ public class CrawlerController {
             }
 
             response.setHeader(HttpHeaders.LOCATION, "/v1/crawler/queue/" + String.valueOf(thread.getId()));
-        }
-
-        else {
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+        } else if (user != null && !user.isBggHandled()) {
+            throw new UserNotCrawlableException("User is not handled via BGG");
+        } else {
+            throw new UserNotFoundException("User does not exist in database");
         }
     }
 

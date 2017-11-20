@@ -1,0 +1,1 @@
+alter table users add column bgg_handled boolean not null default true;
