@@ -131,14 +131,19 @@ public class CollectionCrawler implements Runnable {
 
         }
 
+        // Build the collection as a list of Integers.
         Collection collection = (Collection) new JAXBDecoder(contextFactory).decode(response, Collection.class);
-
-        log.info("Original collection {}", collection.toString());
-        log.info("Collection {}", collection.ownedAsString());
-        log.info("Wanted {}", collection.wantedAsString());
         collection.getItemList().forEach(item -> {
             if (item.getStatus().isOwn()) {
                 integers.add(item.getId());
+            }
+        });
+
+        // Clean collection, remove games that are no longer owned by the user.
+        List<Ownership> existingCollection = ownershipsRepository.findByUser(user.getBggNick());
+        existingCollection.forEach(ownership -> {
+            if (!integers.contains(ownership.getGame())) {
+                ownershipsRepository.delete(ownership);
             }
         });
 
@@ -157,6 +162,7 @@ public class CollectionCrawler implements Runnable {
                     cacheHit++;
                 }
 
+                // Add the game to the user's collection.
                 ownershipsRepository.save(new Ownership(user.getBggNick(), gameId));
 
             } catch (FeignException exception) {
@@ -181,6 +187,7 @@ public class CollectionCrawler implements Runnable {
             log.error("Could not dump to disk: {}", e.getMessage());
         }
 
+        // TODO: MAY THIS WHOLE SECTION BE REMOVED SINCE WE ARE NOW CRAWLING DIRECTLY VIA BGG ?
         int timeout = INITIAL_TIMEOUT;
         for (Iterator<Integer> it = failed.iterator(); it.hasNext(); ) {
             int gameId = it.next();
