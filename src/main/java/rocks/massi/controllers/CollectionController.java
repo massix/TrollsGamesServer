@@ -143,9 +143,10 @@ public class CollectionController {
 
     @CrossOrigin(allowedHeaders = {"Authorization"})
     @DeleteMapping("/remove/{nick}/{game}")
-    public Ownership removeGameForUser(@RequestHeader("Authorization") String authorization,
-                                       @PathVariable("nick") String nick,
-                                       @PathVariable("game") int gameId) {
+    public void removeGameForUser(@RequestHeader("Authorization") String authorization,
+                                  @PathVariable("nick") String nick,
+                                  @PathVariable("game") int gameId) {
+
         if (!trollsJwt.checkHeaderWithToken(authorization)) {
             throw new AuthenticationException("User not authorized");
         }
@@ -154,6 +155,12 @@ public class CollectionController {
             throw new UserNotFoundException("User not found in DB");
         }
 
-        return ownershipsRepository.delete(new Ownership(nick, gameId));
+        Ownership ownership = ownershipsRepository.findByUserAndGame(nick, gameId);
+
+        if (ownership == null) {
+            throw new UserNotFoundException("Ownership not found on DB");
+        }
+
+        ownershipsRepository.delete(ownership);
     }
 }
