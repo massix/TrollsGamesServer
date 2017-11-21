@@ -13,12 +13,13 @@
 
 .queue-user, 
 .queue-active, 
-.queue-games, 
 .queue-total,
 .queue-cache-hit,
 .queue-cache-miss,
 .queue-started, 
-.queue-finished, 
+.queue-finished,
+.queue-games,
+.queue-started, 
 .queue-inactive {
     font-size: 0.8em;
 }
