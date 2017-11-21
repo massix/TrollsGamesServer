@@ -31,6 +31,10 @@ export class CrawlerComponent implements OnInit {
         this.crawlService.getStatus().subscribe(data => this.crawlerStatus = data);
     }
 
+    wake() {
+        this.crawlService.wake().subscribe(data => console.log(data));
+    }
+
     constructor(private crawlService: CrawlService, 
         private alertService: AlertService, 
         private timerService: SimpleTimer,

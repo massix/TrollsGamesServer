@@ -19,6 +19,7 @@ import javax.servlet.http.HttpServletResponse;
 @Slf4j
 @RestController
 @RequestMapping("/v1/crawler")
+@CrossOrigin(allowedHeaders = {"Authorization"})
 public class CrawlerController {
     @Autowired
     private UsersRepository usersRepository;
@@ -29,7 +30,6 @@ public class CrawlerController {
     @Autowired
     private CollectionCrawler collectionCrawler;
 
-    @CrossOrigin(allowedHeaders = {"Authorization"})
     @PostMapping("/games/{gameId}")
     public Game crawlGame(@RequestHeader("Authorization") final String authorization,
                           @PathVariable("gameId") final int gameId) {
@@ -40,7 +40,6 @@ public class CrawlerController {
         return collectionCrawler.crawlGame(gameId);
     }
 
-    @CrossOrigin(allowedHeaders = {"Authorization"})
     @PostMapping("/collection/{user}")
     public void crawlCollectionForUser(@RequestHeader("Authorization") final String authorization,
                                        @PathVariable("user") final String nick, HttpServletResponse response) {
@@ -60,7 +59,6 @@ public class CrawlerController {
         }
     }
 
-    @CrossOrigin(allowedHeaders = {"Authorization"})
     @GetMapping("/status")
     public CrawlerStatus getStatus(@RequestHeader("Authorization") final String authorization) {
         if (!trollsJwt.checkHeaderWithToken(authorization)) {
@@ -68,5 +66,14 @@ public class CrawlerController {
         }
 
         return collectionCrawler.getStatus();
+    }
+
+    @PutMapping("/wake")
+    public void wakeUp(@RequestHeader("Authorization") final String authorization) {
+        if (!trollsJwt.checkHeaderWithToken(authorization)) {
+            throw new AuthenticationException("User not authorized.");
+        }
+
+        collectionCrawler.wakeUp();
     }
 }

@@ -69,7 +69,7 @@ public class CollectionCrawler implements Runnable {
     private String started;
     private String finished;
 
-    private void wakeUp() {
+    public void wakeUp() {
         if (!runningThread.isAlive()) {
             runningThread = new Thread(this);
             runningThread.start();
