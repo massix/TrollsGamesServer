@@ -25,3 +25,19 @@
     font-size: 0.8em;
     font-weight: 800;
 }
+
+.user-bgg {
+    font-size: 0.8em;
+    font-weight: 800;
+}
+
+.searchresult {
+    border-bottom: 1px dotted black;
+}
+
+.searchresult:nth-child(odd) {
+    background-color: lightgray;
+}
+.game-link {
+    cursor: pointer;
+}

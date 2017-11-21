@@ -78,6 +78,11 @@ ul.c-controls li a:hover {
     font-weight: 600;
 }
 
+.bgg {
+    font-size: 0.9em;
+    font-weight: 600;
+}
+
 .c-info {
     padding: 5px 10px;
     font-size: 1.25em;
