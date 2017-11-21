@@ -39,6 +39,7 @@ export class CollectionComponent implements OnInit {
         this.selectedUser = user;
         this.collectionService.getPagesForUser(user.bggNick).subscribe(data => this.totalItems = data.pageSize * data.totalPages);
         this.collectionService.getPageForUser(user.bggNick, 0).subscribe(data => this.shownGames = data);
+        this.searchResult = null;
     }
 
     pageChange(newPage: number) {

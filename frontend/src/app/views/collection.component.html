@@ -35,8 +35,8 @@
       </div>
       <div *ngIf="searchResult" class="row">
         <button class="btn btn-lg fa fa-eye" (click)="searchResult = null"></button>
-        <div *ngFor="let game of searchResult" class="row">
-          <div class="col-md-3"><a (click)="addGame(game)">{{game.id}}</a></div>
+        <div *ngFor="let game of searchResult" class="row searchresult">
+          <div class="col-md-3"><a class="game-link" (click)="addGame(game)">{{game.id}}</a></div>
           <div class="col-md-6">{{game.name}}</div>
           <div class="col-md-3">{{game.yearPublished}}</div>
         </div>
