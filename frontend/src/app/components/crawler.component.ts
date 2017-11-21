@@ -32,7 +32,7 @@ export class CrawlerComponent implements OnInit {
     }
 
     wake() {
-        this.crawlService.wake().subscribe(data => console.log(data));
+        this.crawlService.wake().subscribe(data => console.log(data), error => {});
     }
 
     constructor(private crawlService: CrawlService, 
