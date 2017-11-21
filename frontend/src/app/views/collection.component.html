@@ -57,7 +57,7 @@
                                 data-target="#modalGame"
                                 (click)="focusedGame = game">
                         </button>
-                        <button class="btn btn-sm fa fa-remove" (click)="removeGame(game)"></button>
+                        <button *ngIf="!selectedUser.bggHandled" class="btn btn-sm fa fa-remove" (click)="removeGame(game)"></button>
                         {{game.id}}
                     </th>
                     <td>{{game.name}}</td>
