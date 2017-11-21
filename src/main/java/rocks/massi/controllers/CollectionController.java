@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.*;
 import rocks.massi.authentication.TrollsJwt;
-import rocks.massi.cache.CrawlCache;
 import rocks.massi.crawler.CollectionCrawler;
 import rocks.massi.data.*;
 import rocks.massi.data.joins.GameHonorsRepository;
@@ -49,7 +48,7 @@ public class CollectionController {
     private TrollsJwt trollsJwt;
 
     @Autowired
-    private CrawlCache crawlCache;
+    private CollectionCrawler collectionCrawler;
 
     @CrossOrigin
     @GetMapping("/get/{nick}")
@@ -126,12 +125,7 @@ public class CollectionController {
         Game toBeAdded = gamesRepository.findById(gameId);
         if (toBeAdded == null) {
             try {
-                toBeAdded = new CollectionCrawler(crawlCache,
-                        gamesRepository,
-                        ownershipsRepository,
-                        honorsRepository,
-                        gameHonorsRepository,
-                        null).crawlGame(gameId);
+                toBeAdded = collectionCrawler.crawlGame(gameId);
             } catch (Exception e) {
                 throw new GameNotFoundException();
             }

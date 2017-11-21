@@ -1,13 +1,13 @@
 package rocks.massi.crawler;
 
-import feign.Feign;
-import feign.FeignException;
 import feign.Response;
 import feign.jaxb.JAXBContextFactory;
 import feign.jaxb.JAXBDecoder;
 import lombok.Getter;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 import rocks.massi.cache.CrawlCache;
 import rocks.massi.data.*;
 import rocks.massi.data.boardgamegeek.Boardgames;
@@ -18,223 +18,221 @@ import rocks.massi.data.joins.Ownership;
 import rocks.massi.data.joins.OwnershipsRepository;
 import rocks.massi.services.BoardGameGeek;
 
+import javax.annotation.PreDestroy;
 import java.io.IOException;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 @Slf4j
+@Component
 public class CollectionCrawler implements Runnable {
-    private final int FAILURE_TIMEOUT = 2000;
-    private final int INITIAL_TIMEOUT = 1000;
-    private final int TIMEOUT_INCREASE = 3000;
-    private final int MAXIMUM_TIMEOUT = 10000;
-    public static String BGG_BASE_URL = "https://www.boardgamegeek.com";
 
-    private final CrawlCache cache;
-    private final GamesRepository gamesRepository;
-    private final OwnershipsRepository ownershipsRepository;
-    private final HonorsRepository honorsRepository;
-    private final GameHonorsRepository gameHonorsRepository;
-    private final User user;
+    @Autowired
+    private CrawlCache crawlCache;
+
+    @Autowired
+    private UsersRepository usersRepository;
+
+    @Autowired
+    private GamesRepository gamesRepository;
+
+    @Autowired
+    private HonorsRepository honorsRepository;
+
+    @Autowired
+    private GameHonorsRepository gameHonorsRepository;
+
+    @Autowired
+    private OwnershipsRepository ownershipsRepository;
+
+    @Autowired
+    private BoardGameGeek boardGameGeek;
+
+    @Value("${bgg.url}")
+    private String bggUrl;
+
+    @Value("${crawl.timeout}")
+    private int crawlTimeout;
+
+    private boolean running = true;
+    private Thread runningThread;
 
     @Getter
-    private int cacheHit;
+    private Stack<User> usersToCrawl = new Stack<>();
 
     @Getter
-    private int cacheMiss;
+    private Stack<Integer> gamesToCrawl = new Stack<>();
 
-    @Getter
-    private boolean running;
+    private Set<Ownership> ownerships = new LinkedHashSet<>();
 
-    @Getter
-    private Date started;
+    private long cacheHit = 0;
+    private long cacheMiss = 0;
+    private String started;
+    private String finished;
 
-    @Getter
-    private Date finished;
+    private void wakeUp() {
+        if (!runningThread.isAlive()) {
+            runningThread = new Thread(this);
+            runningThread.start();
+        }
+    }
 
-    @Getter
-    private int totalGames = 0;
+    public CollectionCrawler(@Value("${crawl.timeout}") int timeout) {
+        this.crawlTimeout = timeout;
 
-    private List<Game> crawled;
-    private List<Integer> failed;
-    private List<Ownership> ownerships;
+        runningThread = new Thread(this);
+    }
 
-    JAXBContextFactory contextFactory;
-    BoardGameGeek boardGameGeek;
+    public void addUserToCrawl(final User user) {
+        if (!usersToCrawl.contains(user)) {
+            usersToCrawl.push(user);
+            wakeUp();
+        }
+    }
 
-    public CollectionCrawler(CrawlCache cache,
-                             GamesRepository gamesRepository,
-                             OwnershipsRepository ownershipsRepository,
-                             HonorsRepository honorsRepository,
-                             GameHonorsRepository gameHonorsRepository,
-                             User user) {
-        this.cache = cache;
-        this.gamesRepository = gamesRepository;
-        this.ownershipsRepository = ownershipsRepository;
-        this.honorsRepository = honorsRepository;
-        this.gameHonorsRepository = gameHonorsRepository;
-        this.user = user;
-
-        crawled = new LinkedList<>();
-        failed = new LinkedList<>();
-        ownerships = new LinkedList<>();
-        started = new Date();
-        finished = new Date();
-        contextFactory = new JAXBContextFactory.Builder().build();
-        boardGameGeek = Feign.builder().decoder(new JAXBDecoder(contextFactory)).target(BoardGameGeek.class, BGG_BASE_URL);
+    public void addGameToCrawl(final int gameId) {
+        if (!gamesToCrawl.contains(gameId)) {
+            gamesToCrawl.push(gameId);
+            wakeUp();
+        }
     }
 
     public Game crawlGame(final int gameId) {
-        Boardgames boardgames = boardGameGeek.getGameForId(gameId);
-
-        // Get only the first result
-        Boardgames.Boardgame boardgame = boardgames.getBoardgame().get(0);
+        Boardgames.Boardgame boardgame = boardGameGeek.getGameForId(gameId).getBoardgame().get(0);
         Game toInsert = boardgame.convert();
+        log.info("Crawled game {}", toInsert.getName());
+        crawlCache.put(gameId, new Date().getTime() / 1000);
 
-        // Cache game
-        cache.put(gameId, new Date().getTime() / 1000);
-
-        // Save game in DB
         gamesRepository.save(toInsert);
 
-        // If the game has honors, extract and store them in the db
+        // Save the honors (if any)
         if (boardgame.getHonors() != null) {
             boardgame.getHonors().forEach(honor -> {
                 honorsRepository.save(new Honor(honor.getId(), honor.getDescription()));
-                gameHonorsRepository.save(new GameHonor(honor.getId(), toInsert.getId()));
+                gameHonorsRepository.save(new GameHonor(honor.getId(), gameId));
             });
         }
 
         return gamesRepository.findById(gameId);
     }
 
-    @SneakyThrows
     @Override
     public void run() {
         running = true;
-        cacheHit = 0;
-        cacheMiss = 0;
-        Response response = null;
-        LinkedList<Integer> integers = new LinkedList<>();
+        log.info("Targetting {} with a timeout of {}ms", bggUrl, crawlTimeout);
+        JAXBContextFactory contextFactory = new JAXBContextFactory.Builder().build();
+        started = new Date().toString();
 
-        int status = 0;
-        while (status != 200) {
-            response = boardGameGeek.getCollectionForUser(user.getBggNick());
-            status = response.status();
-
-            if (status != 200) {
-                log.info("Have to wait... status code {}", status);
-                Thread.sleep(2000);
-            }
-
-        }
-
-        // Build the collection as a list of Integers.
-        Collection collection = (Collection) new JAXBDecoder(contextFactory).decode(response, Collection.class);
-        collection.getItemList().forEach(item -> {
-            if (item.getStatus().isOwn()) {
-                integers.add(item.getId());
-            }
-        });
-
-        // Clean collection, remove games that are no longer owned by the user.
-        List<Ownership> existingCollection = ownershipsRepository.findByUser(user.getBggNick());
-        existingCollection.forEach(ownership -> {
-            if (!integers.contains(ownership.getGame())) {
-                ownershipsRepository.delete(ownership);
-            }
-        });
-
-        totalGames = integers.size();
-
-        for (int gameId : integers) {
+        while (running && (!usersToCrawl.isEmpty() || !gamesToCrawl.isEmpty())) {
             try {
-                if (cache.isExpired(gameId)) {
-                    Game g = crawlGame(gameId);
-                    crawled.add(g);
-                    log.info("Added game {} for user {}", g.getName(), user.getBggNick());
-                    cacheMiss++;
-                    Thread.sleep(550);
-                } else {
-                    log.info("No need to recrawl game {}", gameId);
-                    cacheHit++;
+                boolean didCrawlUser = false;
+                boolean didCrawlGame = false;
+
+                if (!usersToCrawl.isEmpty()) {
+                    User toCrawl = usersToCrawl.pop();
+                    log.info("Crawling collection for user {}", toCrawl.getBggNick());
+                    Response response = boardGameGeek.getCollectionForUser(toCrawl.getBggNick());
+                    didCrawlUser = true;
+                    if (response.status() != 200) {
+                        log.info("Could not crawl user {}, status {}", toCrawl.getBggNick(), response.status());
+                        usersToCrawl.push(toCrawl);
+                    } else {
+                        Collection collection = (Collection) new JAXBDecoder(contextFactory).decode(response, Collection.class);
+
+                        // Get all the existing ownerships
+                        List<Ownership> ownershipList = ownershipsRepository.findByUser(toCrawl.getBggNick());
+
+                        // Push all the games in the crawling list and in the ownerships structure
+                        collection.getItemList().forEach(item -> {
+                            Ownership potentialOwnership = new Ownership(toCrawl.getBggNick(), item.getId());
+
+                            // Owned games should be pushed in the base and a new ownership created (after the game has been crawled).
+                            if (item.getStatus().isOwn()) {
+                                ownerships.add(potentialOwnership);
+                            }
+
+                            // We will crawl all the games, just for fun.
+                            addGameToCrawl(item.getId());
+                        });
+
+                        // Update the ownerships repository to reflect the new collection
+                        ownershipList.forEach(ownership -> {
+                            if (!ownerships.contains(ownership)) {
+                                ownershipsRepository.delete(ownership);
+                            }
+                        });
+
+                        // Remove from the new ownerships all the remaining ones in the db
+                        ownershipList = ownershipsRepository.findByUser(toCrawl.getBggNick());
+                        ownershipList.forEach(ownership -> {
+                            if (ownerships.contains(ownership)) {
+                                ownerships.remove(ownership);
+                            }
+                        });
+                    }
                 }
 
-                // Add the game to the user's collection.
-                ownershipsRepository.save(new Ownership(user.getBggNick(), gameId));
-
-            } catch (FeignException exception) {
-                log.warn("Could not download game id {} ({})", gameId, exception.status());
-                log.warn("Sleeping for {}s", FAILURE_TIMEOUT / 1000);
-                failed.add(gameId);
-                try {
-                    Thread.sleep(FAILURE_TIMEOUT);
-                } catch (InterruptedException e) {
-                    log.warn("Couldn't sleep.");
+                if (didCrawlUser) {
+                    Thread.sleep(crawlTimeout);
                 }
-            } catch (final Exception exception) {
-                log.warn("Generic exception caught: {}. Leaving!", exception.getMessage());
-                break;
+
+                if (!gamesToCrawl.isEmpty()) {
+                    int gameId = gamesToCrawl.pop();
+                    if (crawlCache.isExpired(gameId)) {
+                        crawlGame(gameId);
+                        didCrawlGame = true;
+                        cacheMiss++;
+                    } else {
+                        cacheHit++;
+                    }
+
+                    // Check if there are ownerships to update
+                    for (Iterator<Ownership> it = ownerships.iterator(); it.hasNext(); ) {
+                        Ownership ownership = it.next();
+                        if (ownership.getGame() == gameId) {
+                            ownershipsRepository.save(ownership);
+                            it.remove();
+                        }
+                    }
+                }
+
+                if (didCrawlGame) {
+                    Thread.sleep(crawlTimeout);
+                }
+
+            } catch (IOException | InterruptedException e) {
+                log.error("Exception caught while crawling: {}", e.getMessage());
             }
         }
 
-        // Store intermediary cache
+        log.info("Storing cache");
+
         try {
-            cache.store();
+            crawlCache.store();
         } catch (IOException e) {
-            log.error("Could not dump to disk: {}", e.getMessage());
+            log.error("Unable to store cache to disk!");
         }
 
-        // TODO: MAY THIS WHOLE SECTION BE REMOVED SINCE WE ARE NOW CRAWLING DIRECTLY VIA BGG ?
-        int timeout = INITIAL_TIMEOUT;
-        for (Iterator<Integer> it = failed.iterator(); it.hasNext(); ) {
-            int gameId = it.next();
-            try {
-                log.info("Sleeping for {}s", ((double) timeout / 1000));
-                Thread.sleep(timeout);
-                Game g = crawlGame(gameId);
-                crawled.add(g);
-                log.info("Added game {} for user {}", g.getName(), user.getBggNick());
-                it.remove();
-                timeout = INITIAL_TIMEOUT;
-                Thread.sleep(550);
-                ownershipsRepository.save(new Ownership(user.getBggNick(), gameId));
-            } catch (final FeignException exception) {
-                log.warn("Could not download game id {} ({}), timeout = {}", gameId, exception.status(), timeout);
-                it = failed.iterator();
-                timeout += TIMEOUT_INCREASE;
-                if (timeout > MAXIMUM_TIMEOUT) timeout = MAXIMUM_TIMEOUT;
-            } catch (final InterruptedException e) {
-                log.error("Could not sleep because {}", e.getMessage());
-            } catch (final Exception exception) {
-                log.error("Generic exception caught: {}. Leaving!", exception.getMessage());
-                break;
-            }
-        }
-
+        finished = new Date().toString();
+        log.info("Nothing to do!");
         running = false;
-        finished = new Date();
+    }
 
-        // Store final cache
+    @PreDestroy
+    public void stop() {
+        this.running = false;
         try {
-            cache.store();
-        } catch (IOException e) {
-            log.error("Could not dump to disk: {}", e.getMessage());
+            log.info("Gracefully terminating thread");
+            runningThread.join();
+        } catch (InterruptedException exception) {
+            log.error("Could not wait.");
         }
     }
 
-    public final CrawlingProgress getProgress() {
-        return new CrawlingProgress(
-                user.getBggNick(),
-                running,
-                crawled.size(),
-                failed.size(),
-                cacheHit,
-                cacheMiss,
-                totalGames,
-                getStarted().toString(),
-                getFinished().toString());
+    public CrawlerStatus getStatus() {
+        List<String> usersLeft = new LinkedList<>();
+        usersToCrawl.forEach(user -> usersLeft.add(user.getBggNick()));
+
+        return new CrawlerStatus(runningThread.isAlive(), cacheHit, cacheMiss, usersLeft,
+                gamesToCrawl.size(), started, finished);
     }
 }
