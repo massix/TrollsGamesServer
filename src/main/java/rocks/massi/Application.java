@@ -5,7 +5,6 @@ import feign.jaxb.JAXBContextFactory;
 import feign.jaxb.JAXBDecoder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -16,8 +15,7 @@ import rocks.massi.services.BoardGameGeek;
 import java.util.Properties;
 
 @SpringBootApplication
-@EnableAutoConfiguration
-public class Application {
+public class Application extends SpringApplication {
 
     @Bean
     public BCryptPasswordEncoder makeEncoder() {
@@ -45,6 +43,7 @@ public class Application {
 
         return javaMailSender;
     }
+
 
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);

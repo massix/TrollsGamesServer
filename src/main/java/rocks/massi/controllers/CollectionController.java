@@ -6,17 +6,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.*;
 import rocks.massi.authentication.TrollsJwt;
-import rocks.massi.cache.CrawlCache;
 import rocks.massi.crawler.CollectionCrawler;
 import rocks.massi.data.*;
 import rocks.massi.data.joins.GameHonorsRepository;
 import rocks.massi.data.joins.Ownership;
 import rocks.massi.data.joins.OwnershipsRepository;
 import rocks.massi.exceptions.AuthenticationException;
-import rocks.massi.exceptions.GameNotFoundException;
 import rocks.massi.exceptions.UserNotFoundException;
 import rocks.massi.utils.StatsLogger;
 
+import javax.servlet.http.HttpServletResponse;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -49,7 +48,7 @@ public class CollectionController {
     private TrollsJwt trollsJwt;
 
     @Autowired
-    private CrawlCache crawlCache;
+    private CollectionCrawler collectionCrawler;
 
     @CrossOrigin
     @GetMapping("/get/{nick}")
@@ -109,9 +108,10 @@ public class CollectionController {
 
     @CrossOrigin(allowedHeaders = {"Authorization"})
     @PutMapping("/add/{nick}/{game}")
-    public Ownership addGameForUser(@RequestHeader("Authorization") String authorization,
-                                    @PathVariable("nick") String nick,
-                                    @PathVariable("game") int gameId) {
+    public void addGameForUser(@RequestHeader("Authorization") String authorization,
+                               @PathVariable("nick") String nick,
+                               @PathVariable("game") int gameId,
+                               HttpServletResponse servletResponse) {
 
         // Check authorization
         if (!trollsJwt.checkHeaderWithToken(authorization)) {
@@ -123,22 +123,9 @@ public class CollectionController {
             throw new UserNotFoundException("User not found in DB");
         }
 
-        Game toBeAdded = gamesRepository.findById(gameId);
-        if (toBeAdded == null) {
-            try {
-                toBeAdded = new CollectionCrawler(crawlCache,
-                        gamesRepository,
-                        ownershipsRepository,
-                        honorsRepository,
-                        gameHonorsRepository,
-                        null).crawlGame(gameId);
-            } catch (Exception e) {
-                throw new GameNotFoundException();
-            }
-        }
-
-        ownershipsRepository.save(new Ownership(nick, toBeAdded.getId()));
-        return ownershipsRepository.findByUserAndGame(nick, gameId);
+        // Queue the game in the priority list in the crawler
+        servletResponse.setStatus(HttpServletResponse.SC_ACCEPTED);
+        collectionCrawler.addOwnershipToCrawl(new Ownership(nick, gameId));
     }
 
     @CrossOrigin(allowedHeaders = {"Authorization"})

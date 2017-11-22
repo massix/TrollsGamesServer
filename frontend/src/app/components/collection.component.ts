@@ -72,11 +72,18 @@ export class CollectionComponent implements OnInit {
 
     addGame(game: Game) {
         this.collectionService.addGameForUser(this.selectedUser.bggNick, game.id).subscribe(
-            data => {
-                this.alertService.success('added game for user');
-                this.collectionService.getTotalGamesForUser(this.selectedUser.bggNick).subscribe(data => this.selectedUser.collectionSize = data.totalGames);
-                this.collectionService.getPageForUser(this.selectedUser.bggNick, this.currentPage).subscribe(data => this.shownGames = data);
+            data => {},
+            error => {
+                console.log(error);
+                if (error.status == 202) {
+                    this.alertService.success('queued game for user');
+                }
             }
         )
+    }
+
+    reloadUser(user: User) {
+        this.selectUser(user);
+        this.collectionService.getTotalGamesForUser(user.bggNick).subscribe(data => user.collectionSize = data.totalGames);
     }
 }

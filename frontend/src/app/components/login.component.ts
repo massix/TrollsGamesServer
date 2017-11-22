@@ -24,10 +24,6 @@ export class LoginComponent implements OnInit {
 
     onSubmit(): void {
         this.error = null;
-        console.log('Submit button clicked');
-        console.log('login: ' + this.login.email);
-        console.log('password: ' + this.login.password);
-
         this.loginService.login(this.login).subscribe((data: HttpResponse<User>) => {
             if (data.headers.has('authorization')) {
                 localStorage.setItem('token', data.headers.get('authorization').replace('Bearer ', ''));

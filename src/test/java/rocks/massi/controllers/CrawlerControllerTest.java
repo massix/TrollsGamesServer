@@ -13,7 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import rocks.massi.controllers.utils.AuthorizationHandler;
-import rocks.massi.crawler.CollectionCrawler;
 import rocks.massi.data.*;
 import rocks.massi.data.joins.GameHonorsRepository;
 import rocks.massi.data.joins.OwnershipsRepository;
@@ -78,9 +77,6 @@ public class CrawlerControllerTest {
         // Force purge cache
         restTemplate.delete("/v1/cache/purge");
 
-        // Setup WireMock
-        CollectionCrawler.BGG_BASE_URL = "http://localhost:8080";
-
         AuthorizationHandler.setUp(restTemplate, "test@example.com", "authorized_user");
     }
 
@@ -95,10 +91,10 @@ public class CrawlerControllerTest {
     @SneakyThrows
     private void waitForQ() {
         // Wait for the Q to be over.
-        ResponseEntity<CrawlingProgress[]> progress = restTemplate.getForEntity("/v1/crawler/queues", CrawlingProgress[].class);
-        while (progress.getBody()[0].isRunning()) {
+        ResponseEntity<CrawlerStatus> progress = restTemplate.getForEntity("/v1/crawler/status", CrawlerStatus.class);
+        while (progress.getBody().isRunning()) {
             Thread.sleep(1000);
-            progress = restTemplate.getForEntity("/v1/crawler/queues", CrawlingProgress[].class);
+            progress = restTemplate.getForEntity("/v1/crawler/status", CrawlerStatus.class);
             log.info("Still running {}", progress.getBody());
         }
     }
@@ -107,10 +103,9 @@ public class CrawlerControllerTest {
     public void test1_crawlCollectionForUser() throws Exception {
         ResponseEntity<Void> responseEntity = restTemplate.postForEntity("/v1/crawler/collection/bgg_user", null, Void.class);
         assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
-        assertTrue(responseEntity.getHeaders().containsKey("location"));
-        assertTrue(responseEntity.getHeaders().get("location").get(0).startsWith("/v1/crawler/queue"));
 
         waitForQ();
+        Thread.sleep(2000);
 
         // Check that honors have been inserted in the base
         Honor honor = honorsRepository.findById(19901);
@@ -120,21 +115,6 @@ public class CrawlerControllerTest {
         assertEquals(1, gameHonorsRepository.findByGame(111661).size());
         assertEquals(honorsRepository.findById(gameHonorsRepository.findByGame(111661).get(0).getHonor()).getDescription(),
                 "2012 Golden Geek Best Board Game Expansion Nominee");
-    }
-
-    @Test
-    public void test2_getQueues() throws Exception {
-        ResponseEntity<CrawlingProgress[]> responseEntity = restTemplate.getForEntity("/v1/crawler/queues", CrawlingProgress[].class);
-        assertEquals(1, responseEntity.getBody().length);
-        assertFalse(responseEntity.getBody()[0].isRunning());
-        assertEquals(2, responseEntity.getBody()[0].getTotal());
-    }
-
-    @Test
-    public void test3_purgeFinishedQueues() throws Exception {
-        restTemplate.delete("/v1/crawler/queues");
-        ResponseEntity<CrawlingProgress[]> responseEntity = restTemplate.getForEntity("/v1/crawler/queues", CrawlingProgress[].class);
-        assertEquals(0, responseEntity.getBody().length);
     }
 
     @Test
