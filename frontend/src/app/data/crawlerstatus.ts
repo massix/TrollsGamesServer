@@ -4,6 +4,7 @@ export class CrawlerStatus {
     cacheMiss: number;
     usersToCrawl: string[];
     gamesLeft: number;
+    ownershipsLeft: number;
     started: string;
     finished: string;
 }

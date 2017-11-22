@@ -28,9 +28,9 @@ export class CollectionService {
         return this.httpClient.delete<any>(environment.apiBase + '/v1/collection/remove/' + user + '/' + game, {headers: headers});
     }
 
-    addGameForUser(user: string, game: number): Observable<Ownership> {
+    addGameForUser(user: string, game: number): Observable<any> {
         const headers = new HttpHeaders().set('Authorization', 'Bearer ' + localStorage.getItem('token'));
-        return this.httpClient.put<Ownership>(environment.apiBase + '/v1/collection/add/' + user + '/' + game, null, {headers: headers});
+        return this.httpClient.put<any>(environment.apiBase + '/v1/collection/add/' + user + '/' + game, null, {headers: headers});
     }
 
     searchGame(query: string): Observable<Game[]> {

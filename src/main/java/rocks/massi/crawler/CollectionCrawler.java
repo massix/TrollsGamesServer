@@ -62,6 +62,9 @@ public class CollectionCrawler implements Runnable {
     @Getter
     private Stack<Integer> gamesToCrawl = new Stack<>();
 
+    @Getter
+    private Stack<Ownership> ownershipsToCrawl = new Stack<>();
+
     private Set<Ownership> ownerships = new LinkedHashSet<>();
 
     private long cacheHit = 0;
@@ -96,6 +99,13 @@ public class CollectionCrawler implements Runnable {
         }
     }
 
+    public void addOwnershipToCrawl(final Ownership ownership) {
+        if (!ownershipsToCrawl.contains(ownership)) {
+            ownershipsToCrawl.push(ownership);
+            wakeUp();
+        }
+    }
+
     public Game crawlGame(final int gameId) {
         Boardgames.Boardgame boardgame = boardGameGeek.getGameForId(gameId).getBoardgame().get(0);
         Game toInsert = boardgame.convert();
@@ -122,10 +132,29 @@ public class CollectionCrawler implements Runnable {
         JAXBContextFactory contextFactory = new JAXBContextFactory.Builder().build();
         started = new Date().toString();
 
-        while (running && (!usersToCrawl.isEmpty() || !gamesToCrawl.isEmpty())) {
+        while (running && (!usersToCrawl.isEmpty() || !gamesToCrawl.isEmpty() || !ownershipsToCrawl.isEmpty())) {
             try {
                 boolean didCrawlUser = false;
                 boolean didCrawlGame = false;
+                boolean didCrawlOwnership = false;
+
+                if (!ownershipsToCrawl.isEmpty()) {
+                    Ownership toCrawl = ownershipsToCrawl.pop();
+                    log.info("Crawling ownership {}", toCrawl);
+
+                    // We only crawl the game if the cache for it has expired or if we don't have it in DB
+                    if (crawlCache.isExpired(toCrawl.getGame()) && (gamesRepository.findById(toCrawl.getGame()) == null)) {
+                        crawlGame(toCrawl.getGame());
+                        didCrawlOwnership = true;
+                        cacheMiss++;
+                    }
+
+                    ownershipsRepository.save(toCrawl);
+                }
+
+                if (didCrawlOwnership) {
+                    Thread.sleep(crawlTimeout);
+                }
 
                 if (!usersToCrawl.isEmpty()) {
                     User toCrawl = usersToCrawl.pop();
@@ -234,6 +263,6 @@ public class CollectionCrawler implements Runnable {
         usersToCrawl.forEach(user -> usersLeft.add(user.getBggNick()));
 
         return new CrawlerStatus(runningThread.isAlive(), cacheHit, cacheMiss, usersLeft,
-                gamesToCrawl.size(), started, finished);
+                gamesToCrawl.size(), ownershipsToCrawl.size(), started, finished);
     }
 }

@@ -13,6 +13,7 @@ public class CrawlerStatus {
     private final long cacheMiss;
     private final List<String> usersToCrawl;
     private final long gamesLeft;
+    private final long ownershipsLeft;
     private final String started;
     private final String finished;
 }

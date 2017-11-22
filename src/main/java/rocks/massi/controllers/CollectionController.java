@@ -12,10 +12,10 @@ import rocks.massi.data.joins.GameHonorsRepository;
 import rocks.massi.data.joins.Ownership;
 import rocks.massi.data.joins.OwnershipsRepository;
 import rocks.massi.exceptions.AuthenticationException;
-import rocks.massi.exceptions.GameNotFoundException;
 import rocks.massi.exceptions.UserNotFoundException;
 import rocks.massi.utils.StatsLogger;
 
+import javax.servlet.http.HttpServletResponse;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -108,9 +108,10 @@ public class CollectionController {
 
     @CrossOrigin(allowedHeaders = {"Authorization"})
     @PutMapping("/add/{nick}/{game}")
-    public Ownership addGameForUser(@RequestHeader("Authorization") String authorization,
-                                    @PathVariable("nick") String nick,
-                                    @PathVariable("game") int gameId) {
+    public void addGameForUser(@RequestHeader("Authorization") String authorization,
+                               @PathVariable("nick") String nick,
+                               @PathVariable("game") int gameId,
+                               HttpServletResponse servletResponse) {
 
         // Check authorization
         if (!trollsJwt.checkHeaderWithToken(authorization)) {
@@ -122,28 +123,9 @@ public class CollectionController {
             throw new UserNotFoundException("User not found in DB");
         }
 
-        Game toBeAdded = gamesRepository.findById(gameId);
-        if (toBeAdded == null) {
-            try {
-                boolean restartCrawl = false;
-                if (collectionCrawler.getStatus().isRunning()) {
-                    restartCrawl = true;
-                    collectionCrawler.stop();
-                }
-
-                toBeAdded = collectionCrawler.crawlGame(gameId);
-
-                if (restartCrawl) {
-                    collectionCrawler.wakeUp();
-                }
-
-            } catch (Exception e) {
-                throw new GameNotFoundException();
-            }
-        }
-
-        ownershipsRepository.save(new Ownership(nick, toBeAdded.getId()));
-        return ownershipsRepository.findByUserAndGame(nick, gameId);
+        // Queue the game in the priority list in the crawler
+        servletResponse.setStatus(HttpServletResponse.SC_ACCEPTED);
+        collectionCrawler.addOwnershipToCrawl(new Ownership(nick, gameId));
     }
 
     @CrossOrigin(allowedHeaders = {"Authorization"})
