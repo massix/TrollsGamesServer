@@ -9,8 +9,10 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
+import rocks.massi.controllers.utils.AuthorizationHandler;
 import rocks.massi.data.Quote;
 import rocks.massi.data.ServerInformation;
+import rocks.massi.data.Stats;
 
 import static org.junit.Assert.*;
 
@@ -39,5 +41,12 @@ public class ServerControllerTest {
         assertFalse(responseEntity.getBody().getQuote().isEmpty());
 
         log.info("Got quote '{}' from '{}'", responseEntity.getBody().getQuote(), responseEntity.getBody().getAuthor());
+    }
+
+    @Test
+    public void getStats() throws Exception {
+        AuthorizationHandler.setUp(restTemplate, "admin@massi.rocks", "bgg_admin");
+        ResponseEntity<Stats[]> responseEntity = restTemplate.getForEntity("/v1/server/stats", Stats[].class);
+        assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
     }
 }

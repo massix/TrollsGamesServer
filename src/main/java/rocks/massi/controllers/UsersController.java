@@ -3,6 +3,7 @@ package rocks.massi.controllers;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.bcrypt.BCrypt;
@@ -45,6 +46,9 @@ public class UsersController {
 
     @Autowired
     private JavaMailSender mailSender;
+
+    @Value("${users-controller.default-role}")
+    private Role defaultRole;
 
     @CrossOrigin
     @GetMapping("/get/{nick}")
@@ -101,7 +105,7 @@ public class UsersController {
 
         // New users are by default unable to login to the server.
         user.setAuthenticationType(AuthenticationType.NONE);
-        user.setRole(Role.USER);
+        user.setRole(defaultRole);
 
         // Encrypt password
         user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
@@ -129,7 +133,7 @@ public class UsersController {
 
         // Users added via APIs are by default of role user and authenticated via JWT
         user.setAuthenticationType(AuthenticationType.JWT);
-        user.setRole(Role.USER);
+        user.setRole(defaultRole);
 
         if (user.getBggNick().isEmpty() || user.getForumNick().isEmpty() || user.getPassword().isEmpty())
             throw new MalformattedUserException("Missing mandatory field");
@@ -159,11 +163,7 @@ public class UsersController {
 
         try {
             if (BCrypt.checkpw(loginInformation.getPassword(), dbUser.getPassword())) {
-                String token = trollsJwt.getTokenForUser(dbUser);
-                if (token.isEmpty()) {
-                    token = trollsJwt.generateNewTokenForUser(dbUser);
-                }
-
+                String token = trollsJwt.generateNewTokenForUser(dbUser);
                 dbUser.setPassword("*");
                 servletResponse.setHeader("Authorization", String.format("Bearer %s", token));
                 return dbUser;
@@ -179,8 +179,8 @@ public class UsersController {
     @DeleteMapping("/remove/{nick}")
     public User removeUser(@RequestHeader("Authorization") final String authorization,
                            @PathVariable("nick") String nick) {
-        if (!trollsJwt.checkHeaderWithToken(authorization)) {
-            throw new AuthenticationException("User not logged in");
+        if (trollsJwt.getUserInformationFromToken(authorization).getRole() != Role.ADMIN) {
+            throw new AuthenticationException("User not authorized.");
         }
 
         val user = DBUtils.getUser(usersRepository, nick);

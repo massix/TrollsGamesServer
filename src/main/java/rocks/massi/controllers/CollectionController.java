@@ -5,6 +5,7 @@ import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.*;
+import rocks.massi.authentication.Role;
 import rocks.massi.authentication.TrollsJwt;
 import rocks.massi.crawler.CollectionCrawler;
 import rocks.massi.data.*;
@@ -112,10 +113,10 @@ public class CollectionController {
                                @PathVariable("nick") String nick,
                                @PathVariable("game") int gameId,
                                HttpServletResponse servletResponse) {
-
         // Check authorization
-        if (!trollsJwt.checkHeaderWithToken(authorization)) {
-            throw new AuthenticationException("User not authorized");
+        TrollsJwt.UserInformation userInformation = trollsJwt.getUserInformationFromToken(authorization);
+        if (!userInformation.getUser().equals(nick) && userInformation.getRole() != Role.ADMIN) {
+            throw new AuthenticationException("User not authorized.");
         }
 
         // Check that the user exists
@@ -133,9 +134,10 @@ public class CollectionController {
     public void removeGameForUser(@RequestHeader("Authorization") String authorization,
                                   @PathVariable("nick") String nick,
                                   @PathVariable("game") int gameId) {
-
-        if (!trollsJwt.checkHeaderWithToken(authorization)) {
-            throw new AuthenticationException("User not authorized");
+        // Check authorization
+        TrollsJwt.UserInformation userInformation = trollsJwt.getUserInformationFromToken(authorization);
+        if (!userInformation.getUser().equals(nick) && userInformation.getRole() != Role.ADMIN) {
+            throw new AuthenticationException("User not authorized.");
         }
 
         if (getUser(usersRepository, nick) == null) {

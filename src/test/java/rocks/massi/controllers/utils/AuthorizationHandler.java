@@ -27,6 +27,5 @@ public class AuthorizationHandler {
                             .add("Authorization", authorizedUser.getHeaders().get("Authorization").get(0));
                     return execution.execute(request, body);
                 }));
-
     }
 }

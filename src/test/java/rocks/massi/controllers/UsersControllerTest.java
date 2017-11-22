@@ -104,7 +104,7 @@ public class UsersControllerTest {
         String token = responseEntity.getHeaders().get("Authorization").get(0).replace("Bearer ", "");
         Claims parsedToken = Jwts.parser().setSigningKey("test").parseClaimsJws(token).getBody();
         assertEquals(parsedToken.get(USER_KEY), user.getBggNick());
-        assertEquals(parsedToken.get(ROLE_KEY), Role.USER.toString());
+        assertEquals(parsedToken.get(ROLE_KEY), Role.ADMIN.toString());
 
         // Check TrollsJwt
         assertTrue(trollsJwt.checkTokenForUser(user.getBggNick()));
