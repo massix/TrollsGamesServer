@@ -76,4 +76,13 @@ public class CrawlerController {
 
         collectionCrawler.wakeUp();
     }
+
+    @PutMapping("/stop")
+    public void stop(@RequestHeader("Authorization") final String authorization) {
+        if (!trollsJwt.checkHeaderWithToken(authorization)) {
+            throw new AuthenticationException("User not authorized.");
+        }
+
+        collectionCrawler.stop();
+    }
 }

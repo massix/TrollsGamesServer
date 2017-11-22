@@ -1,8 +1,8 @@
 <div class="container">
     <div class="col-lg-3 col-xs-12 col-sm-12 col-md-3">
         <div *ngIf="crawlerStatus" class="queue">
-          <span class="queue-id" [ngClass]="{'bg-success': crawlerStatus.running}">Crawler</span> <span
-          class="fa fa-refresh" (click)="wake()"></span><br/>
+          <span class="queue-id" [ngClass]="{'bg-success': crawlerStatus.running}">Crawler</span> 
+          <span class="fa" [ngClass]="{'fa-stop' : crawlerStatus.running, 'fa-play' : !crawlerStatus.running}" (click)="wakeStop()"></span><br/>
             <span class="queue-cache-hit">{{crawlerStatus.cacheHit}} Hit</span><br />
             <span class="queue-cache-miss">{{crawlerStatus.cacheMiss}} Miss</span><br />
             <!-- <span *ngFor="let user of crawlerStatus.usersToCrawl" class="queue-users">{{crawlerStatus.usersToCrawl}}</span><br /> -->

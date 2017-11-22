@@ -24,4 +24,9 @@ export class CrawlService {
         const headers = new HttpHeaders().set('Authorization', 'Bearer ' + localStorage.getItem('token'));
         return this.httpClient.put<any>(environment.apiBase + '/v1/crawler/wake', null, {headers: headers});
     }
+
+    stop(): Observable<any> {
+        const headers = new HttpHeaders().set('Authorization', 'Bearer ' + localStorage.getItem('token'));
+        return this.httpClient.put<any>(environment.apiBase + '/v1/crawler/stop', null, {headers: headers});
+    }
 }

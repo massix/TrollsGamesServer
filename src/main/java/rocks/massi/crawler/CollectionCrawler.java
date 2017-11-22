@@ -219,6 +219,7 @@ public class CollectionCrawler implements Runnable {
 
     @PreDestroy
     public void stop() {
+        log.info("Stopping crawler");
         this.running = false;
         try {
             log.info("Gracefully terminating thread");

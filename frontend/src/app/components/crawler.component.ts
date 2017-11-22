@@ -31,8 +31,14 @@ export class CrawlerComponent implements OnInit {
         this.crawlService.getStatus().subscribe(data => this.crawlerStatus = data);
     }
 
-    wake() {
-        this.crawlService.wake().subscribe(data => console.log(data), error => {});
+    wakeStop() {
+        if (this.crawlerStatus.running) {
+            console.log('stop');
+            this.crawlService.stop().subscribe(data => console.log(data), error => {});
+        } else {
+            console.log('play');
+            this.crawlService.wake().subscribe(data => console.log(data), error => {});
+        }
     }
 
     constructor(private crawlService: CrawlService, 
