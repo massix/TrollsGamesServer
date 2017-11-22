@@ -127,7 +127,7 @@ public class UsersController {
         return user;
     }
 
-    @CrossOrigin(allowedHeaders = {"Authorization"})
+    @CrossOrigin(allowedHeaders = {"Authorization", "Content-Type"})
     @PostMapping(value = "/add")
     public User addUser(@RequestHeader("Authorization") String authorization, @RequestBody User user) {
         log.info("Got user {}", user.getBggNick());
@@ -153,7 +153,7 @@ public class UsersController {
         return DBUtils.getUser(usersRepository, user.getBggNick());
     }
 
-    @CrossOrigin(allowedHeaders = {"Authorization"})
+    @CrossOrigin(allowedHeaders = {"Authorization", "Content-Type"})
     @PatchMapping("/modify")
     public User modifyUser(@RequestHeader("Authorization") String authorization, @RequestBody User user) {
         log.info("Modifying user {}", user.getBggNick());
