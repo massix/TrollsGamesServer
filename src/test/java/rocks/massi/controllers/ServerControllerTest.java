@@ -45,7 +45,7 @@ public class ServerControllerTest {
 
     @Test
     public void getStats() throws Exception {
-        AuthorizationHandler.setUp(restTemplate, "admin@massi.rocks", "bgg_admin");
+        AuthorizationHandler.setUp(restTemplate);
         ResponseEntity<Stats[]> responseEntity = restTemplate.getForEntity("/v1/server/stats", Stats[].class);
         assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
     }

@@ -77,15 +77,17 @@ public class CrawlerControllerTest {
         // Force purge cache
         restTemplate.delete("/v1/cache/purge");
 
-        AuthorizationHandler.setUp(restTemplate, "test@example.com", "authorized_user");
+        AuthorizationHandler.setUp(restTemplate);
     }
 
     @After
     public void tearDown() throws Exception {
-        usersRepository.deleteAll();
         gamesRepository.deleteAll();
         honorsRepository.deleteAll();
         ownershipsRepository.deleteAll();
+        usersRepository.deleteByBggNick("bgg_user");
+        usersRepository.deleteByBggNick("bgg_user_two");
+        usersRepository.deleteByBggNick("timed_user");
     }
 
     @SneakyThrows

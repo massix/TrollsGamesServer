@@ -36,7 +36,8 @@ public class ExceptionsHandler extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(value = {
-            UserNotCrawlableException.class
+            UserNotCrawlableException.class,
+            UserAlreadyExistsException.class
     })
     protected ResponseEntity<Object> handleUserNotCrawlable(RuntimeException exception, WebRequest request) {
         return handleExceptionInternal(exception, exception.getMessage(), null, HttpStatus.CONFLICT, request);

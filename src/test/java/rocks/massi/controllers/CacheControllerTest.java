@@ -1,6 +1,5 @@
 package rocks.massi.controllers;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,12 +29,7 @@ public class CacheControllerTest {
 
     @Before
     public void setUp() throws Exception {
-        AuthorizationHandler.setUp(restTemplate, "test@example.com", "user");
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        usersRepository.deleteAll();
+        AuthorizationHandler.setUp(restTemplate);
     }
 
     @Test

@@ -10,14 +10,8 @@ import java.util.Collections;
 import static org.junit.Assert.assertTrue;
 
 public class AuthorizationHandler {
-    public static void setUp(TestRestTemplate restTemplate,
-                             final String email,
-                             final String bggNick) {
-        User authorized = new User(bggNick, bggNick, email);
-        authorized.setPassword("test");
-        restTemplate.postForEntity("/v1/users/add", authorized, Void.class);
-
-        LoginInformation loginInformation = new LoginInformation(email, "test");
+    public static void setUp(TestRestTemplate restTemplate) {
+        LoginInformation loginInformation = new LoginInformation("massi@massi.rocks", "supersecret");
         final ResponseEntity<User> authorizedUser = restTemplate.postForEntity("/v1/users/login", loginInformation, User.class);
         assertTrue(authorizedUser.getStatusCode().is2xxSuccessful());
 
