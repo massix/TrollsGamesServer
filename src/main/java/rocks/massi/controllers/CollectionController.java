@@ -125,7 +125,18 @@ public class CollectionController {
         Game toBeAdded = gamesRepository.findById(gameId);
         if (toBeAdded == null) {
             try {
+                boolean restartCrawl = false;
+                if (collectionCrawler.getStatus().isRunning()) {
+                    restartCrawl = true;
+                    collectionCrawler.stop();
+                }
+
                 toBeAdded = collectionCrawler.crawlGame(gameId);
+
+                if (restartCrawl) {
+                    collectionCrawler.wakeUp();
+                }
+
             } catch (Exception e) {
                 throw new GameNotFoundException();
             }
