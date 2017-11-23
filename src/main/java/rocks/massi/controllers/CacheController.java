@@ -7,7 +7,7 @@ import rocks.massi.authentication.Role;
 import rocks.massi.authentication.TrollsJwt;
 import rocks.massi.cache.CrawlCache;
 import rocks.massi.data.CacheOperation;
-import rocks.massi.exceptions.AuthenticationException;
+import rocks.massi.exceptions.AuthorizationException;
 
 import java.io.IOException;
 import java.util.Date;
@@ -29,7 +29,7 @@ public class CacheController {
     @DeleteMapping("/purge")
     public CacheOperation purgeCache(@RequestHeader("Authorization") final String authorization) {
         if (trollsJwt.getUserInformationFromToken(authorization).getRole() != Role.ADMIN) {
-            throw new AuthenticationException("User not authorized.");
+            throw new AuthorizationException("User not authorized.");
         }
 
         try {
@@ -45,7 +45,7 @@ public class CacheController {
     @DeleteMapping("/expired")
     public CacheOperation purgeExpired(@RequestHeader("Authorization") final String authorization) {
         if (trollsJwt.getUserInformationFromToken(authorization).getRole() != Role.ADMIN) {
-            throw new AuthenticationException("User not authorized.");
+            throw new AuthorizationException("User not authorized.");
         }
 
         try {
@@ -61,7 +61,7 @@ public class CacheController {
     @GetMapping("/get")
     public CacheOperation getMemoryCache(@RequestHeader("Authorization") final String authorization) {
         if (trollsJwt.getUserInformationFromToken(authorization).getRole() != Role.ADMIN) {
-            throw new AuthenticationException("User not authorized");
+            throw new AuthorizationException("User not authorized");
         }
 
         List<CacheOperation.CacheEntry> entries = new LinkedList<>();

@@ -10,7 +10,7 @@ import rocks.massi.data.CrawlerStatus;
 import rocks.massi.data.Game;
 import rocks.massi.data.User;
 import rocks.massi.data.UsersRepository;
-import rocks.massi.exceptions.AuthenticationException;
+import rocks.massi.exceptions.AuthorizationException;
 import rocks.massi.exceptions.UserNotCrawlableException;
 import rocks.massi.exceptions.UserNotFoundException;
 import rocks.massi.utils.DBUtils;
@@ -35,7 +35,7 @@ public class CrawlerController {
     public Game crawlGame(@RequestHeader("Authorization") final String authorization,
                           @PathVariable("gameId") final int gameId) {
         if (trollsJwt.getUserInformationFromToken(authorization).getRole() != Role.ADMIN) {
-            throw new AuthenticationException("User not authorized.");
+            throw new AuthorizationException("User not authorized.");
         }
 
         return collectionCrawler.crawlGame(gameId);
@@ -45,7 +45,7 @@ public class CrawlerController {
     public void crawlCollectionForUser(@RequestHeader("Authorization") final String authorization,
                                        @PathVariable("user") final String nick, HttpServletResponse response) {
         if (trollsJwt.getUserInformationFromToken(authorization).getRole() != Role.ADMIN) {
-            throw new AuthenticationException("User not authorized.");
+            throw new AuthorizationException("User not authorized.");
         }
 
         User user = DBUtils.getUser(usersRepository, nick);
@@ -63,7 +63,7 @@ public class CrawlerController {
     @GetMapping("/status")
     public CrawlerStatus getStatus(@RequestHeader("Authorization") final String authorization) {
         if (trollsJwt.getUserInformationFromToken(authorization).getRole() != Role.ADMIN) {
-            throw new AuthenticationException("User not authorized.");
+            throw new AuthorizationException("User not authorized.");
         }
 
         return collectionCrawler.getStatus();
@@ -72,7 +72,7 @@ public class CrawlerController {
     @PutMapping("/wake")
     public void wakeUp(@RequestHeader("Authorization") final String authorization) {
         if (trollsJwt.getUserInformationFromToken(authorization).getRole() != Role.ADMIN) {
-            throw new AuthenticationException("User not authorized.");
+            throw new AuthorizationException("User not authorized.");
         }
 
         collectionCrawler.wakeUp();
@@ -81,7 +81,7 @@ public class CrawlerController {
     @PutMapping("/stop")
     public void stop(@RequestHeader("Authorization") final String authorization) {
         if (trollsJwt.getUserInformationFromToken(authorization).getRole() != Role.ADMIN) {
-            throw new AuthenticationException("User not authorized.");
+            throw new AuthorizationException("User not authorized.");
         }
 
         collectionCrawler.stop();
