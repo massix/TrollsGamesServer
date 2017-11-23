@@ -61,7 +61,7 @@ public class QuotesControllerTest {
     @Test
     public void removeQuote() throws Exception {
         quotesRepository.save(new Quote("To be removed", "Quote"));
-        ResponseEntity<Quote> responseEntity = restTemplate.exchange("/v1/quotes/remove", HttpMethod.DELETE, new HttpEntity<>(new Quote("To be removed", "Quote")), Quote.class);
+        ResponseEntity<Quote> responseEntity = restTemplate.exchange("/v1/quotes/remove?quote=Quote", HttpMethod.DELETE, null, Quote.class);
         assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
 
         responseEntity = restTemplate.getForEntity("/v1/quotes/get/random", Quote.class);

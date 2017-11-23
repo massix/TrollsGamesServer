@@ -29,6 +29,10 @@ import { CacheService } from './services/cache.service';
 import { CollectionComponent } from './components/collection.component';
 import { CollectionService } from './services/collection.service';
 import { StatsService } from './services/stats.service';
+import { QuotesComponent } from './components/quotes.component';
+import { QuotesService } from './services/quotes.service';
+
+import { InlineEditorModule } from 'ng2-inline-editor';
 
 @NgModule({
   declarations: [
@@ -43,13 +47,15 @@ import { StatsService } from './services/stats.service';
     GameDetailsComponent,
     CacheComponent,
     CollectionComponent,
-    InformationComponent
+    InformationComponent,
+    QuotesComponent
   ],
   imports: [
     NgxPaginationModule,
     BrowserModule,
     FormsModule,
     HttpClientModule,
+    InlineEditorModule,
     RouterModule.forRoot([
       {
         path: 'login',
@@ -95,6 +101,12 @@ import { StatsService } from './services/stats.service';
             canActivate: [AuthGuard]
           },
           {
+            path: 'quotes',
+            component: QuotesComponent,
+            outlet: 'adminoutlet',
+            canActivate: [AuthGuard]
+          },
+          {
             path: 'information',
             component: InformationComponent,
             outlet: 'adminoutlet',
@@ -118,6 +130,7 @@ import { StatsService } from './services/stats.service';
     CacheService,
     CollectionService,
     StatsService,
+    QuotesService,
     AuthGuard,
     SimpleTimer
   ],

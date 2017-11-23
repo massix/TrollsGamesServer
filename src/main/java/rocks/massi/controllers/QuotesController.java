@@ -2,6 +2,7 @@ package rocks.massi.controllers;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.repository.query.Param;
 import org.springframework.web.bind.annotation.*;
 import rocks.massi.authentication.Role;
 import rocks.massi.authentication.TrollsJwt;
@@ -30,7 +31,7 @@ public class QuotesController {
         return quotes.get(new Random().nextInt(quotes.size()));
     }
 
-    @CrossOrigin(allowedHeaders = {"Authorization"})
+    @CrossOrigin(allowedHeaders = {"Authorization", "Content-Type"})
     @PutMapping("/add")
     public Quote addQuote(@RequestHeader("Authorization") String authorization, @RequestBody Quote quote) {
         TrollsJwt.UserInformation userInformation = trollsJwt.getUserInformationFromToken(authorization);
@@ -44,13 +45,14 @@ public class QuotesController {
 
     @CrossOrigin(allowedHeaders = {"Authorization"})
     @DeleteMapping("/remove")
-    public Quote removeQuote(@RequestHeader("Authorization") String authorization, @RequestBody Quote quote) {
+    public Quote removeQuote(@RequestHeader("Authorization") String authorization, @Param("quote") String quote) {
         if (trollsJwt.getUserInformationFromToken(authorization).getRole() != Role.ADMIN) {
             throw new AuthorizationException("User not authorized.");
         }
 
-        quotesRepository.delete(quote);
-        return quote;
+        Quote ret = quotesRepository.findByQuote(quote);
+        quotesRepository.deleteByQuote(quote);
+        return ret;
     }
 
     @CrossOrigin
