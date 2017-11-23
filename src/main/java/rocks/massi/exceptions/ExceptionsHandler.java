@@ -29,7 +29,7 @@ public class ExceptionsHandler extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(value = {
-            AuthenticationException.class
+            AuthorizationException.class
     })
     protected ResponseEntity<Object> handleWrongAuthentication(RuntimeException exception, WebRequest request) {
         return handleExceptionInternal(exception, exception.getMessage(), null, HttpStatus.FORBIDDEN, request);

@@ -10,7 +10,7 @@ import rocks.massi.data.Quote;
 import rocks.massi.data.QuotesRepository;
 import rocks.massi.data.ServerInformation;
 import rocks.massi.data.Stats;
-import rocks.massi.exceptions.AuthenticationException;
+import rocks.massi.exceptions.AuthorizationException;
 import rocks.massi.utils.StatsLogger;
 
 import java.io.IOException;
@@ -56,7 +56,7 @@ public class ServerController {
         TrollsJwt.UserInformation userInformation = trollsJwt.getUserInformationFromToken(authorization);
         log.info("Got user information {}", userInformation.toString());
         if (userInformation.getRole() != Role.ADMIN) {
-            throw new AuthenticationException("User not authorized");
+            throw new AuthorizationException("User not authorized");
         }
 
         return statsLogger.getAllStats();

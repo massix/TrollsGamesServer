@@ -7,7 +7,7 @@ import rocks.massi.authentication.Role;
 import rocks.massi.authentication.TrollsJwt;
 import rocks.massi.data.Quote;
 import rocks.massi.data.QuotesRepository;
-import rocks.massi.exceptions.AuthenticationException;
+import rocks.massi.exceptions.AuthorizationException;
 
 import java.util.List;
 import java.util.Random;
@@ -35,7 +35,7 @@ public class QuotesController {
     public Quote addQuote(@RequestHeader("Authorization") String authorization, @RequestBody Quote quote) {
         TrollsJwt.UserInformation userInformation = trollsJwt.getUserInformationFromToken(authorization);
         if (userInformation.getRole() != Role.ADMIN) {
-            throw new AuthenticationException("User not authorized.");
+            throw new AuthorizationException("User not authorized.");
         }
 
         quotesRepository.save(quote);
@@ -46,7 +46,7 @@ public class QuotesController {
     @DeleteMapping("/remove")
     public Quote removeQuote(@RequestHeader("Authorization") String authorization, @RequestBody Quote quote) {
         if (trollsJwt.getUserInformationFromToken(authorization).getRole() != Role.ADMIN) {
-            throw new AuthenticationException("User not authorized.");
+            throw new AuthorizationException("User not authorized.");
         }
 
         quotesRepository.delete(quote);

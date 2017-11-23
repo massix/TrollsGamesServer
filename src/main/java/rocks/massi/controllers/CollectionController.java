@@ -12,7 +12,7 @@ import rocks.massi.data.*;
 import rocks.massi.data.joins.GameHonorsRepository;
 import rocks.massi.data.joins.Ownership;
 import rocks.massi.data.joins.OwnershipsRepository;
-import rocks.massi.exceptions.AuthenticationException;
+import rocks.massi.exceptions.AuthorizationException;
 import rocks.massi.exceptions.UserNotFoundException;
 import rocks.massi.utils.StatsLogger;
 
@@ -116,7 +116,7 @@ public class CollectionController {
         // Check authorization
         TrollsJwt.UserInformation userInformation = trollsJwt.getUserInformationFromToken(authorization);
         if (!userInformation.getUser().equals(nick) && userInformation.getRole() != Role.ADMIN) {
-            throw new AuthenticationException("User not authorized.");
+            throw new AuthorizationException("User not authorized.");
         }
 
         // Check that the user exists
@@ -137,7 +137,7 @@ public class CollectionController {
         // Check authorization
         TrollsJwt.UserInformation userInformation = trollsJwt.getUserInformationFromToken(authorization);
         if (!userInformation.getUser().equals(nick) && userInformation.getRole() != Role.ADMIN) {
-            throw new AuthenticationException("User not authorized.");
+            throw new AuthorizationException("User not authorized.");
         }
 
         if (getUser(usersRepository, nick) == null) {

@@ -16,7 +16,7 @@ import rocks.massi.data.LoginInformation;
 import rocks.massi.data.User;
 import rocks.massi.data.UsersRepository;
 import rocks.massi.data.joins.OwnershipsRepository;
-import rocks.massi.exceptions.AuthenticationException;
+import rocks.massi.exceptions.AuthorizationException;
 import rocks.massi.exceptions.MalformattedUserException;
 import rocks.massi.exceptions.UserAlreadyExistsException;
 import rocks.massi.exceptions.UserNotFoundException;
@@ -84,7 +84,7 @@ public class UsersController {
         User ret = trollsJwt.confirmRegistrationTokenForEmail(email, token);
 
         if (ret == null) {
-            throw new AuthenticationException("Can't go any further.");
+            throw new AuthorizationException("Can't go any further.");
         }
 
         ret.setRole(Role.USER);
@@ -101,7 +101,7 @@ public class UsersController {
 
         // Check that the user doesn't already exist
         if (usersRepository.findByEmail(user.getEmail()) != null || usersRepository.findByBggNick(user.getBggNick()) != null) {
-            throw new AuthenticationException("User already exist. Please ask for a password reset.");
+            throw new AuthorizationException("User already exist. Please ask for a password reset.");
         }
 
         // New users are by default unable to login to the server.
@@ -134,7 +134,7 @@ public class UsersController {
 
         TrollsJwt.UserInformation userInformation = trollsJwt.getUserInformationFromToken(authorization);
         if (userInformation.getRole() != Role.ADMIN) {
-            throw new AuthenticationException("User not authorized.");
+            throw new AuthorizationException("User not authorized.");
         }
 
         if (getUser(usersRepository, user.getBggNick()) != null) {
@@ -175,7 +175,7 @@ public class UsersController {
             return usersRepository.findByBggNick(user.getBggNick());
         }
 
-        throw new AuthenticationException("User not authorized.");
+        throw new AuthorizationException("User not authorized.");
     }
 
     @CrossOrigin(exposedHeaders = {"Authorization"})
@@ -193,7 +193,7 @@ public class UsersController {
 
         if (dbUser.getAuthenticationType() == AuthenticationType.NONE) {
             log.error("User {} authType = NONE", dbUser.getEmail());
-            throw new AuthenticationException("User authentication type is none, missing registration.");
+            throw new AuthorizationException("User authentication type is none, missing registration.");
         }
 
         try {
@@ -207,7 +207,7 @@ public class UsersController {
             log.error("User {} failed to login because: {}", loginInformation.getEmail(), exception.getMessage());
         }
 
-        throw new AuthenticationException("Username or password are WRONG");
+        throw new AuthorizationException("Username or password are WRONG");
     }
 
     @CrossOrigin(allowedHeaders = {"Authorization"})
@@ -215,7 +215,7 @@ public class UsersController {
     public User removeUser(@RequestHeader("Authorization") final String authorization,
                            @PathVariable("nick") String nick) {
         if (trollsJwt.getUserInformationFromToken(authorization).getRole() != Role.ADMIN) {
-            throw new AuthenticationException("User not authorized.");
+            throw new AuthorizationException("User not authorized.");
         }
 
         val user = DBUtils.getUser(usersRepository, nick);

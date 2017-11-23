@@ -14,7 +14,7 @@ import rocks.massi.data.PagesInformation;
 import rocks.massi.data.joins.GameHonorsRepository;
 import rocks.massi.data.joins.Ownership;
 import rocks.massi.data.joins.OwnershipsRepository;
-import rocks.massi.exceptions.AuthenticationException;
+import rocks.massi.exceptions.AuthorizationException;
 import rocks.massi.exceptions.GameNotFoundException;
 import rocks.massi.exceptions.MalformattedGameException;
 import rocks.massi.utils.StatsLogger;
@@ -76,7 +76,7 @@ public class GamesController {
     public Game insertGame(@RequestHeader("Authorization") final String authorization,
                            @RequestBody final Game game) {
         if (trollsJwt.getUserInformationFromToken(authorization).getRole() != Role.ADMIN) {
-            throw new AuthenticationException("User not authorized.");
+            throw new AuthorizationException("User not authorized.");
         }
 
         if (game.getId() <= 0 || game.getName().isEmpty()) {
@@ -92,7 +92,7 @@ public class GamesController {
     public Game removeGame(@RequestHeader("Authorization") final String authorization,
                            @PathVariable("id") final int id) {
         if (trollsJwt.getUserInformationFromToken(authorization).getRole() != Role.ADMIN) {
-            throw new AuthenticationException("User not authorized.");
+            throw new AuthorizationException("User not authorized.");
         }
 
         val g = gamesRepository.findById(id);
