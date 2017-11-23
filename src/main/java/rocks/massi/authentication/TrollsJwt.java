@@ -7,6 +7,7 @@ import io.jsonwebtoken.SignatureException;
 import lombok.Data;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -41,6 +42,16 @@ public class TrollsJwt {
         private final String key;
         private final User user;
         private final String token;
+    }
+
+    @Getter
+    @ToString
+    @RequiredArgsConstructor
+    public static class UserInformation {
+        private final String user;
+        private final Role role;
+        private final AuthenticationType authenticationType;
+        private final String email;
     }
 
     public enum KeyRetrievalMethod {
@@ -117,16 +128,27 @@ public class TrollsJwt {
         return true;
     }
 
-    public boolean checkHeaderWithToken(final String header) {
-        String authorizationHeader = header.replace("Bearer ", "");
-        return tokenToKeyUsernameMap.containsKey(authorizationHeader) &&
-                checkTokenForUser(tokenToKeyUsernameMap.get(authorizationHeader).getUsername());
+    public UserInformation getUserInformationFromToken(final String header) {
+        String token = header.replace("Bearer ", "");
+        if (!tokenToKeyUsernameMap.containsKey(token)) {
+            throw new TokenNotFoundException();
+        }
 
+        KeyUsernamePair keyUsernamePair = tokenToKeyUsernameMap.get(token);
+        KeyTokenPair keyTokenPair = usernameToKeyTokenMap.get(keyUsernamePair.getUsername());
+        Claims parsedToken = Jwts.parser().setSigningKey(keyTokenPair.getKey()).parseClaimsJws(token).getBody();
+
+        return new UserInformation(parsedToken.get(USER_KEY, String.class),
+                Role.valueOf(parsedToken.get(ROLE_KEY, String.class)),
+                AuthenticationType.valueOf(parsedToken.get(AUTH_KEY, String.class)),
+                parsedToken.get(EMAIL_KEY, String.class));
     }
 
     public String generateNewTokenForUser(final User user) {
         // Get a random key to sign our token
         String key = keys.get(new Random().nextInt(keys.size()));
+
+        // Create a signed token
         String generatedToken = Jwts.builder()
                 .claim(USER_KEY, user.getBggNick())
                 .claim(ROLE_KEY, user.getRole())
@@ -136,6 +158,14 @@ public class TrollsJwt {
                 .signWith(SignatureAlgorithm.HS512, key)
                 .compact();
 
+        // Remove the token from the old maps
+        if (usernameToKeyTokenMap.containsKey(user.getBggNick())) {
+            KeyTokenPair keyTokenPair = usernameToKeyTokenMap.get(user.getBggNick());
+            tokenToKeyUsernameMap.remove(keyTokenPair.getToken());
+            usernameToKeyTokenMap.remove(user.getBggNick());
+        }
+
+        // Add the token to the maps
         usernameToKeyTokenMap.put(user.getBggNick(), new KeyTokenPair(key, generatedToken));
         tokenToKeyUsernameMap.put(generatedToken, new KeyUsernamePair(key, user.getBggNick()));
         return generatedToken;

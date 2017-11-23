@@ -60,9 +60,9 @@ public class CollectionControllerTest {
 
     @After
     public void tearDown() throws Exception {
-        usersRepository.deleteAll();
-        gamesRepository.deleteAll();
         ownershipsRepository.deleteAll();
+        gamesRepository.deleteAll();
+        usersRepository.deleteByBggNick("bgg_nick");
     }
 
     @Test

@@ -11,7 +11,7 @@ export class UsersService {
     }
 
     addUser(body: User): Observable<User> {
-        const headers = new HttpHeaders().append('Content-Type', 'application/json;charset=UTF-8');
+        const headers = new HttpHeaders().set('Authorization', 'Bearer ' + localStorage.getItem('token'));
         return this.httpClient.post<User>(environment.apiBase + '/v1/users/add', body, {headers: headers});
     }
 
@@ -19,6 +19,11 @@ export class UsersService {
         return this.httpClient.delete<User>(environment.apiBase + '/v1/users/remove/' + body.bggNick, {
             headers: new HttpHeaders().set('Authorization', 'Bearer ' + localStorage.getItem('token'))
         });
+    }
+
+    modifyUser(user: User): Observable<User> {
+        const headers = new HttpHeaders().set('Authorization', 'Bearer ' + localStorage.getItem('token'));
+        return this.httpClient.patch<User>(environment.apiBase + '/v1/users/modify', user, {headers: headers});
     }
 
     constructor(private httpClient: HttpClient) {}

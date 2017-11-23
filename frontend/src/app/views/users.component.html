@@ -1,5 +1,5 @@
 <div class="col-xs-12 col-sm-9">
-        <div class="panel panel-default borderless">            
+  <div class="panel panel-default borderless">
             <ul class="list-group " id="contact-list">
                 <li *ngFor="let user of users" class="list-group-item borderless">
                     <div class="col-xs-12 col-sm-2">
@@ -7,7 +7,7 @@
                     </div>
                     <div class="col-xs-12 col-sm-6">
                         <span class="bgg">{{user.bggNick}}</span><br/>
-                        <span class="forum">{{user.forumNick}}</span><br />
+                      <span class="forum">{{user.forumNick}} ({{user.role}})</span><br/>
                         <span class="email">{{user.email}}</span><br />
                         <span class="bgg">{{user.bggHandled === true ? "handled via bgg" : "handled manually"}}</span>
                     </div>
@@ -23,10 +23,15 @@
                     <div class="col-xs-8 col-sm-6 col-sm-offset-2">
                         <small>Add new user</small>
                         <form autocomplete="off" class="form-group" name="adduser" #adduser="ngForm" (ngSubmit)="adduser.valid && submitUser()">
-                            <input type="username" class="form-control input-md" placeholder="User" name="bggNick" [(ngModel)]="newUser.bggNick" />
+                          <input type="username" class="form-control input-md" placeholder="User" name="bggNick"
+                                 [(ngModel)]="newUser.bggNick" [disabled]="editing"/>
                             <input type="username" class="form-control input-md" placeholder="Display name" name="forumNick" [(ngModel)]="newUser.forumNick" />
                             <input autocomplete="off" type="email" class="form-control input-md" placeholder="Email" name="email" [(ngModel)]="newUser.email" />
                             <input autocomplete="off" type="password" class="form-control input-md" placeholder="Password" name="password" [(ngModel)]="newUser.password" />
+                          <select class="form-control" name="role" [(ngModel)]="newUser.role">
+                            <option>USER</option>
+                            <option>ADMIN</option>
+                          </select>
                             <div class="checkbox">
                                 <label><input type="checkbox" value="" checked="true" name="bggHandled" [(ngModel)]="newUser.bggHandled">Handled via BGG</label>
                             </div>
@@ -35,7 +40,7 @@
                                 <button type="button" class="btn btn-secondary" (click)="resetForm()">Reset</button>
                             </div>
                         </form>
-                        
+
                     </div>
                 </li>
             </ul>

@@ -46,16 +46,12 @@ public class UsersControllerTest {
     @Before
     public void setUp() throws Exception {
         usersRepository.save(new User("bgg_nick", "forum_nick", "test@example.com"));
-        AuthorizationHandler.setUp(restTemplate, "admin@example.com", "admin");
+        AuthorizationHandler.setUp(restTemplate);
     }
 
     @After
     public void tearDown() throws Exception {
-        try {
-            usersRepository.deleteAll();
-        } catch (Exception e) {
-            /* Do nothing */
-        }
+        usersRepository.deleteByBggNick("bgg_nick");
     }
 
     @Test
@@ -82,6 +78,7 @@ public class UsersControllerTest {
         responseEntityVoid = restTemplate.postForEntity("/v1/users/login", new LoginInformation("test_wrong_user@example.com", "toto"), Void.class);
         assertTrue(responseEntityVoid.getStatusCode().is4xxClientError());
 
+        usersRepository.deleteByBggNick("new_bgg");
     }
 
     @Test
@@ -104,10 +101,12 @@ public class UsersControllerTest {
         String token = responseEntity.getHeaders().get("Authorization").get(0).replace("Bearer ", "");
         Claims parsedToken = Jwts.parser().setSigningKey("test").parseClaimsJws(token).getBody();
         assertEquals(parsedToken.get(USER_KEY), user.getBggNick());
-        assertEquals(parsedToken.get(ROLE_KEY), Role.USER.toString());
+        assertEquals(parsedToken.get(ROLE_KEY), Role.ADMIN.toString());
 
         // Check TrollsJwt
         assertTrue(trollsJwt.checkTokenForUser(user.getBggNick()));
+
+        usersRepository.deleteByBggNick("new_bgg");
     }
 
     @Test
@@ -122,7 +121,6 @@ public class UsersControllerTest {
         ResponseEntity<User[]> responseEntity = restTemplate.getForEntity("/v1/users/get", User[].class);
         assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
         assertEquals(2, responseEntity.getBody().length);
-        assertEquals("bgg_nick", responseEntity.getBody()[0].getBggNick());
         assertEquals("*", responseEntity.getBody()[0].getPassword());
     }
 
@@ -155,6 +153,22 @@ public class UsersControllerTest {
         ResponseEntity<User> responseEntity = restTemplate.getForEntity("/v1/users/get/non_existing", User.class);
         assertNull(responseEntity.getBody());
         assertTrue(responseEntity.getStatusCode().is4xxClientError());
+    }
+
+    @Test
+    public void test8_modifyUser() throws Exception {
+        usersRepository.save(new User("to_modify", "some_forum_nick", "some_email@massi.rocks"));
+        User newUser = new User("to_modify", "other_forum_nick", "other_mail@massi.rocks");
+        newUser.setAuthenticationType(AuthenticationType.NONE);
+        newUser.setRole(Role.USER);
+        User responseEntity = restTemplate.patchForObject("/v1/users/modify", newUser, User.class);
+        assertEquals("to_modify", responseEntity.getBggNick());
+        assertEquals("other_forum_nick", responseEntity.getForumNick());
+        assertEquals("other_mail@massi.rocks", responseEntity.getEmail());
+
+        // We are enforcing JWT
+        assertEquals(AuthenticationType.JWT, responseEntity.getAuthenticationType());
+        assertEquals(Role.USER, responseEntity.getRole());
     }
 
 }

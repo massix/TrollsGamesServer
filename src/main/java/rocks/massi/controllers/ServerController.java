@@ -1,7 +1,10 @@
 package rocks.massi.controllers;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import rocks.massi.authentication.Role;
 import rocks.massi.authentication.TrollsJwt;
 import rocks.massi.data.Quote;
 import rocks.massi.data.QuotesRepository;
@@ -15,6 +18,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Random;
 
+@Slf4j
 @RestController
 @RequestMapping("/v1/server")
 public class ServerController {
@@ -27,6 +31,12 @@ public class ServerController {
 
     @Autowired
     private TrollsJwt trollsJwt;
+
+    @PreAuthorize(value = "")
+    private boolean checkHeader(@RequestHeader("Authorization") String authorization) {
+        log.info("Checking header {}", authorization);
+        return true;
+    }
 
     @CrossOrigin
     @GetMapping("/information")
@@ -43,7 +53,9 @@ public class ServerController {
     @CrossOrigin(allowedHeaders = {"Authorization"})
     @GetMapping("/stats")
     public List<Stats> getStats(@RequestHeader("Authorization") final String authorization) {
-        if (!trollsJwt.checkHeaderWithToken(authorization)) {
+        TrollsJwt.UserInformation userInformation = trollsJwt.getUserInformationFromToken(authorization);
+        log.info("Got user information {}", userInformation.toString());
+        if (userInformation.getRole() != Role.ADMIN) {
             throw new AuthenticationException("User not authorized");
         }
 

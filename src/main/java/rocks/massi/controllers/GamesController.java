@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.repository.query.Param;
 import org.springframework.web.bind.annotation.*;
+import rocks.massi.authentication.Role;
 import rocks.massi.authentication.TrollsJwt;
 import rocks.massi.data.Game;
 import rocks.massi.data.GamesRepository;
@@ -74,7 +75,7 @@ public class GamesController {
     @PostMapping("/add")
     public Game insertGame(@RequestHeader("Authorization") final String authorization,
                            @RequestBody final Game game) {
-        if (!trollsJwt.checkHeaderWithToken(authorization)) {
+        if (trollsJwt.getUserInformationFromToken(authorization).getRole() != Role.ADMIN) {
             throw new AuthenticationException("User not authorized.");
         }
 
@@ -90,7 +91,7 @@ public class GamesController {
     @DeleteMapping("/remove/{id}")
     public Game removeGame(@RequestHeader("Authorization") final String authorization,
                            @PathVariable("id") final int id) {
-        if (!trollsJwt.checkHeaderWithToken(authorization)) {
+        if (trollsJwt.getUserInformationFromToken(authorization).getRole() != Role.ADMIN) {
             throw new AuthenticationException("User not authorized.");
         }
 
