@@ -37,6 +37,8 @@ import { EventsService } from './services/events.service';
 import { EventsComponent } from './components/events.component';
 import { DateTimePickerModule } from 'ng-pick-datetime';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { TablesComponent } from './components/tables.component';
+import { TablesService } from './services/tables.service';
 
 @NgModule({
   declarations: [
@@ -53,6 +55,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
     CollectionComponent,
     InformationComponent,
     EventsComponent,
+    TablesComponent,
     QuotesComponent
   ],
   imports: [
@@ -121,6 +124,12 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
             canActivate: [AuthGuard]
           },
           {
+            path: 'tables',
+            component: TablesComponent,
+            outlet: 'adminoutlet',
+            canActivate: [AuthGuard]
+          },
+          {
             path: 'information',
             component: InformationComponent,
             outlet: 'adminoutlet',
@@ -146,6 +155,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
     StatsService,
     QuotesService,
     EventsService,
+    TablesService,
     AuthGuard,
     SimpleTimer
   ],
