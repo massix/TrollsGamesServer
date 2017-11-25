@@ -49,6 +49,16 @@ public class TablesController {
             throw new AuthorizationException("User not authorized.");
         }
 
+        int newId = 0;
+
+        // Calculates the highest id
+        for (Table t : tablesRepository.findAll()) {
+            if (t.getId() >= newId) {
+                newId = newId + 1;
+            }
+        }
+
+        table.setId(newId);
         return tablesRepository.save(table);
     }
 

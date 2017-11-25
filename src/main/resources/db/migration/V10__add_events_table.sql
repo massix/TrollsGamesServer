@@ -27,3 +27,10 @@ create table table_game (
     game_id smallint not null,
     primary key(table_id, game_id)
 );
+
+-- Join table -> users
+create table table_user (
+    table_id smallint not null,
+    user_id text not null,
+    primary key(table_id, user_id)
+);
