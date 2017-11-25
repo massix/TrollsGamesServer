@@ -6,6 +6,6 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface EventTablesRepository extends JpaRepository<EventTable, EventTable> {
+public interface EventTablesRepository extends JpaRepository<EventTable, Integer> {
     List<EventTable> findByEventId(int eventId);
 }
