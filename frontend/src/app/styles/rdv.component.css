@@ -1,0 +1,23 @@
+.event {
+    border-bottom: 1px solid black;
+    margin-top: 9px;
+    margin-bottom: 9px;
+    font-weight: 80;
+}
+
+.event:hover {
+    background-color: lightyellow;
+}
+
+.event-name {
+    font-weight: 600;
+}
+
+.event-start,
+.event-end {
+    font-weight: 160;
+}
+
+.event-tables {
+    font-weight: 160;
+}

@@ -3,4 +3,7 @@ export class Event {
     name: string;
     start: number;
     end: number;
+
+    // Number of tables associated to the event
+    tables: number = 0;
 }

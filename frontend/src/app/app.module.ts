@@ -39,6 +39,8 @@ import { DateTimePickerModule } from 'ng-pick-datetime';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { TablesComponent } from './components/tables.component';
 import { TablesService } from './services/tables.service';
+import { RdvComponent } from './components/rdv.component';
+import { EventDetailsComponent } from './components/event_details.component';
 
 @NgModule({
   declarations: [
@@ -56,6 +58,8 @@ import { TablesService } from './services/tables.service';
     InformationComponent,
     EventsComponent,
     TablesComponent,
+    RdvComponent,
+    EventDetailsComponent,
     QuotesComponent
   ],
   imports: [
@@ -126,6 +130,12 @@ import { TablesService } from './services/tables.service';
           {
             path: 'tables',
             component: TablesComponent,
+            outlet: 'adminoutlet',
+            canActivate: [AuthGuard]
+          },
+          {
+            path: 'rdv',
+            component: RdvComponent,
             outlet: 'adminoutlet',
             canActivate: [AuthGuard]
           },

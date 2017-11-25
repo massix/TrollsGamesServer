@@ -1,0 +1,30 @@
+<div class="container">
+    <div class="shownGame" id="modalGame" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+            <div *ngIf="focusedGame" class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">{{focusedGame.name}}</h4>
+                </div>
+                <div class="modal-body">
+                    <game-details [game]="focusedGame"></game-details>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-sm" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 col-lg-3 col-sm-12">
+        <div *ngFor="let event of events" class="event" (click)="selectedEvent = event">
+            <span class="event-name">{{event.name}}</span><br />
+            S: <span class="event-start">{{event.start | date: 'dd/MM/yy HH:mm'}}</span><br />
+            E: <span class="event-end">{{event.end | date: 'dd/MM/yy HH:mm'}}</span><br />
+            <span class="event-tables">{{event.tables}}</span> tables
+        </div>
+    </div>
+    <div class="col-md-8 col-lg-8 col-sm-12">
+        <event-details *ngIf="selectedEvent" [event]="selectedEvent"></event-details>
+    </div>
+</div>
