@@ -50,10 +50,10 @@ public class RdvController {
      */
     @CrossOrigin
     @GetMapping("/event/{id}/tables")
-    public List<Table> getTablesForEvent(@PathVariable("id") int eventId) {
-        List<Table> tables = new LinkedList<>();
-        eventTablesRepository.findByEventId(eventId).forEach(et -> tables.add(tablesRepository.findOne(et.getTableId())));
-        return tables;
+    public List<TableEntity> getTablesForEvent(@PathVariable("id") int eventId) {
+        List<TableEntity> tableEntities = new LinkedList<>();
+        eventTablesRepository.findByEventId(eventId).forEach(et -> tableEntities.add(tablesRepository.findOne(et.getTableId())));
+        return tableEntities;
     }
 
     /**

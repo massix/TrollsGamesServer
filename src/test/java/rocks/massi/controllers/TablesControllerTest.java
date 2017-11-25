@@ -12,7 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import rocks.massi.controllers.utils.AuthorizationHandler;
-import rocks.massi.data.Table;
+import rocks.massi.data.TableEntity;
 import rocks.massi.data.TablesRepository;
 
 import static org.junit.Assert.assertEquals;
@@ -32,7 +32,7 @@ public class TablesControllerTest {
 
     @Before
     public void setUp() throws Exception {
-        tablesRepository.save(new Table(0, "Table for event", 2, 8));
+        tablesRepository.save(new TableEntity(0, "Table for event", 2, 8));
         AuthorizationHandler.setUp(restTemplate);
     }
 
@@ -43,8 +43,8 @@ public class TablesControllerTest {
 
     @Test
     public void getTables() throws Exception {
-        tablesRepository.save(new Table(1, "Another table", 2, 4));
-        ResponseEntity<Table[]> responseEntity = restTemplate.getForEntity("/v1/tables/get", Table[].class);
+        tablesRepository.save(new TableEntity(1, "Another table", 2, 4));
+        ResponseEntity<TableEntity[]> responseEntity = restTemplate.getForEntity("/v1/tables/get", TableEntity[].class);
         assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
         assertEquals(responseEntity.getBody().length, 2);
     }
@@ -52,8 +52,8 @@ public class TablesControllerTest {
     @Test
     public void createTable() throws Exception {
         // Create a new table, passing id == 0 should auto-increment it on server side.
-        restTemplate.put("/v1/tables/create", new Table(0, "Another table", 1, 3));
-        ResponseEntity<Table[]> responseEntity = restTemplate.getForEntity("/v1/tables/get", Table[].class);
+        restTemplate.put("/v1/tables/create", new TableEntity(0, "Another table", 1, 3));
+        ResponseEntity<TableEntity[]> responseEntity = restTemplate.getForEntity("/v1/tables/get", TableEntity[].class);
         assertEquals(responseEntity.getBody().length, 2);
         assertEquals("Another table", responseEntity.getBody()[1].getName());
     }
@@ -61,11 +61,11 @@ public class TablesControllerTest {
     @Test
     public void removeTable() throws Exception {
         // Store a new table
-        tablesRepository.save(new Table(1, "Highlander", 1, 10));
+        tablesRepository.save(new TableEntity(1, "Highlander", 1, 10));
 
         // Remove the table id 0
         restTemplate.delete("/v1/tables/remove/0");
-        ResponseEntity<Table[]> responseEntity = restTemplate.getForEntity("/v1/tables/get", Table[].class);
+        ResponseEntity<TableEntity[]> responseEntity = restTemplate.getForEntity("/v1/tables/get", TableEntity[].class);
         assertEquals(1, responseEntity.getBody().length);
         assertEquals("Highlander", responseEntity.getBody()[0].getName());
     }

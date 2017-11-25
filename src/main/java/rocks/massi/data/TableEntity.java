@@ -8,14 +8,15 @@ import lombok.ToString;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Table;
 
 @ToString
 @Data
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@javax.persistence.Table(name = "tables")
-public class Table {
+@Table(name = "tables")
+public class TableEntity {
     @Id
     @Column
     private int id;

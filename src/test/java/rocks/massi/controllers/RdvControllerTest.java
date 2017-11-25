@@ -55,7 +55,7 @@ public class RdvControllerTest {
         usersRepository.save(new User("some_user", "someUser", "user@massi.rocks"));
         gamesRepository.save(new Game(0, "Cyclades", "", 0, 1, 0, 0, 0, false, "", "", ""));
         eventsRepository.save(new Event(0, "Some random event", new Timestamp(new Date().getTime()), new Timestamp(new Date().getTime())));
-        tablesRepository.save(new Table(0, "Some random table", 2, 4));
+        tablesRepository.save(new TableEntity(0, "Some random table", 2, 4));
 
         eventTablesRepository.save(new EventTable(0, 0));
         tableGamesRepository.save(new TableGame(0, 0));
@@ -78,7 +78,7 @@ public class RdvControllerTest {
 
     @Test
     public void getTablesForEvent() throws Exception {
-        ResponseEntity<Table[]> responseEntity = testRestTemplate.getForEntity("/v1/rdv/event/0/tables", Table[].class);
+        ResponseEntity<TableEntity[]> responseEntity = testRestTemplate.getForEntity("/v1/rdv/event/0/tables", TableEntity[].class);
         assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
         assertEquals(1, responseEntity.getBody().length);
         assertEquals("Some random table", responseEntity.getBody()[0].getName());
@@ -115,10 +115,10 @@ public class RdvControllerTest {
 
     @Test
     public void addTableToEvent() throws Exception {
-        tablesRepository.save(new Table(1, "random_table", 2, 18));
+        tablesRepository.save(new TableEntity(1, "random_table", 2, 18));
         testRestTemplate.put("/v1/rdv/event/0/add_table/1", null);
 
-        ResponseEntity<Table[]> responseEntity = testRestTemplate.getForEntity("/v1/rdv/event/0/tables", Table[].class);
+        ResponseEntity<TableEntity[]> responseEntity = testRestTemplate.getForEntity("/v1/rdv/event/0/tables", TableEntity[].class);
         assertEquals(2, responseEntity.getBody().length);
         assertEquals("random_table", responseEntity.getBody()[1].getName());
 
@@ -152,7 +152,7 @@ public class RdvControllerTest {
     @Test
     public void removeTableFromEvent() throws Exception {
         testRestTemplate.delete("/v1/rdv/event/0/remove_table/0");
-        ResponseEntity<Table[]> responseEntity = testRestTemplate.getForEntity("/v1/rdv/event/0/tables", Table[].class);
+        ResponseEntity<TableEntity[]> responseEntity = testRestTemplate.getForEntity("/v1/rdv/event/0/tables", TableEntity[].class);
         assertEquals(0, responseEntity.getBody().length);
     }
 
