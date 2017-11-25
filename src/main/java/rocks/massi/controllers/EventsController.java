@@ -62,7 +62,7 @@ public class EventsController {
      * @param event         the event
      * @return the event
      */
-    @CrossOrigin(allowedHeaders = {"Authorization"})
+    @CrossOrigin(allowedHeaders = {"Authorization", "Content-Type"})
     @PutMapping("/create")
     public Event createEvent(@RequestHeader("Authorization") String authorization, @RequestBody Event event) {
 

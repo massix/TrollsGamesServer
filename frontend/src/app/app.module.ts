@@ -33,6 +33,10 @@ import { QuotesComponent } from './components/quotes.component';
 import { QuotesService } from './services/quotes.service';
 
 import { InlineEditorModule } from 'ng2-inline-editor';
+import { EventsService } from './services/events.service';
+import { EventsComponent } from './components/events.component';
+import { DateTimePickerModule } from 'ng-pick-datetime';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 @NgModule({
   declarations: [
@@ -48,6 +52,7 @@ import { InlineEditorModule } from 'ng2-inline-editor';
     CacheComponent,
     CollectionComponent,
     InformationComponent,
+    EventsComponent,
     QuotesComponent
   ],
   imports: [
@@ -56,6 +61,9 @@ import { InlineEditorModule } from 'ng2-inline-editor';
     FormsModule,
     HttpClientModule,
     InlineEditorModule,
+    DateTimePickerModule,
+    BrowserModule,
+    BrowserAnimationsModule,
     RouterModule.forRoot([
       {
         path: 'login',
@@ -107,6 +115,12 @@ import { InlineEditorModule } from 'ng2-inline-editor';
             canActivate: [AuthGuard]
           },
           {
+            path: 'events',
+            component: EventsComponent,
+            outlet: 'adminoutlet',
+            canActivate: [AuthGuard]
+          },
+          {
             path: 'information',
             component: InformationComponent,
             outlet: 'adminoutlet',
@@ -131,6 +145,7 @@ import { InlineEditorModule } from 'ng2-inline-editor';
     CollectionService,
     StatsService,
     QuotesService,
+    EventsService,
     AuthGuard,
     SimpleTimer
   ],

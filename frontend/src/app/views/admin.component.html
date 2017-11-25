@@ -36,6 +36,11 @@
                          [ngClass]="{ 'active': this.activeRoute === 'quotes'}">Quotes</a>
                     </li>
                   <li>
+                    <a [routerLink]="['/admin', {outlets: {adminoutlet: 'events'}}]"
+                       (click)="setActiveRoute('events')"
+                       [ngClass]="{ 'active': this.activeRoute === 'events'}">Events</a>
+                  </li>
+                  <li>
                     <a [routerLink]="['/admin', {outlets: {adminoutlet: 'information'}}]"
                        (click)="setActiveRoute('information')"
                        [ngClass]="{ 'active' : this.activeRoute === 'information' }">Information</a>
