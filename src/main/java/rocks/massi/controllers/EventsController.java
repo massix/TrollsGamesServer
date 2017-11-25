@@ -94,6 +94,13 @@ public class EventsController {
         return event;
     }
 
+    /**
+     * Removes event.
+     *
+     * @param authorization the authorization token of the user
+     * @param id            the id of the event
+     * @return the removed event
+     */
     @CrossOrigin(allowedHeaders = {"Authorization"})
     @DeleteMapping("/remove/{id}")
     public Event removeEvent(@RequestHeader("Authorization") String authorization, @PathVariable("id") int id) {

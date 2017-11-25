@@ -1,0 +1,42 @@
+<div class="container">
+    <div class="table">
+        <table class="table table-hover table-condensed">
+            <thead>
+                <tr>
+                    <th class="col">Id</th>
+                    <th>Name</th>
+                    <th>Start</th>
+                    <th>End</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let event of events">
+                    <th class="col"><button class="btn btn-sm fa fa-remove" (click)="removeEvent(event)"></button> {{event.id}}</th>
+                    <td>{{event.name}}</td>
+                    <td>{{event.start | date: 'dd/MM/yy HH:mm'}}</td>
+                    <td>{{event.end | date: 'dd/MM/yy HH:mm'}}</td>
+                </tr>
+                <tr>
+                    <th class="col"><button class="btn btn-sm fa fa-plus" (click)="saveEvent(newEvent)"></button></th>
+                    <td><inline-editor size="32" type="text" [(ngModel)]="newEvent.name"></inline-editor></td>
+                    <td>
+                        <owl-date-time  autoclose="true" 
+                                        showButtons="true"
+                                        [(ngModel)]="newEvent.start"
+                                        dateFormat="DD/MM/YYYY HH:mm" 
+                                        placeHolder="start date">
+                        </owl-date-time>
+                    </td>
+                    <td>
+                        <owl-date-time  autoclose="true"
+                                        [(ngModel)]="newEvent.end"
+                                        showButtons="true"
+                                        dateFormat="DD/MM/YYYY HH:mm" 
+                                        placeHolder="end date">
+                        </owl-date-time>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
