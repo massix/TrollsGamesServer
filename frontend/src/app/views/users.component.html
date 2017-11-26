@@ -22,12 +22,12 @@
                 <li class="list-group-item form-group borderless">
                     <div class="col-xs-8 col-sm-6 col-sm-offset-2">
                         <small>Add new user</small>
-                        <form autocomplete="off" class="form-group" name="adduser" #adduser="ngForm" (ngSubmit)="adduser.valid && submitUser()">
+                        <form class="form-group" name="adduser" #adduser="ngForm" (ngSubmit)="adduser.valid && submitUser()">
                           <input type="username" class="form-control input-md" placeholder="User" name="bggNick"
                                  [(ngModel)]="newUser.bggNick" [disabled]="editing"/>
                             <input type="username" class="form-control input-md" placeholder="Display name" name="forumNick" [(ngModel)]="newUser.forumNick" />
-                            <input autocomplete="off" type="email" class="form-control input-md" placeholder="Email" name="email" [(ngModel)]="newUser.email" />
-                            <input autocomplete="off" type="password" class="form-control input-md" placeholder="Password" name="password" [(ngModel)]="newUser.password" />
+                            <input type="email" class="form-control input-md" placeholder="Email" name="email" [(ngModel)]="newUser.email" />
+                            <input type="password" class="form-control input-md" placeholder="Password" name="password" [(ngModel)]="newUser.password" />
                           <select class="form-control" name="role" [(ngModel)]="newUser.role">
                             <option>USER</option>
                             <option>ADMIN</option>

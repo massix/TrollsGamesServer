@@ -36,6 +36,22 @@
                          [ngClass]="{ 'active': this.activeRoute === 'quotes'}">Quotes</a>
                     </li>
                   <li>
+                    <a [routerLink]="['/admin', {outlets: {adminoutlet: 'events'}}]"
+                       (click)="setActiveRoute('events')"
+                       [ngClass]="{ 'active': this.activeRoute === 'events'}">Events</a>
+                  </li>
+                  <li>
+                      <a [routerLink]="['/admin', {outlets: {adminoutlet: 'tables'}}]"
+                      (click)="setActiveRoute('tables')"
+                      [ngClass]="{ 'active': this.activeRoute === 'tables'}">Tables</a>
+                  </li>
+                  <li>
+                        <a [routerLink]="['/admin', {outlets: {adminoutlet: 'rdv'}}]"
+                        (click)="setActiveRoute('rdv')"
+                        [ngClass]="{ 'active': this.activeRoute === 'rdv'}">RDV</a>
+                    </li>
+  
+                  <li>
                     <a [routerLink]="['/admin', {outlets: {adminoutlet: 'information'}}]"
                        (click)="setActiveRoute('information')"
                        [ngClass]="{ 'active' : this.activeRoute === 'information' }">Information</a>

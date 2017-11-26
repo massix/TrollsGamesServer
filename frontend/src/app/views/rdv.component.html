@@ -1,0 +1,14 @@
+<div class="container">
+    <div class="col-md-3 col-lg-3 col-sm-12">
+      <div *ngFor="let event of events" class="event" (click)="selectedEvent = event"
+           [ngClass]="{'active': selectedEvent === event}">
+            <span class="event-name">{{event.name}}</span><br />
+            S: <span class="event-start">{{event.start | date: 'dd/MM/yy HH:mm'}}</span><br />
+            E: <span class="event-end">{{event.end | date: 'dd/MM/yy HH:mm'}}</span><br />
+            <span class="event-tables">{{event.tables}}</span> tables
+        </div>
+    </div>
+  <div class="col-md-9 col-sm-12">
+        <event-details *ngIf="selectedEvent" [event]="selectedEvent"></event-details>
+    </div>
+</div>

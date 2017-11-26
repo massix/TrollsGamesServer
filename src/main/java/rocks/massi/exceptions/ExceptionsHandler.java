@@ -14,7 +14,9 @@ public class ExceptionsHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(value = {
             UserNotFoundException.class,
-            GameNotFoundException.class
+            GameNotFoundException.class,
+            EventNotFoundException.class,
+            TableNotFoundException.class
     })
     protected ResponseEntity<Object> handleResourceNotFound(RuntimeException exception, WebRequest request) {
         return handleExceptionInternal(exception, null, null, HttpStatus.NOT_FOUND, request);

@@ -33,6 +33,16 @@ import { QuotesComponent } from './components/quotes.component';
 import { QuotesService } from './services/quotes.service';
 
 import { InlineEditorModule } from 'ng2-inline-editor';
+import { EventsService } from './services/events.service';
+import { EventsComponent } from './components/events.component';
+import { DateTimePickerModule } from 'ng-pick-datetime';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { TablesComponent } from './components/tables.component';
+import { TablesService } from './services/tables.service';
+import { RdvComponent } from './components/rdv.component';
+import { EventDetailsComponent } from './components/event_details.component';
+import { TableDetailsComponent } from './components/table_details.component';
+import { AutocompleteModule } from 'ng2-input-autocomplete';
 
 @NgModule({
   declarations: [
@@ -48,6 +58,11 @@ import { InlineEditorModule } from 'ng2-inline-editor';
     CacheComponent,
     CollectionComponent,
     InformationComponent,
+    EventsComponent,
+    TablesComponent,
+    RdvComponent,
+    EventDetailsComponent,
+    TableDetailsComponent,
     QuotesComponent
   ],
   imports: [
@@ -56,6 +71,10 @@ import { InlineEditorModule } from 'ng2-inline-editor';
     FormsModule,
     HttpClientModule,
     InlineEditorModule,
+    DateTimePickerModule,
+    BrowserModule,
+    BrowserAnimationsModule,
+    AutocompleteModule.forRoot(),
     RouterModule.forRoot([
       {
         path: 'login',
@@ -107,6 +126,24 @@ import { InlineEditorModule } from 'ng2-inline-editor';
             canActivate: [AuthGuard]
           },
           {
+            path: 'events',
+            component: EventsComponent,
+            outlet: 'adminoutlet',
+            canActivate: [AuthGuard]
+          },
+          {
+            path: 'tables',
+            component: TablesComponent,
+            outlet: 'adminoutlet',
+            canActivate: [AuthGuard]
+          },
+          {
+            path: 'rdv',
+            component: RdvComponent,
+            outlet: 'adminoutlet',
+            canActivate: [AuthGuard]
+          },
+          {
             path: 'information',
             component: InformationComponent,
             outlet: 'adminoutlet',
@@ -131,6 +168,8 @@ import { InlineEditorModule } from 'ng2-inline-editor';
     CollectionService,
     StatsService,
     QuotesService,
+    EventsService,
+    TablesService,
     AuthGuard,
     SimpleTimer
   ],
