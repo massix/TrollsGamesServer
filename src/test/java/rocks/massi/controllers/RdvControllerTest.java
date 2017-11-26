@@ -108,7 +108,7 @@ public class RdvControllerTest {
 
         ResponseEntity<User[]> responseEntity = testRestTemplate.getForEntity("/v1/rdv/table/0/users", User[].class);
         assertEquals(2, responseEntity.getBody().length);
-        assertEquals("other_user", responseEntity.getBody()[1].getBggNick());
+        assertEquals("other_user", responseEntity.getBody()[0].getBggNick());
 
         usersRepository.deleteByBggNick("other_user");
     }
