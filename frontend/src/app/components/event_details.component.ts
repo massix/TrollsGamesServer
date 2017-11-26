@@ -1,48 +1,43 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { Event } from '../data/event';
-import { TablesService } from '../services/tables.service';
 import { Table } from '../data/table';
+import { TablesService } from '../services/tables.service';
 import { EventsService } from '../services/events.service';
 
 @Component({
     selector: 'event-details',
     template:
     `
-    <div class="container">
-        <h4 style="margin-bottom: 20px">{{event.name}}</h4>
-
         <!-- Tables -->
-        <div class="row">
-            <ul class="col-md-4 list-group">
-                <li *ngFor="let table of tables" class="list-group-item">
+        <div class="col-md-6">
+            <ul class="list-group">
+                <h4 style="margin-bottom: 20px">{{event.name}}</h4>
+                <li *ngFor="let table of tables" class="list-group-item" [ngClass]="{'active' : focusedTable === table}">
                     {{table.name}} ({{table.minPlayers}} - {{table.maxPlayers}} players)
                     <button class="btn btn-sm fa fa-remove pull-right" (click)="removeTable(table)"></button>
-                    <button class="btn btn-sm fa fa-search pull-right" (click)="getDetails(table)"></button>
+                    <button class="btn btn-sm fa fa-search pull-right" (click)="focusedTable = table"></button>
                 </li>
             </ul>
 
-            <div class="col-md-3">
-                Table details.
-            </div>
+            <!-- Add table -->
+            <form class="form form-compact form-inline">
+                <button class="btn btn-sm fa fa-plus" (click)="addTableToEvent(selectedTable.value)"></button>
+                <select #selectedTable class="form-control" id="addtable">
+                    <option *ngFor="let table of allTables" [value]="table.id">{{table.name}}</option>
+                </select>
+            </form>
         </div>
 
-        <!-- Add a table -->
-        <div class="row">
-            <div class="col-md-12 event-add-table form-group">
-                <form class="form form-compact form-inline">
-                    <button class="btn btn-sm fa fa-plus" (click)="addTableToEvent(selectedTable.value)"></button>
-                    <select #selectedTable class="form-control" id="addtable">
-                        <option *ngFor="let table of allTables" [value]="table.id">{{table.name}}</option>
-                    </select>
-                </form>
-            </div>
+
+        <div class="col-md-6">
+            <table-details *ngIf="focusedTable" [table]="focusedTable"></table-details>
         </div>
-    </div>
     `
 })
 export class EventDetailsComponent implements OnInit {
     private _event: Event;
     tables: Table[];
+    focusedTable: Table = null;
 
     allTables: Table[];
 
@@ -54,6 +49,7 @@ export class EventDetailsComponent implements OnInit {
             this._event.tables = data.length;
         });
         this.tablesService.getTables().subscribe(data => this.allTables = data);
+        this.focusedTable = null;
     }
 
     ngOnInit() {

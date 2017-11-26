@@ -6,6 +6,9 @@ import rocks.massi.authentication.Role;
 import rocks.massi.authentication.TrollsJwt;
 import rocks.massi.data.TableEntity;
 import rocks.massi.data.TablesRepository;
+import rocks.massi.data.joins.EventTablesRepository;
+import rocks.massi.data.joins.TableGamesRepository;
+import rocks.massi.data.joins.TableUsersRepository;
 import rocks.massi.exceptions.AuthorizationException;
 import rocks.massi.exceptions.TableNotFoundException;
 
@@ -22,6 +25,15 @@ public class TablesController {
     private TablesRepository tablesRepository;
 
     @Autowired
+    private TableUsersRepository tableUsersRepository;
+
+    @Autowired
+    private TableGamesRepository tableGamesRepository;
+
+    @Autowired
+    private EventTablesRepository eventTablesRepository;
+
+    @Autowired
     private TrollsJwt trollsJwt;
 
     /**
@@ -36,10 +48,27 @@ public class TablesController {
     }
 
     /**
+     * Gets table.
+     *
+     * @param tableId the table id
+     * @return the table
+     */
+    @CrossOrigin
+    @GetMapping("/get/{id}")
+    public TableEntity getTable(@PathVariable("id") int tableId) {
+        TableEntity ret = tablesRepository.findOne(tableId);
+        if (ret == null) {
+            throw new TableNotFoundException();
+        }
+
+        return ret;
+    }
+
+    /**
      * Create new table.
      *
      * @param authorization the authorization token
-     * @param tableEntity         the table to be added or modified
+     * @param tableEntity   the table to be added or modified
      * @return the table
      */
     @CrossOrigin(allowedHeaders = {"Authorization", "Content-Type"})
@@ -54,7 +83,7 @@ public class TablesController {
         // Calculates the highest id
         for (TableEntity t : tablesRepository.findAll()) {
             if (t.getId() >= newId) {
-                newId = newId + 1;
+                newId = t.getId() + 1;
             }
         }
 
@@ -81,6 +110,11 @@ public class TablesController {
         if (toBeRemoved == null) {
             throw new TableNotFoundException();
         }
+
+        // Remove also the references in other repositories
+        eventTablesRepository.deleteByTableId(id);
+        tableUsersRepository.deleteByTableId(id);
+        tableGamesRepository.deleteByTableId(id);
 
         tablesRepository.delete(id);
         return toBeRemoved;

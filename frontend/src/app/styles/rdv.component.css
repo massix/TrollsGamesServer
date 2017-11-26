@@ -5,7 +5,8 @@
     font-weight: 80;
 }
 
-.event:hover {
+.event:hover,
+.active {
     background-color: lightyellow;
 }
 

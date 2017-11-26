@@ -50,6 +50,16 @@ public class TablesControllerTest {
     }
 
     @Test
+    public void getTable() throws Exception {
+        ResponseEntity<TableEntity> responseEntity = restTemplate.getForEntity("/v1/tables/get/0", TableEntity.class);
+        assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
+        assertEquals(responseEntity.getBody().getName(), "Table for event");
+
+        responseEntity = restTemplate.getForEntity("/v1/tables/get/12", TableEntity.class);
+        assertTrue(responseEntity.getStatusCode().is4xxClientError());
+    }
+
+    @Test
     public void createTable() throws Exception {
         // Create a new table, passing id == 0 should auto-increment it on server side.
         restTemplate.put("/v1/tables/create", new TableEntity(0, "Another table", 1, 3));

@@ -7,6 +7,7 @@ import rocks.massi.authentication.Role;
 import rocks.massi.authentication.TrollsJwt;
 import rocks.massi.data.Event;
 import rocks.massi.data.EventsRepository;
+import rocks.massi.data.joins.EventTablesRepository;
 import rocks.massi.exceptions.AuthorizationException;
 import rocks.massi.exceptions.EventNotFoundException;
 
@@ -22,6 +23,9 @@ public class EventsController {
 
     @Autowired
     private EventsRepository eventsRepository;
+
+    @Autowired
+    private EventTablesRepository eventTablesRepository;
 
     @Autowired
     private TrollsJwt trollsJwt;
@@ -113,6 +117,7 @@ public class EventsController {
         if (toBeRemoved == null) {
             throw new EventNotFoundException("Event not found in base.");
         } else {
+            eventTablesRepository.deleteByEventId(id);
             eventsRepository.delete(id);
             return toBeRemoved;
         }

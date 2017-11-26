@@ -20,6 +20,10 @@ export class TablesComponent implements OnInit {
         this.tablesService.createTable(table).subscribe(data => this.refreshAllTables());
     }
 
+    removeTable(table: Table) {
+        this.tablesService.removeTable(table).subscribe(data => this.refreshAllTables());
+    }
+
     ngOnInit() {
         this.refreshAllTables();
     }

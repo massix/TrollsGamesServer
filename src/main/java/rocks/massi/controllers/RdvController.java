@@ -80,7 +80,7 @@ public class RdvController {
     @GetMapping("/table/{id}/users")
     public List<User> getUsersForTable(@PathVariable("id") int tableId) {
         List<User> users = new LinkedList<>();
-        tableUsersRepository.findAll().forEach(tu -> {
+        tableUsersRepository.findByTableId(tableId).forEach(tu -> {
             User user = usersRepository.findByBggNick(tu.getUserId());
             user.setPassword("");
             users.add(user);

@@ -41,6 +41,8 @@ import { TablesComponent } from './components/tables.component';
 import { TablesService } from './services/tables.service';
 import { RdvComponent } from './components/rdv.component';
 import { EventDetailsComponent } from './components/event_details.component';
+import { TableDetailsComponent } from './components/table_details.component';
+import { AutocompleteModule } from 'ng2-input-autocomplete';
 
 @NgModule({
   declarations: [
@@ -60,6 +62,7 @@ import { EventDetailsComponent } from './components/event_details.component';
     TablesComponent,
     RdvComponent,
     EventDetailsComponent,
+    TableDetailsComponent,
     QuotesComponent
   ],
   imports: [
@@ -71,6 +74,7 @@ import { EventDetailsComponent } from './components/event_details.component';
     DateTimePickerModule,
     BrowserModule,
     BrowserAnimationsModule,
+    AutocompleteModule.forRoot(),
     RouterModule.forRoot([
       {
         path: 'login',
