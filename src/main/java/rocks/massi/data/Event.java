@@ -26,9 +26,9 @@ public class Event {
     @Column
     private String name;
 
-    @Column
+    @Column(name = "start_date")
     private Timestamp start;
 
-    @Column
+    @Column(name = "end_date")
     private Timestamp end;
 }
