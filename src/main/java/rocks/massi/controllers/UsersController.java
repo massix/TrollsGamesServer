@@ -4,10 +4,12 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.repository.query.Param;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import rocks.massi.authentication.AuthenticationType;
 import rocks.massi.authentication.Role;
@@ -80,7 +82,10 @@ public class UsersController {
 
     @CrossOrigin
     @GetMapping(value = "/confirm")
-    public User confirmRegistration(@RequestParam("email") final String email, @RequestParam("token") final String token) {
+    public User confirmRegistration(@RequestParam("email") final String email,
+                                    @RequestParam("token") final String token,
+                                    @Param("redirect") final String redirect,
+                                    HttpServletResponse servletResponse) {
         User ret = trollsJwt.confirmRegistrationTokenForEmail(email, token);
 
         if (ret == null) {
@@ -91,12 +96,19 @@ public class UsersController {
         ret.setAuthenticationType(AuthenticationType.JWT);
 
         usersRepository.save(ret);
+
+        if (!StringUtils.isEmpty(redirect)) {
+            servletResponse.setHeader("Location", redirect);
+            servletResponse.setStatus(HttpServletResponse.SC_FOUND);
+        }
+
         return usersRepository.findByEmail(email);
     }
 
     @CrossOrigin
     @PostMapping(value = "/register")
-    public User registerNewUser(@RequestBody User user) {
+    public User registerNewUser(@RequestBody User user,
+                                @Param("redirect") String redirect) {
         // Check that the user exists on bgg
 
         // Check that the user doesn't already exist
@@ -121,7 +133,9 @@ public class UsersController {
         mailMessage.setReplyTo("massi@massi.rocks");
         mailMessage.setTo(user.getEmail());
         mailMessage.setSubject("Verify your subscription to the service!");
-        mailMessage.setText("Confirmez votre account en cliquant sur le lien suivant!\nhttps://" + host + "/v1/users/confirm?email=" + user.getEmail() + "&token=" + token);
+        mailMessage.setText("Confirmez votre account en cliquant sur le lien suivant!\nhttps://" +
+                host + "/v1/users/confirm?email=" + user.getEmail() + "&token=" + token +
+                (redirect != null ? "&redirect=" + redirect : ""));
         mailSender.send(mailMessage);
 
         return user;
