@@ -31,7 +31,7 @@
                     <button class="btn btn-lg btn-primary btn-block" [disabled]="!confirmPassword || (confirmPassword != user.password) || !loginForm.valid">Create account</button>
 
                     <div>
-                        <a href="/login">Login</a> or
+                        <a [routerLink]="['/login']">Login</a> or
                         <a href="/reset">reset password</a>
                     </div>
                 </form>

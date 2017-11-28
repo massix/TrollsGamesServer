@@ -16,7 +16,7 @@
 
                     <button class="btn btn-lg btn-primary btn-block">Sign in</button>
                     <div>
-                        <a href="/register">Create account</a> or
+                        <a [routerLink]="['/register']">Create account</a> or
                         <a href="/reset">reset password</a>
                     </div>
                     <div *ngIf="error">
