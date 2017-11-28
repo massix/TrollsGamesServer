@@ -115,7 +115,7 @@ public class UsersController {
                                 @Param("redirect") String redirect) {
 
         // Check that the user exists on bgg, if it exists, start crawling it right now
-        if (!collectionCrawler.checkUserExists(user)) {
+        if (user.isBggHandled() && !collectionCrawler.checkUserExists(user)) {
             throw new UserNotFoundException("User not found on BGG.");
         }
 
