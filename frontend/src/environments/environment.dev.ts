@@ -1,4 +1,5 @@
 export const environment = {
     production: false,
-    apiBase: 'http://dev.massi.rocks'
+    apiBase: 'http://dev.massi.rocks',
+    redirectUrl: 'http://dev.massi.rocks'
 };

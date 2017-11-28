@@ -1,0 +1,61 @@
+<div class="container">
+
+    <div class="row" id="pwd-container">
+        <div class="col-md-4"></div>
+
+        <div class="col-md-4">
+            <section class="login-form">
+
+                <form #loginForm="ngForm" role="login" name="form" (ngSubmit)="loginForm.form.valid && onSubmit()">
+                    <img src="https://i.imgur.com/RcmcLv4.png" class="img-responsive" alt="" />
+
+                    <div class="help-block">
+                        Complete the form below to create your account!
+                    </div>
+
+                    <label class="btn btn-sm btn-primary">
+                        <input type="checkbox" [(ngModel)]="user.bggHandled" name="bggHandled"> I own an account on BoardGameGeek.
+                    </label>
+
+                    <input [(ngModel)]="user.bggNick" type="username" placeholder="Nick on BGG" required class="form-control input-lg" name="bggNick" [disabled]="!user.bggHandled" />
+
+                    <input [(ngModel)]="user.forumNick" type="username" placeholder="Display name" required class="form-control input-lg" name="forumNick" />
+
+                    <input [(ngModel)]="user.email" type="email" name="email" placeholder="Email" required class="form-control input-lg" />
+
+                    <input [(ngModel)]="user.password" type="password" name="password" class="form-control input-lg" id="password" placeholder="Password" required />
+
+                    <input [(ngModel)]="confirmPassword" type="password" name="password" class="form-control input-lg" id="password" placeholder="Confirm password" required />
+
+                    <div *ngIf="confirmPassword && confirmPassword != user.password" class="help-block">Passwords don't match.</div>
+                    <button class="btn btn-lg btn-primary btn-block" [disabled]="!confirmPassword || (confirmPassword != user.password) || !loginForm.valid">Create account</button>
+
+                    <div>
+                        <a href="/login">Login</a> or
+                        <a href="/reset">reset password</a>
+                    </div>
+                    <div *ngIf="error">
+                        <span class="error">{{error}}</span>
+                    </div>
+                </form>
+
+                <div class="form-links">
+                    <a href="#">www.website.com</a>
+                </div>
+            </section>
+        </div>
+
+        <div class="col-md-4"></div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4"></div>
+        <div class="col-md-4">
+            <blockquote *ngIf="quote" class="blockquote">
+                    <p class="mb-0">{{quote.quote}}</p>
+                    <footer class="blockquote-footer">{{quote.author}}</footer>
+            </blockquote>
+        </div>
+        <div class="col-md-4"></div>
+    </div>
+</div>

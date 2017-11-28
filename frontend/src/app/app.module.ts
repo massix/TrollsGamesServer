@@ -43,6 +43,8 @@ import { RdvComponent } from './components/rdv.component';
 import { EventDetailsComponent } from './components/event_details.component';
 import { TableDetailsComponent } from './components/table_details.component';
 import { AutocompleteModule } from 'ng2-input-autocomplete';
+import { RegisterComponent } from './components/register.component';
+import { ConfirmComponent } from './components/confirm.component';
 
 @NgModule({
   declarations: [
@@ -63,6 +65,8 @@ import { AutocompleteModule } from 'ng2-input-autocomplete';
     RdvComponent,
     EventDetailsComponent,
     TableDetailsComponent,
+    RegisterComponent,
+    ConfirmComponent,
     QuotesComponent
   ],
   imports: [
@@ -79,6 +83,14 @@ import { AutocompleteModule } from 'ng2-input-autocomplete';
       {
         path: 'login',
         component: LoginComponent
+      },
+      {
+        path: 'register',
+        component: RegisterComponent
+      },
+      {
+        path: 'confirm',
+        component: ConfirmComponent
       },
       {
         path: 'logout',

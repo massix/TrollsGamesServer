@@ -105,7 +105,7 @@ public class UsersController {
         return usersRepository.findByEmail(email);
     }
 
-    @CrossOrigin
+    @CrossOrigin(allowedHeaders = {"Content-Type"})
     @PostMapping(value = "/register")
     public User registerNewUser(@RequestBody User user,
                                 @Param("redirect") String redirect) {
