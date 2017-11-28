@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import rocks.massi.authentication.AuthenticationType;
 import rocks.massi.authentication.Role;
 import rocks.massi.authentication.TrollsJwt;
+import rocks.massi.crawler.CollectionCrawler;
 import rocks.massi.data.LoginInformation;
 import rocks.massi.data.User;
 import rocks.massi.data.UsersRepository;
@@ -43,6 +44,9 @@ public class UsersController {
 
     @Autowired
     private BCryptPasswordEncoder bCryptPasswordEncoder;
+
+    @Autowired
+    private CollectionCrawler collectionCrawler;
 
     @Autowired
     private TrollsJwt trollsJwt;
@@ -109,7 +113,11 @@ public class UsersController {
     @PostMapping(value = "/register")
     public User registerNewUser(@RequestBody User user,
                                 @Param("redirect") String redirect) {
-        // Check that the user exists on bgg
+
+        // Check that the user exists on bgg, if it exists, start crawling it right now
+        if (!collectionCrawler.checkUserExists(user)) {
+            throw new UserNotFoundException("User not found on BGG.");
+        }
 
         // Check that the user doesn't already exist
         if (usersRepository.findByEmail(user.getEmail()) != null || usersRepository.findByBggNick(user.getBggNick()) != null) {

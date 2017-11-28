@@ -28,7 +28,7 @@ export class RegisterComponent implements OnInit {
                 this.alertService.success('Done! Please verify your email for a confirmation link!', true);
                 this.router.navigate(['/login']);
             },
-            error => this.alertService.error('Something wrong happened. Please refresh the page and retry!')
+            error => this.alertService.error('Something wrong happened. Please check all the fields (is the BGG user correct?) and retry!')
         );
     }
 

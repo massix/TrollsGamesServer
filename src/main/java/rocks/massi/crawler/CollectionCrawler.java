@@ -30,9 +30,6 @@ public class CollectionCrawler implements Runnable {
     private CrawlCache crawlCache;
 
     @Autowired
-    private UsersRepository usersRepository;
-
-    @Autowired
     private GamesRepository gamesRepository;
 
     @Autowired
@@ -67,10 +64,28 @@ public class CollectionCrawler implements Runnable {
 
     private Set<Ownership> ownerships = new LinkedHashSet<>();
 
+    private JAXBContextFactory contextFactory = new JAXBContextFactory.Builder().build();
+
     private long cacheHit = 0;
     private long cacheMiss = 0;
     private String started;
     private String finished;
+
+    // Blocking method
+    public boolean checkUserExists(User user) {
+        try {
+            Response r = boardGameGeek.getCollectionForUser(user.getBggNick());
+            if (r.status() == 201 || r.status() == 202) {
+                return true;
+            } else {
+                Collection collection = (Collection) new JAXBDecoder(contextFactory).decode(r, Collection.class);
+                addUserToCrawl(user);
+                return true;
+            }
+        } catch (Exception e) {
+            return false;
+        }
+    }
 
     public void wakeUp() {
         if (!runningThread.isAlive()) {
@@ -129,7 +144,6 @@ public class CollectionCrawler implements Runnable {
     public void run() {
         running = true;
         log.info("Targetting {} with a timeout of {}ms", bggUrl, crawlTimeout);
-        JAXBContextFactory contextFactory = new JAXBContextFactory.Builder().build();
         started = new Date().toString();
 
         while (running && (!usersToCrawl.isEmpty() || !gamesToCrawl.isEmpty() || !ownershipsToCrawl.isEmpty())) {
