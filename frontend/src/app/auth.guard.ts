@@ -8,15 +8,12 @@ import 'rxjs/add/operator/toPromise';
 export class AuthGuard implements CanActivate {
     canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Promise<boolean> {
         return new Promise((resolve) => {
-            console.log('returning promise');
             if (localStorage.getItem('token')) {
                 this.crawlService.getStatus().subscribe(
                     ok => {
-                        console.log('Auth guard resolving to OK');
                         resolve(true);
                     },
                     ko => {
-                        console.log('Auth guard resolving to KO');
                         localStorage.removeItem('token');
                         this.alertService.error('You are not logged in!', true);
                         resolve(false);
@@ -24,7 +21,6 @@ export class AuthGuard implements CanActivate {
                     }
                 );
             } else {
-                console.log('User not logged in');
                 resolve(false);
                 this.router.navigate(['/login']);
                 this.alertService.error('You are not logged in!', true);
