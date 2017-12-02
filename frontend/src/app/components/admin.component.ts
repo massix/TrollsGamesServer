@@ -16,7 +16,6 @@ export class AdminComponent implements OnInit {
     activeRoute = 'users';
 
     ngOnInit(): void {
-        console.log('Im admin');
     }
 
     setActiveRoute(activeRoute: string) {
