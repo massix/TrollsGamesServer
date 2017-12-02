@@ -6,22 +6,24 @@ import 'rxjs/add/operator/toPromise';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-    async canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot) {
-        if (localStorage.getItem('token')) {
-            try {
-                const resp = await this.crawlService.getStatus().toPromise();
-            } catch (e) {
-                localStorage.removeItem('token');
-                this.router.navigate(['/login']);
-                this.alertService.error('You are not logged in!', true);
+    canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Promise<boolean> {
+        return new Promise((resolve) => {
+            if (localStorage.getItem('token')) {
+                const resp = this.crawlService.getStatus().subscribe(
+                    ok => {
+                        console.log('Auth guard resolving to OK');
+                        resolve(true);
+                    },
+                    ko => {
+                        console.log('Auth guard resolving to KO');
+                        localStorage.removeItem('token');
+                        this.router.navigate(['/login']);
+                        this.alertService.error('You are not logged in!', true);
+                        resolve(false);
+                });
             }
-            return true;
-        }
-
-        this.router.navigate(['/login']);
-        this.alertService.error('You are not logged in', true);
+        });
     }
 
     constructor(private router: Router, private alertService: AlertService, private crawlService: CrawlService) {}
-
 }
