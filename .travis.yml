@@ -29,3 +29,9 @@ deploy:
   on:
     all_branches: true
     condition: "$TRAVIS_BRANCH =~ ^feature/.*$"
+- provider: script
+  skip_cleanup: true
+  script: ./configuration/deploy.sh dev
+  on:
+    all_branches: true
+    condition: "$TRAVIS_BRANCH =~ ^hotfix/.*$"

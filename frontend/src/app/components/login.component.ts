@@ -24,11 +24,14 @@ export class LoginComponent implements OnInit {
 
     onSubmit(): void {
         this.error = null;
+        console.log('on submit');
         this.loginService.login(this.login).subscribe((data: HttpResponse<User>) => {
+            console.log('received response');
             if (data.headers.has('authorization')) {
                 localStorage.setItem('token', data.headers.get('authorization').replace('Bearer ', ''));
                 this.alertService.success('Logged in', true);
-                this.router.navigate(['/admin']);
+                console.log('routing to admin');
+                this.router.navigateByUrl('/admin/(adminoutlet:users)');
             } else {
                 this.alertService.error('Missing header?');
             }
