@@ -8,6 +8,7 @@ import 'rxjs/add/operator/toPromise';
 export class AuthGuard implements CanActivate {
     canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Promise<boolean> {
         return new Promise((resolve) => {
+            console.log('returning promise');
             if (localStorage.getItem('token')) {
                 this.crawlService.getStatus().subscribe(
                     ok => {
