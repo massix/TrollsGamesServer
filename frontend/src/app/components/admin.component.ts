@@ -13,9 +13,10 @@ declare var $: any;
     styleUrls: ['../styles/admin.component.css']
 })
 export class AdminComponent implements OnInit {
-    activeRoute = '';
+    activeRoute = 'users';
 
     ngOnInit(): void {
+        console.log('Im admin');
     }
 
     setActiveRoute(activeRoute: string) {
