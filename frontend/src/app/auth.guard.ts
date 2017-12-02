@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable } from '@angular/core'; 
 import { Router, ActivatedRouteSnapshot, RouterStateSnapshot, CanActivate } from '@angular/router';
 import { AlertService } from './services/alert.service';
 import { CrawlService } from './services/crawl.service';
@@ -25,8 +25,8 @@ export class AuthGuard implements CanActivate {
                 );
             } else {
                 console.log('User not logged in');
-                this.router.navigate(['/login']);
                 resolve(false);
+                this.router.navigate(['/login']);
                 this.alertService.error('You are not logged in!', true);
             }
         });
