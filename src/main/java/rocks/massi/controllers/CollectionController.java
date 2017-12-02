@@ -5,14 +5,18 @@ import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.*;
-import rocks.massi.data.Game;
-import rocks.massi.data.GamesRepository;
-import rocks.massi.data.PagesInformation;
-import rocks.massi.data.UsersRepository;
+import rocks.massi.authentication.Role;
+import rocks.massi.authentication.TrollsJwt;
+import rocks.massi.crawler.CollectionCrawler;
+import rocks.massi.data.*;
+import rocks.massi.data.joins.GameHonorsRepository;
 import rocks.massi.data.joins.Ownership;
 import rocks.massi.data.joins.OwnershipsRepository;
+import rocks.massi.exceptions.AuthorizationException;
 import rocks.massi.exceptions.UserNotFoundException;
+import rocks.massi.utils.StatsLogger;
 
+import javax.servlet.http.HttpServletResponse;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -22,6 +26,7 @@ import static rocks.massi.utils.DBUtils.getUser;
 @RestController
 @RequestMapping("/v1/collection")
 public class CollectionController {
+
     @Autowired
     private GamesRepository gamesRepository;
 
@@ -31,11 +36,28 @@ public class CollectionController {
     @Autowired
     private OwnershipsRepository ownershipsRepository;
 
+    @Autowired
+    private GameHonorsRepository gameHonorsRepository;
+
+    @Autowired
+    private HonorsRepository honorsRepository;
+
+    @Autowired
+    private StatsLogger statsLogger;
+
+    @Autowired
+    private TrollsJwt trollsJwt;
+
+    @Autowired
+    private CollectionCrawler collectionCrawler;
+
     @CrossOrigin
     @GetMapping("/get/{nick}")
-    public List<Game> getCollection(@PathVariable("nick") final String nick) {
+    public List<Game> getCollection(@RequestHeader("User-Agent") final String userAgent,
+                                    @PathVariable("nick") final String nick) {
         val user = getUser(usersRepository, nick);
         LinkedList<Game> collection = new LinkedList<>();
+        statsLogger.logStat("games/get/" + nick, userAgent);
 
         if (user != null) {
             List<Ownership> ownerships = ownershipsRepository.findByUser(user.getBggNick());
@@ -46,6 +68,17 @@ public class CollectionController {
         }
 
         return collection;
+    }
+
+    @CrossOrigin
+    @GetMapping("/get/{nick}/total")
+    public CollectionInformation getCollectioInformation(@PathVariable("nick") final String nick) {
+        val user = getUser(usersRepository, nick);
+        if (user == null) {
+            throw new UserNotFoundException("User not found in DB");
+        }
+
+        return new CollectionInformation(ownershipsRepository.findByUser(user.getBggNick()).size());
     }
 
     @CrossOrigin
@@ -72,5 +105,51 @@ public class CollectionController {
         }
 
         return new PagesInformation(ownershipsRepository.findByUser(user.getBggNick(), new PageRequest(0, 20)).getTotalPages(), 20);
+    }
+
+    @CrossOrigin(allowedHeaders = {"Authorization"})
+    @PutMapping("/add/{nick}/{game}")
+    public void addGameForUser(@RequestHeader("Authorization") String authorization,
+                               @PathVariable("nick") String nick,
+                               @PathVariable("game") int gameId,
+                               HttpServletResponse servletResponse) {
+        // Check authorization
+        TrollsJwt.UserInformation userInformation = trollsJwt.getUserInformationFromToken(authorization);
+        if (!userInformation.getUser().equals(nick) && userInformation.getRole() != Role.ADMIN) {
+            throw new AuthorizationException("User not authorized.");
+        }
+
+        // Check that the user exists
+        if (getUser(usersRepository, nick) == null) {
+            throw new UserNotFoundException("User not found in DB");
+        }
+
+        // Queue the game in the priority list in the crawler
+        servletResponse.setStatus(HttpServletResponse.SC_ACCEPTED);
+        collectionCrawler.addOwnershipToCrawl(new Ownership(nick, gameId));
+    }
+
+    @CrossOrigin(allowedHeaders = {"Authorization"})
+    @DeleteMapping("/remove/{nick}/{game}")
+    public void removeGameForUser(@RequestHeader("Authorization") String authorization,
+                                  @PathVariable("nick") String nick,
+                                  @PathVariable("game") int gameId) {
+        // Check authorization
+        TrollsJwt.UserInformation userInformation = trollsJwt.getUserInformationFromToken(authorization);
+        if (!userInformation.getUser().equals(nick) && userInformation.getRole() != Role.ADMIN) {
+            throw new AuthorizationException("User not authorized.");
+        }
+
+        if (getUser(usersRepository, nick) == null) {
+            throw new UserNotFoundException("User not found in DB");
+        }
+
+        Ownership ownership = ownershipsRepository.findByUserAndGame(nick, gameId);
+
+        if (ownership == null) {
+            throw new UserNotFoundException("Ownership not found on DB");
+        }
+
+        ownershipsRepository.delete(ownership);
     }
 }

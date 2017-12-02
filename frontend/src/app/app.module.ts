@@ -16,6 +16,7 @@ import { UsersComponent } from './components/users.component';
 import { AlertService } from './services/alert.service';
 import { AlertComponent } from './components/alert.component';
 import { LogoutComponent } from './components/logout.component';
+import { InformationComponent } from './components/information.component';
 import { UsersService } from './services/users.service';
 import { AuthGuard } from './auth.guard';
 import { GamesService } from './services/games.service';
@@ -27,6 +28,23 @@ import { CacheComponent } from './components/cache.component';
 import { CacheService } from './services/cache.service';
 import { CollectionComponent } from './components/collection.component';
 import { CollectionService } from './services/collection.service';
+import { StatsService } from './services/stats.service';
+import { QuotesComponent } from './components/quotes.component';
+import { QuotesService } from './services/quotes.service';
+
+import { InlineEditorModule } from 'ng2-inline-editor';
+import { EventsService } from './services/events.service';
+import { EventsComponent } from './components/events.component';
+import { DateTimePickerModule } from 'ng-pick-datetime';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { TablesComponent } from './components/tables.component';
+import { TablesService } from './services/tables.service';
+import { RdvComponent } from './components/rdv.component';
+import { EventDetailsComponent } from './components/event_details.component';
+import { TableDetailsComponent } from './components/table_details.component';
+import { AutocompleteModule } from 'ng2-input-autocomplete';
+import { RegisterComponent } from './components/register.component';
+import { ConfirmComponent } from './components/confirm.component';
 
 @NgModule({
   declarations: [
@@ -40,17 +58,39 @@ import { CollectionService } from './services/collection.service';
     CrawlerComponent,
     GameDetailsComponent,
     CacheComponent,
-    CollectionComponent
+    CollectionComponent,
+    InformationComponent,
+    EventsComponent,
+    TablesComponent,
+    RdvComponent,
+    EventDetailsComponent,
+    TableDetailsComponent,
+    RegisterComponent,
+    ConfirmComponent,
+    QuotesComponent
   ],
   imports: [
     NgxPaginationModule,
     BrowserModule,
     FormsModule,
     HttpClientModule,
+    InlineEditorModule,
+    DateTimePickerModule,
+    BrowserModule,
+    BrowserAnimationsModule,
+    AutocompleteModule.forRoot(),
     RouterModule.forRoot([
       {
         path: 'login',
         component: LoginComponent
+      },
+      {
+        path: 'register',
+        component: RegisterComponent
+      },
+      {
+        path: 'confirm',
+        component: ConfirmComponent
       },
       {
         path: 'logout',
@@ -90,6 +130,36 @@ import { CollectionService } from './services/collection.service';
             component: CollectionComponent,
             outlet: 'adminoutlet',
             canActivate: [AuthGuard]
+          },
+          {
+            path: 'quotes',
+            component: QuotesComponent,
+            outlet: 'adminoutlet',
+            canActivate: [AuthGuard]
+          },
+          {
+            path: 'events',
+            component: EventsComponent,
+            outlet: 'adminoutlet',
+            canActivate: [AuthGuard]
+          },
+          {
+            path: 'tables',
+            component: TablesComponent,
+            outlet: 'adminoutlet',
+            canActivate: [AuthGuard]
+          },
+          {
+            path: 'rdv',
+            component: RdvComponent,
+            outlet: 'adminoutlet',
+            canActivate: [AuthGuard]
+          },
+          {
+            path: 'information',
+            component: InformationComponent,
+            outlet: 'adminoutlet',
+            canActivate: [AuthGuard]
           }
         ]
       },
@@ -108,6 +178,10 @@ import { CollectionService } from './services/collection.service';
     CrawlService,
     CacheService,
     CollectionService,
+    StatsService,
+    QuotesService,
+    EventsService,
+    TablesService,
     AuthGuard,
     SimpleTimer
   ],

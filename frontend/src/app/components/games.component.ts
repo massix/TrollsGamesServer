@@ -3,6 +3,7 @@ import { GamesService } from '../services/games.service';
 import { Game } from '../data/game';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AlertService } from '../services/alert.service';
+import { Subject } from 'rxjs/Subject';
 
 @Component({
     templateUrl: '../views/games.component.html',
@@ -13,6 +14,8 @@ export class GamesComponent implements OnInit {
     currentPage: number = 0;
     totalItems: number;
     selectedGame: Game;
+    searchTerm: string;
+    inputTimer: any;
 
     pageChange(newPage: number) {
         this.selectedGame = null;
@@ -26,6 +29,24 @@ export class GamesComponent implements OnInit {
         });
 
         this.gamesService.getPageNumber(0).subscribe(data => this.games = data);
+    }
+
+    searchTermChange() {
+        clearTimeout(this.inputTimer);
+        this.inputTimer = setTimeout(data => {
+            if (this.searchTerm == '') {
+                console.log('resetting');
+                this.ngOnInit();
+                this.currentPage = 0;
+            } else {
+                console.log('search for ' + this.searchTerm);
+                this.gamesService.searchGame(this.searchTerm).subscribe(data => {
+                    this.games = data;
+                    this.totalItems = data.length;
+                    this.currentPage = 0;
+                });
+            }
+        }, 2000);
     }
 
     showHideGame(game: Game) {

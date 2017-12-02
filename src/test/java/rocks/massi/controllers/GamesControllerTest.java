@@ -52,14 +52,15 @@ public class GamesControllerTest {
         ownershipsRepository.save(new Ownership("user_1", 1));
         ownershipsRepository.save(new Ownership("user_2", 1));
 
-        AuthorizationHandler.setUp(restTemplate, "email@example.com", "admin");
+        AuthorizationHandler.setUp(restTemplate);
     }
 
     @After
     public void tearDown() throws Exception {
         ownershipsRepository.deleteAll();
         gamesRepository.deleteAll();
-        usersRepository.deleteAll();
+        usersRepository.deleteByBggNick("user_1");
+        usersRepository.deleteByBggNick("user_2");
     }
 
     @Test
@@ -124,4 +125,11 @@ public class GamesControllerTest {
         assertEquals(2, responseEntity.getBody().length);
     }
 
+    @Test
+    public void getFuzzySearch() throws Exception {
+        ResponseEntity<Game[]> responseEntity = restTemplate.getForEntity("/v1/games/search?q=cycl", Game[].class);
+        assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
+        assertEquals(1, responseEntity.getBody().length);
+        assertEquals("Cyclades", responseEntity.getBody()[0].getName());
+    }
 }

@@ -1,0 +1,1 @@
+update quotes set quote = 'War. War never changes.' where quote = 'War. War never ends.';

@@ -3,20 +3,25 @@ package rocks.massi.controllers;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.repository.query.Param;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import rocks.massi.authentication.AuthenticationType;
 import rocks.massi.authentication.Role;
 import rocks.massi.authentication.TrollsJwt;
+import rocks.massi.crawler.CollectionCrawler;
 import rocks.massi.data.LoginInformation;
 import rocks.massi.data.User;
 import rocks.massi.data.UsersRepository;
 import rocks.massi.data.joins.OwnershipsRepository;
-import rocks.massi.exceptions.AuthenticationException;
+import rocks.massi.exceptions.AuthorizationException;
 import rocks.massi.exceptions.MalformattedUserException;
+import rocks.massi.exceptions.UserAlreadyExistsException;
 import rocks.massi.exceptions.UserNotFoundException;
 import rocks.massi.utils.DBUtils;
 
@@ -41,10 +46,16 @@ public class UsersController {
     private BCryptPasswordEncoder bCryptPasswordEncoder;
 
     @Autowired
+    private CollectionCrawler collectionCrawler;
+
+    @Autowired
     private TrollsJwt trollsJwt;
 
     @Autowired
     private JavaMailSender mailSender;
+
+    @Value("${users-controller.default-role}")
+    private Role defaultRole;
 
     @CrossOrigin
     @GetMapping("/get/{nick}")
@@ -75,33 +86,47 @@ public class UsersController {
 
     @CrossOrigin
     @GetMapping(value = "/confirm")
-    public User confirmRegistration(@RequestParam("email") final String email, @RequestParam("token") final String token) {
+    public User confirmRegistration(@RequestParam("email") final String email,
+                                    @RequestParam("token") final String token,
+                                    @Param("redirect") final String redirect,
+                                    HttpServletResponse servletResponse) {
         User ret = trollsJwt.confirmRegistrationTokenForEmail(email, token);
 
         if (ret == null) {
-            throw new AuthenticationException("Can't go any further.");
+            throw new AuthorizationException("Can't go any further.");
         }
 
         ret.setRole(Role.USER);
         ret.setAuthenticationType(AuthenticationType.JWT);
 
         usersRepository.save(ret);
+
+        if (!StringUtils.isEmpty(redirect)) {
+            servletResponse.setHeader("Location", redirect);
+            servletResponse.setStatus(HttpServletResponse.SC_FOUND);
+        }
+
         return usersRepository.findByEmail(email);
     }
 
-    @CrossOrigin
+    @CrossOrigin(allowedHeaders = {"Content-Type"})
     @PostMapping(value = "/register")
-    public User registerNewUser(@RequestBody User user) {
-        // Check that the user exists on bgg
+    public User registerNewUser(@RequestBody User user,
+                                @Param("redirect") String redirect) {
+
+        // Check that the user exists on bgg, if it exists, start crawling it right now
+        if (user.isBggHandled() && !collectionCrawler.checkUserExists(user)) {
+            throw new UserNotFoundException("User not found on BGG.");
+        }
 
         // Check that the user doesn't already exist
         if (usersRepository.findByEmail(user.getEmail()) != null || usersRepository.findByBggNick(user.getBggNick()) != null) {
-            throw new AuthenticationException("User already exist. Please ask for a password reset.");
+            throw new AuthorizationException("User already exist. Please ask for a password reset.");
         }
 
         // New users are by default unable to login to the server.
         user.setAuthenticationType(AuthenticationType.NONE);
-        user.setRole(Role.USER);
+        user.setRole(defaultRole);
 
         // Encrypt password
         user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
@@ -116,20 +141,31 @@ public class UsersController {
         mailMessage.setReplyTo("massi@massi.rocks");
         mailMessage.setTo(user.getEmail());
         mailMessage.setSubject("Verify your subscription to the service!");
-        mailMessage.setText("Confirmez votre blabla @ https://" + host + "/v1/users/confirm?email=" + user.getEmail() + "&token=" + token);
+        mailMessage.setText("Confirmez votre account en cliquant sur le lien suivant!\nhttps://" +
+                host + "/v1/users/confirm?email=" + user.getEmail() + "&token=" + token +
+                (redirect != null ? "&redirect=" + redirect : ""));
         mailSender.send(mailMessage);
 
         return user;
     }
 
-    @CrossOrigin
+    @CrossOrigin(allowedHeaders = {"Authorization", "Content-Type"})
     @PostMapping(value = "/add")
-    public User addUser(@RequestBody User user) {
+    public User addUser(@RequestHeader("Authorization") String authorization, @RequestBody User user) {
         log.info("Got user {}", user.getBggNick());
+
+        TrollsJwt.UserInformation userInformation = trollsJwt.getUserInformationFromToken(authorization);
+        if (userInformation.getRole() != Role.ADMIN) {
+            throw new AuthorizationException("User not authorized.");
+        }
+
+        if (getUser(usersRepository, user.getBggNick()) != null) {
+            throw new UserAlreadyExistsException("User already exists");
+        }
 
         // Users added via APIs are by default of role user and authenticated via JWT
         user.setAuthenticationType(AuthenticationType.JWT);
-        user.setRole(Role.USER);
+        user.setRole(defaultRole);
 
         if (user.getBggNick().isEmpty() || user.getForumNick().isEmpty() || user.getPassword().isEmpty())
             throw new MalformattedUserException("Missing mandatory field");
@@ -137,6 +173,31 @@ public class UsersController {
         user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
         usersRepository.save(user);
         return DBUtils.getUser(usersRepository, user.getBggNick());
+    }
+
+    @CrossOrigin(allowedHeaders = {"Authorization", "Content-Type"})
+    @PatchMapping("/modify")
+    public User modifyUser(@RequestHeader("Authorization") String authorization, @RequestBody User user) {
+        log.info("Modifying user {}", user.getBggNick());
+
+        // Check that the user is either himself or an admin
+        TrollsJwt.UserInformation userInformation = trollsJwt.getUserInformationFromToken(authorization);
+        if (userInformation.getUser().equals(user.getBggNick()) || userInformation.getRole() == Role.ADMIN) {
+            User oldUser = getUser(usersRepository, user.getBggNick());
+            if (oldUser == null) {
+                throw new UserNotFoundException("User not found. Please use the /add endpoint or /register");
+            }
+
+            user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
+
+            // Force JWT because we.. well, that's what we do.
+            user.setAuthenticationType(AuthenticationType.JWT);
+
+            usersRepository.save(user);
+            return usersRepository.findByBggNick(user.getBggNick());
+        }
+
+        throw new AuthorizationException("User not authorized.");
     }
 
     @CrossOrigin(exposedHeaders = {"Authorization"})
@@ -154,16 +215,12 @@ public class UsersController {
 
         if (dbUser.getAuthenticationType() == AuthenticationType.NONE) {
             log.error("User {} authType = NONE", dbUser.getEmail());
-            throw new AuthenticationException("User authentication type is none, missing registration.");
+            throw new AuthorizationException("User authentication type is none, missing registration.");
         }
 
         try {
             if (BCrypt.checkpw(loginInformation.getPassword(), dbUser.getPassword())) {
-                String token = trollsJwt.getTokenForUser(dbUser);
-                if (token.isEmpty()) {
-                    token = trollsJwt.generateNewTokenForUser(dbUser);
-                }
-
+                String token = trollsJwt.generateNewTokenForUser(dbUser);
                 dbUser.setPassword("*");
                 servletResponse.setHeader("Authorization", String.format("Bearer %s", token));
                 return dbUser;
@@ -172,15 +229,15 @@ public class UsersController {
             log.error("User {} failed to login because: {}", loginInformation.getEmail(), exception.getMessage());
         }
 
-        throw new AuthenticationException("Username or password are WRONG");
+        throw new AuthorizationException("Username or password are WRONG");
     }
 
     @CrossOrigin(allowedHeaders = {"Authorization"})
     @DeleteMapping("/remove/{nick}")
     public User removeUser(@RequestHeader("Authorization") final String authorization,
                            @PathVariable("nick") String nick) {
-        if (!trollsJwt.checkHeaderWithToken(authorization)) {
-            throw new AuthenticationException("User not logged in");
+        if (trollsJwt.getUserInformationFromToken(authorization).getRole() != Role.ADMIN) {
+            throw new AuthorizationException("User not authorized.");
         }
 
         val user = DBUtils.getUser(usersRepository, nick);

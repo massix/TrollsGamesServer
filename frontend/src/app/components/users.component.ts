@@ -15,15 +15,21 @@ export class UsersComponent implements OnInit {
     constructor(private usersService: UsersService, private crawlService: CrawlService, private alertService: AlertService) {}
     users: User[] = [];
     newUser: User = new User();
+    editing = false;
 
     ngOnInit() {
         this.refreshUsersList();
     }
 
     submitUser() {
-        this.usersService.addUser(this.newUser).subscribe(data => {
-            this.refreshUsersList();
-        });
+        console.log(this.newUser);
+        if (this.editing) {
+            this.usersService.modifyUser(this.newUser).subscribe(data => this.refreshUsersList());
+        } else {
+           this.usersService.addUser(this.newUser).subscribe(data => {
+                this.refreshUsersList();
+            });
+        }
     }
 
     removeUser(user: User) {
@@ -44,6 +50,7 @@ export class UsersComponent implements OnInit {
 
     editUser(user: User) {
         this.newUser = user;
+        this.editing = true;
     }
 
     lookupUser(user: User) {
@@ -60,5 +67,6 @@ export class UsersComponent implements OnInit {
 
     resetForm() {
         this.newUser = new User();
+        this.editing = false;
     }
 }

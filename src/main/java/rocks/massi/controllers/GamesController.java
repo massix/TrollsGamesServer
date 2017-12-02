@@ -1,9 +1,12 @@
 package rocks.massi.controllers;
 
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.repository.query.Param;
 import org.springframework.web.bind.annotation.*;
+import rocks.massi.authentication.Role;
 import rocks.massi.authentication.TrollsJwt;
 import rocks.massi.data.Game;
 import rocks.massi.data.GamesRepository;
@@ -11,13 +14,15 @@ import rocks.massi.data.PagesInformation;
 import rocks.massi.data.joins.GameHonorsRepository;
 import rocks.massi.data.joins.Ownership;
 import rocks.massi.data.joins.OwnershipsRepository;
-import rocks.massi.exceptions.AuthenticationException;
+import rocks.massi.exceptions.AuthorizationException;
 import rocks.massi.exceptions.GameNotFoundException;
 import rocks.massi.exceptions.MalformattedGameException;
+import rocks.massi.utils.StatsLogger;
 
 import java.util.LinkedList;
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/v1/games")
 public class GamesController {
@@ -33,6 +38,9 @@ public class GamesController {
 
     @Autowired
     private TrollsJwt trollsJwt;
+
+    @Autowired
+    private StatsLogger statsLogger;
 
     @CrossOrigin
     @GetMapping("/get")
@@ -67,8 +75,8 @@ public class GamesController {
     @PostMapping("/add")
     public Game insertGame(@RequestHeader("Authorization") final String authorization,
                            @RequestBody final Game game) {
-        if (!trollsJwt.checkHeaderWithToken(authorization)) {
-            throw new AuthenticationException("User not authorized.");
+        if (trollsJwt.getUserInformationFromToken(authorization).getRole() != Role.ADMIN) {
+            throw new AuthorizationException("User not authorized.");
         }
 
         if (game.getId() <= 0 || game.getName().isEmpty()) {
@@ -83,8 +91,8 @@ public class GamesController {
     @DeleteMapping("/remove/{id}")
     public Game removeGame(@RequestHeader("Authorization") final String authorization,
                            @PathVariable("id") final int id) {
-        if (!trollsJwt.checkHeaderWithToken(authorization)) {
-            throw new AuthenticationException("User not authorized.");
+        if (trollsJwt.getUserInformationFromToken(authorization).getRole() != Role.ADMIN) {
+            throw new AuthorizationException("User not authorized.");
         }
 
         val g = gamesRepository.findById(id);
@@ -93,8 +101,7 @@ public class GamesController {
             gameHonorsRepository.deleteByGame(id);
             ownershipsRepository.deleteByGame(id);
             gamesRepository.delete(g);
-        }
-        else {
+        } else {
             throw new GameNotFoundException();
         }
 
@@ -112,5 +119,15 @@ public class GamesController {
         }
 
         return users;
+    }
+
+    @CrossOrigin
+    @GetMapping("/search")
+    public List<Game> searchGame(@RequestHeader("User-Agent") String userAgent,
+                                 @RequestParam("q") final String query,
+                                 @Param("user") final String user) {
+
+        statsLogger.logStat("games/search - " + query, userAgent);
+        return gamesRepository.findByNameContainingIgnoreCase(query);
     }
 }

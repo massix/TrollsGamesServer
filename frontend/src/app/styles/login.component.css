@@ -77,3 +77,11 @@ form[role=login] {
 	.form-links a {
 		color: #fff;
 	}
+
+footer {
+	background-color: white;
+}
+
+blockquote {
+	font-size: 0.9em;
+}
