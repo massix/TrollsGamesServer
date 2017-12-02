@@ -17,15 +17,16 @@ export class AuthGuard implements CanActivate {
                     ko => {
                         console.log('Auth guard resolving to KO');
                         localStorage.removeItem('token');
-                        this.router.navigate(['/login']);
                         this.alertService.error('You are not logged in!', true);
                         resolve(false);
-                });
+                        this.router.navigate(['/login']);
+                    }
+                );
             } else {
                 console.log('User not logged in');
                 this.router.navigate(['/login']);
-                this.alertService.error('You are not logged in!', true);
                 resolve(false);
+                this.alertService.error('You are not logged in!', true);
             }
         });
     }
