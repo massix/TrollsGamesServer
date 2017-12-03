@@ -148,8 +148,6 @@ public class UsersController {
                 "Veuillez confirmer votre nouveau compte en cliquant sur le lien suivant!\nhttps://" +
                 host + "/v1/users/confirm?email=" + user.getEmail() + "&token=" + token +
                 (redirect != null ? "&redirect=" + redirect : ""));
-        mailMessage.setText(mailMessage.getText() + "\n" +
-                "Si vous vous êtes enregistrés grâce à l'appli Android, merci d'ignorer ce mail !");
         mailSender.send(mailMessage);
 
         return user;
