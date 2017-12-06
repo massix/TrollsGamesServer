@@ -70,6 +70,19 @@ public class UsersController {
         return user;
     }
 
+    @CrossOrigin(allowedHeaders = {"Authorization"})
+    @GetMapping("/get/{nick}/information")
+    public TrollsJwt.UserInformation getUserInformation(@RequestHeader("Authorization") String authorization,
+                                                        @PathVariable("nick") String user) {
+        TrollsJwt.UserInformation userInformation = trollsJwt.getUserInformationFromToken(authorization);
+
+        if (!userInformation.getUser().equals(user) && userInformation.getRole() != Role.ADMIN) {
+            throw new AuthorizationException("User not authorized.");
+        }
+
+        return userInformation;
+    }
+
     @CrossOrigin
     @GetMapping("/get")
     public List<User> getAllUsers() {
