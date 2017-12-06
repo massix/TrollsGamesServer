@@ -190,6 +190,10 @@ public class UsersControllerTest {
         ResponseEntity<TrollsJwt.UserInformation> responseEntity = unauthorizedRestTemplate.getForEntity("/v1/users/get/unauthorized_user/information", TrollsJwt.UserInformation.class);
         assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
         assertEquals(responseEntity.getBody().getUser(), "unauthorized_user");
+        assertEquals(responseEntity.getBody().getEmail(), "email@massi.rocks");
+        assertEquals(responseEntity.getBody().getRole(), Role.USER);
+        assertEquals(responseEntity.getBody().getAuthenticationType(), AuthenticationType.JWT);
+
         usersRepository.deleteByBggNick("unauthorized_user");
     }
 
