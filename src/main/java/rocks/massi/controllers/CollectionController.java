@@ -37,12 +37,6 @@ public class CollectionController {
     private OwnershipsRepository ownershipsRepository;
 
     @Autowired
-    private GameHonorsRepository gameHonorsRepository;
-
-    @Autowired
-    private HonorsRepository honorsRepository;
-
-    @Autowired
     private StatsLogger statsLogger;
 
     @Autowired
@@ -151,5 +145,13 @@ public class CollectionController {
         }
 
         ownershipsRepository.delete(ownership);
+    }
+
+    @CrossOrigin(allowedHeaders = {"Authorization"})
+    @GetMapping("/regenerate_collections")
+    public void regenerateCollections(@RequestHeader("Authorization") String authorization) {
+        if (trollsJwt.getUserInformationFromToken(authorization).getRole() != Role.ADMIN) {
+            throw new AuthorizationException("User not authorized.");
+        }
     }
 }
