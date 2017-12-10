@@ -12,7 +12,8 @@ function deploy_backoffice() {
     scp dist.tar.gz prod:trolls-admin-${DEPLOY_ENV}/archive/dist-${now}.tar.gz
     ssh prod -- rm -fr trolls-admin-${DEPLOY_ENV}/dist/*
     scp dist/* prod:trolls-admin-${DEPLOY_ENV}/dist/
-    ssh prod -- docker-compose -f trolls-admin-${DEPLOY_ENV}/docker-compose.yml restart
+    ssh prod -- docker-compose -f trolls-admin-${DEPLOY_ENV}/docker-compose.yml down
+    ssh prod -- docker-compose -f trolls-admin-${DEPLOY_ENV}/docker-compose.yml up -d
 }
 
 function deploy_files() {
@@ -31,6 +32,9 @@ function restart_docker() {
 
 echo "Deploying for ${DEPLOY_ENV}"
 
-[[ ${DEPLOY_TARGET} == "backend" ]] && deploy_files
-[[ ${DEPLOY_TARGET} == "backend" ]] && restart_docker
-[[ ${DEPLOY_TARGET} == "frontend" ]] && deploy_backoffice
+if [[ ${DEPLOY_TARGET} == "backend" ]]; then
+    deploy_files
+    restart_docker
+elif [[ ${DEPLOY_TARGET} == "frontend" ]]; then
+    deploy_backoffice
+fi
