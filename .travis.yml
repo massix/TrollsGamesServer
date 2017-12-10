@@ -1,10 +1,17 @@
 matrix:
   include:
     - language: java
+      jdk: openjdk8
       script: mvn clean package
+      env:
+        - DEPLOY_TARGET=backend
 
-    - language: node
+    - language: node_js
+      node_js:
+        - "node"
       script: ./configuration/frontend.sh ${TRAVIS_BRANCH}
+      env:
+        - DEPLOY_TARGET=frontend
 
 before_deploy:
 - mkdir -p $HOME/.ssh
@@ -19,24 +26,24 @@ before_install:
 deploy:
 - provider: script
   skip_cleanup: true
-  script: ./configuration/deploy.sh preprod
+  script: ./configuration/deploy.sh preprod ${DEPLOY_TARGET}
   on:
     branch: develop
 - provider: script
   skip_cleanup: true
-  script: ./configuration/deploy.sh prod
+  script: ./configuration/deploy.sh prod ${DEPLOY_TARGET}
   on:
     branch: master
     tags: true
 - provider: script
   skip_cleanup: true
-  script: ./configuration/deploy.sh dev
+  script: ./configuration/deploy.sh dev ${DEPLOY_TARGET}
   on:
     all_branches: true
     condition: "$TRAVIS_BRANCH =~ ^feature/.*$"
 - provider: script
   skip_cleanup: true
-  script: ./configuration/deploy.sh dev
+  script: ./configuration/deploy.sh dev ${DEPLOY_TARGET}
   on:
     all_branches: true
     condition: "$TRAVIS_BRANCH =~ ^hotfix/.*$"

@@ -1,6 +1,7 @@
 #!/bin/bash
 
 DEPLOY_ENV="$1"
+DEPLOY_TARGET="$2"
 
 function deploy_backoffice() {
     local now=$(date '+%Y-%m-%d.%H.%M')
@@ -30,6 +31,6 @@ function restart_docker() {
 
 echo "Deploying for ${DEPLOY_ENV}"
 
-deploy_files
-deploy_backoffice
-restart_docker
+[[ ${DEPLOY_TARGET} == "backend" ]] && deploy_files
+[[ ${DEPLOY_TARGET} == "backend" ]] && restart_docker
+[[ ${DEPLOY_TARGET} == "frontend" ]] && deploy_backoffice
