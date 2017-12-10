@@ -3,7 +3,7 @@ matrix:
     - language: java
       script: mvn clean package
 
-    - language: node_js
+    - language: node
       script: ./configuration/frontend.sh ${TRAVIS_BRANCH}
 
 before_deploy:
