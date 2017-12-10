@@ -1,25 +1,20 @@
 package rocks.massi.data;
 
-import org.springframework.data.repository.Repository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 import javax.transaction.Transactional;
-import java.util.List;
 
 @org.springframework.stereotype.Repository
-public interface UsersRepository extends Repository<User, String> {
-    User save(final User user);
+public interface UsersRepository extends JpaRepository<User, String> {
     User findByBggNick(final String bggNick);
     User findByForumNick(final String forumNick);
 
     User findByEmail(final String email);
-    List<User> findAll();
 
-    @Transactional
-    User delete(final User user);
+    Page<Game> findCollectionByBggNick(String bggNick, Pageable pageable);
 
     @Transactional
     void deleteByBggNick(final String bggNick);
-
-    @Transactional
-    void deleteAll();
 }
