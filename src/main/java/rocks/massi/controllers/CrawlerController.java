@@ -11,7 +11,6 @@ import rocks.massi.data.Game;
 import rocks.massi.data.User;
 import rocks.massi.data.UsersRepository;
 import rocks.massi.exceptions.AuthorizationException;
-import rocks.massi.exceptions.UserNotCrawlableException;
 import rocks.massi.exceptions.UserNotFoundException;
 import rocks.massi.utils.DBUtils;
 
@@ -50,11 +49,9 @@ public class CrawlerController {
 
         User user = DBUtils.getUser(usersRepository, nick);
 
-        if (user != null && user.isBggHandled()) {
+        if (user != null) {
             response.setStatus(HttpServletResponse.SC_ACCEPTED);
             collectionCrawler.addUserToCrawl(user);
-        } else if (user != null && !user.isBggHandled()) {
-            throw new UserNotCrawlableException("User is not handled via BGG");
         } else {
             throw new UserNotFoundException("User does not exist in database");
         }

@@ -175,43 +175,54 @@ public class CollectionCrawler implements Runnable {
                 if (!usersToCrawl.isEmpty()) {
                     User toCrawl = usersToCrawl.pop();
                     log.info("Crawling collection for user {}", toCrawl.getBggNick());
-                    Response response = boardGameGeek.getCollectionForUser(toCrawl.getBggNick());
-                    didCrawlUser = true;
-                    if (response.status() != 200) {
-                        log.info("Could not crawl user {}, status {}", toCrawl.getBggNick(), response.status());
-                        usersToCrawl.push(toCrawl);
+
+                    // If the user is handled via bgg we have to fetch his/her collection first.
+                    if (toCrawl.isBggHandled()) {
+                        log.info("{} is handled via bgg", toCrawl.getBggNick());
+                        Response response = boardGameGeek.getCollectionForUser(toCrawl.getBggNick());
+                        didCrawlUser = true;
+                        if (response.status() != 200) {
+                            log.info("Could not crawl user {}, status {}", toCrawl.getBggNick(), response.status());
+                            usersToCrawl.push(toCrawl);
+                        } else {
+                            Collection collection = (Collection) new JAXBDecoder(contextFactory).decode(response, Collection.class);
+
+                            // Get all the existing ownerships
+                            List<Ownership> ownershipsInBase = ownershipsRepository.findByUser(toCrawl.getBggNick());
+
+                            // Push all the games in the crawling list and in the ownerships structure
+                            collection.getItemList().forEach(item -> {
+                                Ownership potentialOwnership = new Ownership(toCrawl.getBggNick(), item.getId());
+
+                                // Owned games should be pushed in the base and a new ownership created (after the game has been crawled).
+                                if (item.getStatus().isOwn()) {
+                                    ownerships.add(potentialOwnership);
+                                }
+
+                                // We will crawl all the games, just for fun.
+                                addGameToCrawl(item.getId());
+                            });
+
+                            // Update the ownerships repository to reflect the new collection
+                            ownershipsInBase.forEach(ownership -> {
+                                if (!ownerships.contains(ownership)) {
+                                    ownershipsRepository.deleteByUserAndGame(ownership.getUser(), ownership.getGame());
+                                }
+                            });
+
+                            // Remove from the new ownerships all the remaining ones in the db
+                            ownershipsInBase = ownershipsRepository.findByUser(toCrawl.getBggNick());
+                            ownershipsInBase.forEach(ownership -> {
+                                if (ownerships.contains(ownership)) {
+                                    ownerships.remove(ownership);
+                                }
+                            });
+                        }
+                        // Else, we don't need to fetch the collection first, we will just recrawl all his/her games.
                     } else {
-                        Collection collection = (Collection) new JAXBDecoder(contextFactory).decode(response, Collection.class);
-
-                        // Get all the existing ownerships
-                        List<Ownership> ownershipsInBase = ownershipsRepository.findByUser(toCrawl.getBggNick());
-
-                        // Push all the games in the crawling list and in the ownerships structure
-                        collection.getItemList().forEach(item -> {
-                            Ownership potentialOwnership = new Ownership(toCrawl.getBggNick(), item.getId());
-
-                            // Owned games should be pushed in the base and a new ownership created (after the game has been crawled).
-                            if (item.getStatus().isOwn()) {
-                                ownerships.add(potentialOwnership);
-                            }
-
-                            // We will crawl all the games, just for fun.
-                            addGameToCrawl(item.getId());
-                        });
-
-                        // Update the ownerships repository to reflect the new collection
-                        ownershipsInBase.forEach(ownership -> {
-                            if (!ownerships.contains(ownership)) {
-                                ownershipsRepository.deleteByUserAndGame(ownership.getUser(), ownership.getGame());
-                            }
-                        });
-
-                        // Remove from the new ownerships all the remaining ones in the db
-                        ownershipsInBase = ownershipsRepository.findByUser(toCrawl.getBggNick());
-                        ownershipsInBase.forEach(ownership -> {
-                            if (ownerships.contains(ownership)) {
-                                ownerships.remove(ownership);
-                            }
+                        log.info("{} is handled manually, not crawling his/her collection, only crawling games", toCrawl.getBggNick());
+                        ownershipsRepository.findByUser(toCrawl.getBggNick()).forEach(ownership -> {
+                            addGameToCrawl(ownership.getGame());
                         });
                     }
                 }
