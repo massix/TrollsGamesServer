@@ -1,5 +1,10 @@
-language: java
-script: mvn clean package
+matrix:
+  include:
+    - language: java
+      script: mvn clean package
+
+    - language: nodejs
+      script: ./configuration/frontend.sh
 
 before_deploy:
 - mkdir -p $HOME/.ssh

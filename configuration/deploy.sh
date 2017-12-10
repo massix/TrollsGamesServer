@@ -2,12 +2,10 @@
 
 DEPLOY_ENV="$1"
 
-function build_and_deploy_backoffice() {
+function deploy_backoffice() {
     local now=$(date '+%Y-%m-%d.%H.%M')
     echo "Building and deploying backoffice for environment ${DEPLOY_ENV} at ${now}"
     cd frontend
-    npm install
-    node_modules/@angular/cli/bin/ng build --prod -e ${DEPLOY_ENV}
     tar czf dist.tar.gz dist/
 
     scp dist.tar.gz prod:trolls-admin-${DEPLOY_ENV}/archive/dist-${now}.tar.gz
@@ -33,5 +31,5 @@ function restart_docker() {
 echo "Deploying for ${DEPLOY_ENV}"
 
 deploy_files
-build_and_deploy_backoffice
+deploy_backoffice
 restart_docker
