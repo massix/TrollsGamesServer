@@ -6,6 +6,7 @@ DEPLOY_TARGET="$2"
 function deploy_frontend() {
     local now=$(date '+%Y-%m-%d.%H.%M')
     echo "Building and deploying backoffice for environment ${DEPLOY_ENV} at ${now}"
+    npm install -g @angular/cli
     cd frontend
     tar czf dist.tar.gz dist/
 
