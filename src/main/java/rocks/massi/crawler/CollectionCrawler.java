@@ -162,6 +162,9 @@ public class CollectionCrawler implements Runnable {
                         cacheMiss++;
                     }
 
+                    // Update game name
+                    toCrawl.setGameName(gamesRepository.findById(toCrawl.getGame()).getName());
+
                     ownershipsRepository.save(toCrawl);
                 }
 
@@ -181,7 +184,7 @@ public class CollectionCrawler implements Runnable {
                         Collection collection = (Collection) new JAXBDecoder(contextFactory).decode(response, Collection.class);
 
                         // Get all the existing ownerships
-                        List<Ownership> ownershipList = ownershipsRepository.findByUser(toCrawl.getBggNick());
+                        List<Ownership> ownershipsInBase = ownershipsRepository.findByUser(toCrawl.getBggNick());
 
                         // Push all the games in the crawling list and in the ownerships structure
                         collection.getItemList().forEach(item -> {
@@ -197,15 +200,15 @@ public class CollectionCrawler implements Runnable {
                         });
 
                         // Update the ownerships repository to reflect the new collection
-                        ownershipList.forEach(ownership -> {
+                        ownershipsInBase.forEach(ownership -> {
                             if (!ownerships.contains(ownership)) {
-                                ownershipsRepository.delete(ownership);
+                                ownershipsRepository.deleteByUserAndGame(ownership.getUser(), ownership.getGame());
                             }
                         });
 
                         // Remove from the new ownerships all the remaining ones in the db
-                        ownershipList = ownershipsRepository.findByUser(toCrawl.getBggNick());
-                        ownershipList.forEach(ownership -> {
+                        ownershipsInBase = ownershipsRepository.findByUser(toCrawl.getBggNick());
+                        ownershipsInBase.forEach(ownership -> {
                             if (ownerships.contains(ownership)) {
                                 ownerships.remove(ownership);
                             }
@@ -231,6 +234,7 @@ public class CollectionCrawler implements Runnable {
                     for (Iterator<Ownership> it = ownerships.iterator(); it.hasNext(); ) {
                         Ownership ownership = it.next();
                         if (ownership.getGame() == gameId) {
+                            ownership.setGameName(gamesRepository.findById(gameId).getName());
                             ownershipsRepository.save(ownership);
                             it.remove();
                         }
