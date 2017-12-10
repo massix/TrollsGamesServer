@@ -9,7 +9,6 @@ import rocks.massi.authentication.Role;
 import rocks.massi.authentication.TrollsJwt;
 import rocks.massi.crawler.CollectionCrawler;
 import rocks.massi.data.*;
-import rocks.massi.data.joins.GameHonorsRepository;
 import rocks.massi.data.joins.Ownership;
 import rocks.massi.data.joins.OwnershipsRepository;
 import rocks.massi.exceptions.AuthorizationException;
@@ -145,13 +144,5 @@ public class CollectionController {
         }
 
         ownershipsRepository.delete(ownership);
-    }
-
-    @CrossOrigin(allowedHeaders = {"Authorization"})
-    @GetMapping("/regenerate_collections")
-    public void regenerateCollections(@RequestHeader("Authorization") String authorization) {
-        if (trollsJwt.getUserInformationFromToken(authorization).getRole() != Role.ADMIN) {
-            throw new AuthorizationException("User not authorized.");
-        }
     }
 }
