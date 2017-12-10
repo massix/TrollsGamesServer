@@ -49,8 +49,13 @@ public class GamesControllerTest {
         usersRepository.save(new User("user_1", "", ""));
         usersRepository.save(new User("user_2", "", ""));
 
-        ownershipsRepository.save(new Ownership("user_1", 1));
-        ownershipsRepository.save(new Ownership("user_2", 1));
+        Ownership o1 = new Ownership("user_1", 1);
+        o1.setGameName("Cyclades");
+        ownershipsRepository.save(o1);
+
+        Ownership o2 = new Ownership("user_2", 1);
+        o2.setGameName("Cyclades");
+        ownershipsRepository.save(o2);
 
         AuthorizationHandler.setUp(restTemplate);
     }
