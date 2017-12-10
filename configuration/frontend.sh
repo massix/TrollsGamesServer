@@ -9,7 +9,7 @@ function build_backoffice() {
 
     case ${DEPLOY_ENV} in
         develop)
-            BUILD_ENV="staging"
+            BUILD_ENV="preprod"
             ;;
         *)
             BUILD_ENV="dev"
