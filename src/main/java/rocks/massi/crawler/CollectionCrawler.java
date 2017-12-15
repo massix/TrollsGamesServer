@@ -89,7 +89,7 @@ public class CollectionCrawler implements Runnable {
         }
     }
 
-    public void wakeUp() {
+    synchronized public void wakeUp() {
         if (!runningThread.isAlive()) {
             runningThread = new Thread(this);
             runningThread.start();
@@ -102,21 +102,21 @@ public class CollectionCrawler implements Runnable {
         runningThread = new Thread(this);
     }
 
-    public void addUserToCrawl(final User user) {
+    synchronized public void addUserToCrawl(final User user) {
         if (!usersToCrawl.contains(user)) {
             usersToCrawl.push(user);
             wakeUp();
         }
     }
 
-    private void addGameToCrawl(final int gameId) {
+    synchronized private void addGameToCrawl(final int gameId) {
         if (!gamesToCrawl.contains(gameId)) {
             gamesToCrawl.push(gameId);
             wakeUp();
         }
     }
 
-    public void addOwnershipToCrawl(final Ownership ownership) {
+    synchronized public void addOwnershipToCrawl(final Ownership ownership) {
         if (!ownershipsToCrawl.contains(ownership)) {
             ownershipsToCrawl.push(ownership);
             wakeUp();
