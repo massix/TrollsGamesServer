@@ -50,6 +50,9 @@ public class CollectionCrawler implements Runnable {
     @Value("${crawl.timeout}")
     private int crawlTimeout;
 
+    @Value("${crawl.batch.sleep}")
+    private int batchSleep;
+
     private boolean running = true;
     private Thread runningThread;
 
@@ -144,6 +147,13 @@ public class CollectionCrawler implements Runnable {
         running = true;
         log.info("Targetting {} with a timeout of {}ms", bggUrl, crawlTimeout);
         started = new Date().toString();
+        log.info("Sleeping for {}ms before starting the crawl", batchSleep);
+
+        try {
+            Thread.sleep(batchSleep);
+        } catch (InterruptedException exception) {
+            log.error("Couldn't sleep");
+        }
 
         while (running && (!usersToCrawl.isEmpty() || !gamesToCrawl.isEmpty() || !ownershipsToCrawl.isEmpty())) {
             try {
