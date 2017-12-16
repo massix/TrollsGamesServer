@@ -9,10 +9,13 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
+import rocks.massi.data.Token;
+import rocks.massi.data.TokensRepository;
 import rocks.massi.data.User;
 
 import java.util.*;
@@ -22,27 +25,8 @@ import java.util.*;
 @Component
 public class TrollsJwt {
 
-    @Getter
-    @RequiredArgsConstructor
-    private class KeyTokenPair {
-        private final String key;
-        private final String token;
-    }
-
-    @Getter
-    @RequiredArgsConstructor
-    private class KeyUsernamePair {
-        private final String key;
-        private final String username;
-    }
-
-    @Getter
-    @RequiredArgsConstructor
-    private class KeyUserTokenTriple {
-        private final String key;
-        private final User user;
-        private final String token;
-    }
+    @Autowired
+    TokensRepository tokensRepository;
 
     @Getter
     @ToString
@@ -67,24 +51,12 @@ public class TrollsJwt {
 
     private List<String> keys;
 
-    // username -> (key token)
-    private Map<String, KeyTokenPair> usernameToKeyTokenMap;
-
-    // token -> (key username)
-    private Map<String, KeyUsernamePair> tokenToKeyUsernameMap;
-
-    // email -> (key user token)
-    private Map<String, KeyUserTokenTriple> oneUseRegistrationTokensMap;
-
     @Bean
     @Primary
     public static TrollsJwt makeTokenCreator(@Value("${token.key.retrieval}") final String retrieval,
                                              @Value("${token.key.iterations}") final Integer iterations) throws Exception {
         TrollsJwt token = new TrollsJwt();
         token.keys = new LinkedList<>();
-        token.usernameToKeyTokenMap = new HashMap<>();
-        token.tokenToKeyUsernameMap = new HashMap<>();
-        token.oneUseRegistrationTokensMap = new HashMap<>();
         log.info("Create new TrollsJwt using method {} with {} iterations", retrieval, iterations);
 
         for (int i = 0; i < iterations; i++) {
@@ -105,19 +77,18 @@ public class TrollsJwt {
         return token;
     }
 
-    public boolean checkTokenForUser(final String user) {
-        if (!usernameToKeyTokenMap.containsKey(user)) {
-            log.error("I have no token in here for user {}", user);
+    public boolean checkTokenForUser(final String userEmail) {
+        Token token = tokensRepository.findByUserEmail(userEmail);
+        if (token == null) {
+            log.error("I have no token in here for user {}", userEmail);
             return false;
         }
 
-        KeyTokenPair keyTokenPair = usernameToKeyTokenMap.get(user);
-
         try {
-            Claims parsedToken = Jwts.parser().setSigningKey(keyTokenPair.getKey()).parseClaimsJws(keyTokenPair.getToken()).getBody();
+            Claims parsedToken = Jwts.parser().setSigningKey(token.getTokenKey()).parseClaimsJws(token.getTokenValue()).getBody();
 
-            if (!parsedToken.get(USER_KEY).equals(user)) {
-                log.error("User mismatch while verifying token for user {}", user);
+            if (!parsedToken.get(EMAIL_KEY).equals(userEmail)) {
+                log.error("User mismatch while verifying token for user {}", userEmail);
                 return false;
             }
         } catch (SignatureException exception) {
@@ -129,14 +100,13 @@ public class TrollsJwt {
     }
 
     public UserInformation getUserInformationFromToken(final String header) {
-        String token = header.replace("Bearer ", "");
-        if (!tokenToKeyUsernameMap.containsKey(token)) {
+        String tokenHeader = header.replace("Bearer ", "");
+        Token token = tokensRepository.findByTokenValue(tokenHeader);
+        if (token == null) {
             throw new TokenNotFoundException();
         }
 
-        KeyUsernamePair keyUsernamePair = tokenToKeyUsernameMap.get(token);
-        KeyTokenPair keyTokenPair = usernameToKeyTokenMap.get(keyUsernamePair.getUsername());
-        Claims parsedToken = Jwts.parser().setSigningKey(keyTokenPair.getKey()).parseClaimsJws(token).getBody();
+        Claims parsedToken = Jwts.parser().setSigningKey(token.getTokenKey()).parseClaimsJws(token.getTokenValue()).getBody();
 
         return new UserInformation(parsedToken.get(USER_KEY, String.class),
                 Role.valueOf(parsedToken.get(ROLE_KEY, String.class)),
@@ -144,7 +114,13 @@ public class TrollsJwt {
                 parsedToken.get(EMAIL_KEY, String.class));
     }
 
-    public String generateNewTokenForUser(final User user) {
+    public String generateOrRetrieveTokenForUser(final User user) {
+
+        Token existingToken = tokensRepository.findByUserEmail(user.getEmail());
+        if (existingToken != null) {
+            return existingToken.getTokenValue();
+        }
+
         // Get a random key to sign our token
         String key = keys.get(new Random().nextInt(keys.size()));
 
@@ -158,24 +134,16 @@ public class TrollsJwt {
                 .signWith(SignatureAlgorithm.HS512, key)
                 .compact();
 
-        // Remove the token from the old maps
-        if (usernameToKeyTokenMap.containsKey(user.getBggNick())) {
-            KeyTokenPair keyTokenPair = usernameToKeyTokenMap.get(user.getBggNick());
-            tokenToKeyUsernameMap.remove(keyTokenPair.getToken());
-            usernameToKeyTokenMap.remove(user.getBggNick());
-        }
+        // Create new token
+        Token token = new Token();
+        token.setTokenKey(key);
+        token.setTokenValue(generatedToken);
+        token.setUserEmail(user.getEmail());
+        token.setTokenType(TokenType.ACCESS);
 
-        // Add the token to the maps
-        usernameToKeyTokenMap.put(user.getBggNick(), new KeyTokenPair(key, generatedToken));
-        tokenToKeyUsernameMap.put(generatedToken, new KeyUsernamePair(key, user.getBggNick()));
+        tokensRepository.save(token);
+
         return generatedToken;
-    }
-
-    public String getTokenForUser(final User user) {
-        if (usernameToKeyTokenMap.containsKey(user.getBggNick()))
-            return usernameToKeyTokenMap.get(user.getBggNick()).getToken();
-        else
-            return "";
     }
 
     public String generateRegistrationTokenForUser(final User user) {
@@ -187,21 +155,28 @@ public class TrollsJwt {
                 .signWith(SignatureAlgorithm.HS512, key)
                 .compact();
 
-        oneUseRegistrationTokensMap.put(user.getEmail(), new KeyUserTokenTriple(key, user, generatedToken));
+        Token token = new Token();
+        token.setTokenType(TokenType.REGISTRATION);
+        token.setUserEmail(user.getEmail());
+        token.setTokenValue(generatedToken);
+        token.setTokenKey(key);
+
+        tokensRepository.save(token);
+
         return generatedToken;
     }
 
-    public User confirmRegistrationTokenForEmail(final String email, final String token) {
-        if (oneUseRegistrationTokensMap.containsKey(email)) {
-            KeyUserTokenTriple userTokenTriple = oneUseRegistrationTokensMap.get(email);
-            String decodedEmail = (String) Jwts.parser().setSigningKey(userTokenTriple.getKey()).parseClaimsJws(token).getBody().get("EMAIL");
-            if (decodedEmail.equalsIgnoreCase(userTokenTriple.getUser().getEmail())) {
-                oneUseRegistrationTokensMap.remove(email);
-                return userTokenTriple.getUser();
+    public boolean confirmRegistrationTokenForEmail(final String email, final String token) {
+        Token tokenDb = tokensRepository.findByUserEmail(email);
+        if (tokenDb != null && tokenDb.getTokenType() == TokenType.REGISTRATION) {
+            String decodedEmail = (String) Jwts.parser().setSigningKey(tokenDb.getTokenKey()).parseClaimsJws(token).getBody().get("EMAIL");
+            if (decodedEmail.equalsIgnoreCase(tokenDb.getUserEmail())) {
+                tokensRepository.delete(tokenDb);
+                return true;
             }
         }
 
-        return null;
+        return false;
     }
 
 }
