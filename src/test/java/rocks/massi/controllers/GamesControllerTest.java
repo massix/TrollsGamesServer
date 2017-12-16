@@ -40,7 +40,7 @@ public class GamesControllerTest {
     private TestRestTemplate restTemplate;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         gamesRepository.save(
                 new Game(1, "Cyclades", "Game of Cyclades", 2, 18, 250,
                         2012, 1, false, "here", "Bruno Cathala", "")
@@ -49,14 +49,19 @@ public class GamesControllerTest {
         usersRepository.save(new User("user_1", "", ""));
         usersRepository.save(new User("user_2", "", ""));
 
-        ownershipsRepository.save(new Ownership("user_1", 1));
-        ownershipsRepository.save(new Ownership("user_2", 1));
+        Ownership o1 = new Ownership("user_1", 1);
+        o1.setGameName("Cyclades");
+        ownershipsRepository.save(o1);
+
+        Ownership o2 = new Ownership("user_2", 1);
+        o2.setGameName("Cyclades");
+        ownershipsRepository.save(o2);
 
         AuthorizationHandler.setUp(restTemplate);
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         ownershipsRepository.deleteAll();
         gamesRepository.deleteAll();
         usersRepository.deleteByBggNick("user_1");
@@ -64,7 +69,7 @@ public class GamesControllerTest {
     }
 
     @Test
-    public void getGames() throws Exception {
+    public void getGames() {
         ResponseEntity<Game[]> responseEntity = restTemplate.getForEntity("/v1/games/get", Game[].class);
         assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
         assertEquals(responseEntity.getBody().length, 1);
@@ -72,21 +77,21 @@ public class GamesControllerTest {
     }
 
     @Test
-    public void getGame() throws Exception {
+    public void getGame() {
         ResponseEntity<Game> responseEntity = restTemplate.getForEntity("/v1/games/get/1", Game.class);
         assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
         assertEquals(responseEntity.getBody().getName(), "Cyclades");
     }
 
     @Test
-    public void getNonExistingGame() throws Exception {
+    public void getNonExistingGame() {
         ResponseEntity<Game> responseEntity = restTemplate.getForEntity("/v1/games/get/666", Game.class);
         assertTrue(responseEntity.getStatusCode().is4xxClientError());
         assertNull(responseEntity.getBody());
     }
 
     @Test
-    public void insertGame() throws Exception {
+    public void insertGame() {
         Game newGame = new Game(2, "Cyclades II", "New game of Cyclades",
                 2, 24, 350, 2012, 2, false, "",
                 "Bruno Cathala", "");
@@ -96,7 +101,7 @@ public class GamesControllerTest {
     }
 
     @Test
-    public void insertMalformattedGame() throws Exception {
+    public void insertMalformedGame() {
         Game newGame = new Game(0, "Cyclades II", "New game of Cyclades",
                 2, 24, 350, 2012, 2, false, "",
                 "Bruno Cathala", "");
@@ -113,12 +118,12 @@ public class GamesControllerTest {
     }
 
     @Test
-    public void removeGame() throws Exception {
+    public void removeGame() {
         restTemplate.delete("/v1/games/remove/2");
     }
 
     @Test
-    public void getOwnersForGame() throws Exception {
+    public void getOwnersForGame() {
         // Existing game, 2 users own it
         ResponseEntity<String[]> responseEntity = restTemplate.getForEntity("/v1/games/owners/1", String[].class);
         assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
@@ -126,7 +131,7 @@ public class GamesControllerTest {
     }
 
     @Test
-    public void getFuzzySearch() throws Exception {
+    public void getFuzzySearch() {
         ResponseEntity<Game[]> responseEntity = restTemplate.getForEntity("/v1/games/search?q=cycl", Game[].class);
         assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
         assertEquals(1, responseEntity.getBody().length);

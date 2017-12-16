@@ -70,6 +70,19 @@ public class UsersController {
         return user;
     }
 
+    @CrossOrigin(allowedHeaders = {"Authorization"})
+    @GetMapping("/get/{nick}/information")
+    public TrollsJwt.UserInformation getUserInformation(@RequestHeader("Authorization") String authorization,
+                                                        @PathVariable("nick") String user) {
+        TrollsJwt.UserInformation userInformation = trollsJwt.getUserInformationFromToken(authorization);
+
+        if (!userInformation.getUser().equals(user) && userInformation.getRole() != Role.ADMIN) {
+            throw new AuthorizationException("User not authorized.");
+        }
+
+        return userInformation;
+    }
+
     @CrossOrigin
     @GetMapping("/get")
     public List<User> getAllUsers() {
@@ -112,7 +125,8 @@ public class UsersController {
     @CrossOrigin(allowedHeaders = {"Content-Type"})
     @PostMapping(value = "/register")
     public User registerNewUser(@RequestBody User user,
-                                @Param("redirect") String redirect) {
+                                @Param("redirect") String redirect,
+                                HttpServletResponse servletResponse) {
 
         // Check that the user exists on bgg, if it exists, start crawling it right now
         if (user.isBggHandled() && !collectionCrawler.checkUserExists(user)) {
@@ -135,13 +149,16 @@ public class UsersController {
         String host = System.getenv("VIRTUAL_HOST");
         String token = trollsJwt.generateRegistrationTokenForUser(user);
 
+        servletResponse.addHeader("X-Token-Validation", token);
+
         // Send email asking user to verify their email address
         SimpleMailMessage mailMessage = new SimpleMailMessage();
         mailMessage.setFrom("Trolls De Jeux <noreply@massi.rocks>");
         mailMessage.setReplyTo("massi@massi.rocks");
         mailMessage.setTo(user.getEmail());
         mailMessage.setSubject("Verify your subscription to the service!");
-        mailMessage.setText("Confirmez votre account en cliquant sur le lien suivant!\nhttps://" +
+        mailMessage.setText("Bienvenue à bord, " + user.getForumNick() + "!\n" +
+                "Veuillez confirmer votre nouveau compte en cliquant sur le lien suivant!\nhttps://" +
                 host + "/v1/users/confirm?email=" + user.getEmail() + "&token=" + token +
                 (redirect != null ? "&redirect=" + redirect : ""));
         mailSender.send(mailMessage);

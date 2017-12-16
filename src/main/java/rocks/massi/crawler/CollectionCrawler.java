@@ -50,6 +50,9 @@ public class CollectionCrawler implements Runnable {
     @Value("${crawl.timeout}")
     private int crawlTimeout;
 
+    @Value("${crawl.batch.sleep}")
+    private int batchSleep;
+
     private boolean running = true;
     private Thread runningThread;
 
@@ -75,19 +78,18 @@ public class CollectionCrawler implements Runnable {
     public boolean checkUserExists(User user) {
         try {
             Response r = boardGameGeek.getCollectionForUser(user.getBggNick());
-            if (r.status() == 201 || r.status() == 202) {
-                return true;
-            } else {
-                Collection collection = (Collection) new JAXBDecoder(contextFactory).decode(r, Collection.class);
+            if (r.status() == 201 || r.status() == 202 || r.status() == 200) {
                 addUserToCrawl(user);
                 return true;
+            } else {
+                return false;
             }
         } catch (Exception e) {
             return false;
         }
     }
 
-    public void wakeUp() {
+    synchronized public void wakeUp() {
         if (!runningThread.isAlive()) {
             runningThread = new Thread(this);
             runningThread.start();
@@ -100,21 +102,21 @@ public class CollectionCrawler implements Runnable {
         runningThread = new Thread(this);
     }
 
-    public void addUserToCrawl(final User user) {
+    synchronized public void addUserToCrawl(final User user) {
         if (!usersToCrawl.contains(user)) {
             usersToCrawl.push(user);
             wakeUp();
         }
     }
 
-    public void addGameToCrawl(final int gameId) {
+    synchronized private void addGameToCrawl(final int gameId) {
         if (!gamesToCrawl.contains(gameId)) {
             gamesToCrawl.push(gameId);
             wakeUp();
         }
     }
 
-    public void addOwnershipToCrawl(final Ownership ownership) {
+    synchronized public void addOwnershipToCrawl(final Ownership ownership) {
         if (!ownershipsToCrawl.contains(ownership)) {
             ownershipsToCrawl.push(ownership);
             wakeUp();
@@ -145,6 +147,13 @@ public class CollectionCrawler implements Runnable {
         running = true;
         log.info("Targetting {} with a timeout of {}ms", bggUrl, crawlTimeout);
         started = new Date().toString();
+        log.info("Sleeping for {}ms before starting the crawl", batchSleep);
+
+        try {
+            Thread.sleep(batchSleep);
+        } catch (InterruptedException exception) {
+            log.error("Couldn't sleep");
+        }
 
         while (running && (!usersToCrawl.isEmpty() || !gamesToCrawl.isEmpty() || !ownershipsToCrawl.isEmpty())) {
             try {
@@ -163,6 +172,9 @@ public class CollectionCrawler implements Runnable {
                         cacheMiss++;
                     }
 
+                    // Update game name
+                    toCrawl.setGameName(gamesRepository.findById(toCrawl.getGame()).getName());
+
                     ownershipsRepository.save(toCrawl);
                 }
 
@@ -173,43 +185,54 @@ public class CollectionCrawler implements Runnable {
                 if (!usersToCrawl.isEmpty()) {
                     User toCrawl = usersToCrawl.pop();
                     log.info("Crawling collection for user {}", toCrawl.getBggNick());
-                    Response response = boardGameGeek.getCollectionForUser(toCrawl.getBggNick());
-                    didCrawlUser = true;
-                    if (response.status() != 200) {
-                        log.info("Could not crawl user {}, status {}", toCrawl.getBggNick(), response.status());
-                        usersToCrawl.push(toCrawl);
+
+                    // If the user is handled via bgg we have to fetch his/her collection first.
+                    if (toCrawl.isBggHandled()) {
+                        log.info("{} is handled via bgg", toCrawl.getBggNick());
+                        Response response = boardGameGeek.getCollectionForUser(toCrawl.getBggNick());
+                        didCrawlUser = true;
+                        if (response.status() != 200) {
+                            log.info("Could not crawl user {}, status {}", toCrawl.getBggNick(), response.status());
+                            usersToCrawl.push(toCrawl);
+                        } else {
+                            Collection collection = (Collection) new JAXBDecoder(contextFactory).decode(response, Collection.class);
+
+                            // Get all the existing ownerships
+                            List<Ownership> ownershipsInBase = ownershipsRepository.findByUser(toCrawl.getBggNick());
+
+                            // Push all the games in the crawling list and in the ownerships structure
+                            collection.getItemList().forEach(item -> {
+                                Ownership potentialOwnership = new Ownership(toCrawl.getBggNick(), item.getId());
+
+                                // Owned games should be pushed in the base and a new ownership created (after the game has been crawled).
+                                if (item.getStatus().isOwn()) {
+                                    ownerships.add(potentialOwnership);
+                                }
+
+                                // We will crawl all the games, just for fun.
+                                addGameToCrawl(item.getId());
+                            });
+
+                            // Update the ownerships repository to reflect the new collection
+                            ownershipsInBase.forEach(ownership -> {
+                                if (!ownerships.contains(ownership)) {
+                                    ownershipsRepository.deleteByUserAndGame(ownership.getUser(), ownership.getGame());
+                                }
+                            });
+
+                            // Remove from the new ownerships all the remaining ones in the db
+                            ownershipsInBase = ownershipsRepository.findByUser(toCrawl.getBggNick());
+                            ownershipsInBase.forEach(ownership -> {
+                                if (ownerships.contains(ownership)) {
+                                    ownerships.remove(ownership);
+                                }
+                            });
+                        }
+                        // Else, we don't need to fetch the collection first, we will just recrawl all his/her games.
                     } else {
-                        Collection collection = (Collection) new JAXBDecoder(contextFactory).decode(response, Collection.class);
-
-                        // Get all the existing ownerships
-                        List<Ownership> ownershipList = ownershipsRepository.findByUser(toCrawl.getBggNick());
-
-                        // Push all the games in the crawling list and in the ownerships structure
-                        collection.getItemList().forEach(item -> {
-                            Ownership potentialOwnership = new Ownership(toCrawl.getBggNick(), item.getId());
-
-                            // Owned games should be pushed in the base and a new ownership created (after the game has been crawled).
-                            if (item.getStatus().isOwn()) {
-                                ownerships.add(potentialOwnership);
-                            }
-
-                            // We will crawl all the games, just for fun.
-                            addGameToCrawl(item.getId());
-                        });
-
-                        // Update the ownerships repository to reflect the new collection
-                        ownershipList.forEach(ownership -> {
-                            if (!ownerships.contains(ownership)) {
-                                ownershipsRepository.delete(ownership);
-                            }
-                        });
-
-                        // Remove from the new ownerships all the remaining ones in the db
-                        ownershipList = ownershipsRepository.findByUser(toCrawl.getBggNick());
-                        ownershipList.forEach(ownership -> {
-                            if (ownerships.contains(ownership)) {
-                                ownerships.remove(ownership);
-                            }
+                        log.info("{} is handled manually, not crawling his/her collection, only crawling games", toCrawl.getBggNick());
+                        ownershipsRepository.findByUser(toCrawl.getBggNick()).forEach(ownership -> {
+                            addGameToCrawl(ownership.getGame());
                         });
                     }
                 }
@@ -232,6 +255,7 @@ public class CollectionCrawler implements Runnable {
                     for (Iterator<Ownership> it = ownerships.iterator(); it.hasNext(); ) {
                         Ownership ownership = it.next();
                         if (ownership.getGame() == gameId) {
+                            ownership.setGameName(gamesRepository.findById(gameId).getName());
                             ownershipsRepository.save(ownership);
                             it.remove();
                         }

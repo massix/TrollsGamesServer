@@ -1,22 +1,26 @@
 #!/bin/bash
 
 DEPLOY_ENV="$1"
+DEPLOY_TARGET="$2"
 
-function build_and_deploy_backoffice() {
+function deploy_frontend() {
     local now=$(date '+%Y-%m-%d.%H.%M')
     echo "Building and deploying backoffice for environment ${DEPLOY_ENV} at ${now}"
+    npm install -g @angular/cli
     cd frontend
-    npm install
-    node_modules/@angular/cli/bin/ng build --prod -e ${DEPLOY_ENV}
     tar czf dist.tar.gz dist/
 
     scp dist.tar.gz prod:trolls-admin-${DEPLOY_ENV}/archive/dist-${now}.tar.gz
     ssh prod -- rm -fr trolls-admin-${DEPLOY_ENV}/dist/*
     scp dist/* prod:trolls-admin-${DEPLOY_ENV}/dist/
-    ssh prod -- docker-compose -f trolls-admin-${DEPLOY_ENV}/docker-compose.yml restart
 }
 
-function deploy_files() {
+function restart_frontend() {
+    ssh prod -- docker-compose -f trolls-admin-${DEPLOY_ENV}/docker-compose.yml down
+    ssh prod -- docker-compose -f trolls-admin-${DEPLOY_ENV}/docker-compose.yml up -d
+}
+
+function deploy_backend() {
     local now=$(date '+%Y-%m-%d.%H.%M')
     echo "Deploying new Jar with date '${now}'"
     scp ${TRAVIS_BUILD_DIR}/target/TrollsGames*.jar prod:trolls-${DEPLOY_ENV}/archive/TrollsGames-${now}.jar
@@ -24,7 +28,7 @@ function deploy_files() {
     scp ${TRAVIS_BUILD_DIR}/configuration/docker-compose-${DEPLOY_ENV}.yml prod:trolls-${DEPLOY_ENV}/
 }
 
-function restart_docker() {
+function restart_backend() {
     echo "Restarting dockers"
     ssh prod -- docker-compose -f trolls-${DEPLOY_ENV}/docker-compose-${DEPLOY_ENV}.yml down
     ssh prod -- docker-compose -f trolls-${DEPLOY_ENV}/docker-compose-${DEPLOY_ENV}.yml up -d
@@ -32,6 +36,10 @@ function restart_docker() {
 
 echo "Deploying for ${DEPLOY_ENV}"
 
-deploy_files
-build_and_deploy_backoffice
-restart_docker
+if [[ ${DEPLOY_TARGET} == "backend" ]]; then
+    deploy_backend
+    restart_backend
+elif [[ ${DEPLOY_TARGET} == "frontend" ]]; then
+    deploy_frontend
+    restart_frontend
+fi

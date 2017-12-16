@@ -52,10 +52,17 @@ public class CollectionControllerTest {
                         1, false, "", "Bruno Cathala", "")
         );
 
-        ownershipsRepository.save(new Ownership("bgg_nick", 1));
-        ownershipsRepository.save(new Ownership("bgg_nick", 2));
-        ownershipsRepository.save(new Ownership("bgg_nick", 3));
+        Ownership o1 = new Ownership("bgg_nick", 1);
+        o1.setGameName("Cyclades");
+        ownershipsRepository.save(o1);
 
+        Ownership o2 = new Ownership("bgg_nick", 2);
+        o2.setGameName("Cyclades II");
+        ownershipsRepository.save(o2);
+
+        Ownership o3 = new Ownership("bgg_nick", 3);
+        o3.setGameName("Cyclades III");
+        ownershipsRepository.save(o3);
     }
 
     @After

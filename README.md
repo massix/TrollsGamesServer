@@ -1,5 +1,13 @@
 # TrollsGamesServer
+
 This is the server for the TrollsGames project.
+
+## Build status
+
+| branch  | status  |
+| :------ | ------: |
+| develop | [![Build Status](https://travis-ci.org/massix/TrollsGamesServer.svg?branch=develop)](https://travis-ci.org/massix/TrollsGamesServer) |
+| master  | [![Build Status](https://travis-ci.org/massix/TrollsGamesServer.svg?branch=master)](https://travis-ci.org/massix/TrollsGamesServer) |
 
 ## Compile
 1. Compile the whole package using `mvn package`

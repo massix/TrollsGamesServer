@@ -21,10 +21,14 @@ public interface OwnershipsRepository extends Repository<Ownership, Integer> {
     @Transactional
     void deleteByGame(final int game);
 
+    @Transactional
+    void deleteByUserAndGame(String user, int game);
+
     Ownership findByUserAndGame(final String user, final int game);
 
     List<Ownership> findByUser(final String user);
-    Page<Ownership> findByUser(final String user, final Pageable pageable);
+
+    Page<Ownership> findByUserOrderByGameName(final String user, final Pageable pageable);
 
     List<Ownership> findByGame(final int game);
     List<Ownership> findAll();

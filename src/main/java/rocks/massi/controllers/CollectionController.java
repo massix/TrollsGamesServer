@@ -9,7 +9,6 @@ import rocks.massi.authentication.Role;
 import rocks.massi.authentication.TrollsJwt;
 import rocks.massi.crawler.CollectionCrawler;
 import rocks.massi.data.*;
-import rocks.massi.data.joins.GameHonorsRepository;
 import rocks.massi.data.joins.Ownership;
 import rocks.massi.data.joins.OwnershipsRepository;
 import rocks.massi.exceptions.AuthorizationException;
@@ -37,12 +36,6 @@ public class CollectionController {
     private OwnershipsRepository ownershipsRepository;
 
     @Autowired
-    private GameHonorsRepository gameHonorsRepository;
-
-    @Autowired
-    private HonorsRepository honorsRepository;
-
-    @Autowired
     private StatsLogger statsLogger;
 
     @Autowired
@@ -56,29 +49,24 @@ public class CollectionController {
     public List<Game> getCollection(@RequestHeader("User-Agent") final String userAgent,
                                     @PathVariable("nick") final String nick) {
         val user = getUser(usersRepository, nick);
-        LinkedList<Game> collection = new LinkedList<>();
         statsLogger.logStat("games/get/" + nick, userAgent);
 
-        if (user != null) {
-            List<Ownership> ownerships = ownershipsRepository.findByUser(user.getBggNick());
-            ownerships.forEach(ownership -> collection.add(gamesRepository.findById(ownership.getGame())));
-        }
-        else {
+        if (user == null) {
             throw new UserNotFoundException("");
         }
 
-        return collection;
+        return user.getCollection();
     }
 
     @CrossOrigin
     @GetMapping("/get/{nick}/total")
-    public CollectionInformation getCollectioInformation(@PathVariable("nick") final String nick) {
+    public CollectionInformation getCollectionInformation(@PathVariable("nick") final String nick) {
         val user = getUser(usersRepository, nick);
         if (user == null) {
             throw new UserNotFoundException("User not found in DB");
         }
 
-        return new CollectionInformation(ownershipsRepository.findByUser(user.getBggNick()).size());
+        return new CollectionInformation(user.getCollection().size());
     }
 
     @CrossOrigin
@@ -91,7 +79,7 @@ public class CollectionController {
         }
 
         List<Game> collection = new LinkedList<>();
-        List<Ownership> ownerships = ownershipsRepository.findByUser(user.getBggNick(), new PageRequest(page, 20)).getContent();
+        List<Ownership> ownerships = ownershipsRepository.findByUserOrderByGameName(user.getBggNick(), new PageRequest(page, 20)).getContent();
         ownerships.forEach(ownership -> collection.add(gamesRepository.findById(ownership.getGame())));
         return collection;
     }
@@ -104,7 +92,7 @@ public class CollectionController {
             throw new UserNotFoundException("");
         }
 
-        return new PagesInformation(ownershipsRepository.findByUser(user.getBggNick(), new PageRequest(0, 20)).getTotalPages(), 20);
+        return new PagesInformation(ownershipsRepository.findByUserOrderByGameName(user.getBggNick(), new PageRequest(0, 20)).getTotalPages(), 20);
     }
 
     @CrossOrigin(allowedHeaders = {"Authorization"})

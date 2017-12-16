@@ -41,21 +41,24 @@ public class UsersControllerTest {
     private TestRestTemplate restTemplate;
 
     @Autowired
+    private TestRestTemplate unauthorizedRestTemplate;
+
+    @Autowired
     private TrollsJwt trollsJwt;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         usersRepository.save(new User("bgg_nick", "forum_nick", "test@example.com"));
         AuthorizationHandler.setUp(restTemplate);
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         usersRepository.deleteByBggNick("bgg_nick");
     }
 
     @Test
-    public void test1_testWrongAuthentication() throws Exception {
+    public void test1_testWrongAuthentication() {
         User user = new User("new_bgg", "new_forum", "test_wrong_user@example.com");
         user.setPassword("toto");
         ResponseEntity<User> responseEntity = restTemplate.postForEntity("/v1/users/add", user, User.class);
@@ -82,7 +85,7 @@ public class UsersControllerTest {
     }
 
     @Test
-    public void test2_addUser() throws Exception {
+    public void test2_addUser() {
         User user = new User("new_bgg", "new_forum", "test_user_new@example.com");
         user.setPassword("toto");
         ResponseEntity<User> responseEntity = restTemplate.postForEntity("/v1/users/add", user, User.class);
@@ -110,14 +113,14 @@ public class UsersControllerTest {
     }
 
     @Test
-    public void test3_getUserByNick() throws Exception {
+    public void test3_getUserByNick() {
         ResponseEntity<User> responseEntity = restTemplate.getForEntity("/v1/users/get/bgg_nick", User.class);
         assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
         assertEquals("forum_nick", responseEntity.getBody().getForumNick());
     }
 
     @Test
-    public void test4_getAllUsers() throws Exception {
+    public void test4_getAllUsers() {
         ResponseEntity<User[]> responseEntity = restTemplate.getForEntity("/v1/users/get", User[].class);
         assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
         assertEquals(2, responseEntity.getBody().length);
@@ -126,7 +129,7 @@ public class UsersControllerTest {
 
 
     @Test
-    public void test5_addMalformattedUser() throws Exception {
+    public void test5_addMalformattedUser() {
         ResponseEntity<User> responseEntity = restTemplate.postForEntity("/v1/users/add", new User("", "new_forum", "test@example.com"), User.class);
         assertTrue(responseEntity.getStatusCode().is4xxClientError());
         assertNull(responseEntity.getBody());
@@ -141,7 +144,7 @@ public class UsersControllerTest {
     }
 
     @Test
-    public void test6_removeUser() throws Exception {
+    public void test6_removeUser() {
         restTemplate.delete("/v1/users/remove/new_bgg");
         ResponseEntity<User> responseEntity = restTemplate.getForEntity("/v1/users/get/new_bgg", User.class);
         assertTrue(responseEntity.getStatusCode().is4xxClientError());
@@ -149,14 +152,14 @@ public class UsersControllerTest {
     }
 
     @Test
-    public void test7_getNonExistingUser() throws Exception {
+    public void test7_getNonExistingUser() {
         ResponseEntity<User> responseEntity = restTemplate.getForEntity("/v1/users/get/non_existing", User.class);
         assertNull(responseEntity.getBody());
         assertTrue(responseEntity.getStatusCode().is4xxClientError());
     }
 
     @Test
-    public void test8_modifyUser() throws Exception {
+    public void test8_modifyUser() {
         usersRepository.save(new User("to_modify", "some_forum_nick", "some_email@massi.rocks"));
         User newUser = new User("to_modify", "other_forum_nick", "other_mail@massi.rocks");
         newUser.setAuthenticationType(AuthenticationType.NONE);
@@ -169,6 +172,29 @@ public class UsersControllerTest {
         // We are enforcing JWT
         assertEquals(AuthenticationType.JWT, responseEntity.getAuthenticationType());
         assertEquals(Role.USER, responseEntity.getRole());
+    }
+
+    @Test
+    public void test9_userInformationSecurity() {
+        User dbUser = new User("unauthorized_user", "some_nick", "email@massi.rocks");
+
+        // Set password "dadaumpa"
+        dbUser.setPassword("$2a$04$YHVySpKbnMDXd0tXl8q2hOxWqMJrsyTk8rjUFJd1h2NEzZtvcwRM.");
+        dbUser.setRole(Role.USER);
+        usersRepository.save(dbUser);
+
+        AuthorizationHandler.setUpNormalUser(unauthorizedRestTemplate, new LoginInformation("email@massi.rocks", "dadaumpa"));
+        ResponseEntity<Void> responseEntityVoid = unauthorizedRestTemplate.getForEntity("/v1/users/get/massi_x/information", Void.class);
+        assertTrue(responseEntityVoid.getStatusCode().is4xxClientError());
+
+        ResponseEntity<TrollsJwt.UserInformation> responseEntity = unauthorizedRestTemplate.getForEntity("/v1/users/get/unauthorized_user/information", TrollsJwt.UserInformation.class);
+        assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
+        assertEquals(responseEntity.getBody().getUser(), "unauthorized_user");
+        assertEquals(responseEntity.getBody().getEmail(), "email@massi.rocks");
+        assertEquals(responseEntity.getBody().getRole(), Role.USER);
+        assertEquals(responseEntity.getBody().getAuthenticationType(), AuthenticationType.JWT);
+
+        usersRepository.deleteByBggNick("unauthorized_user");
     }
 
 }
