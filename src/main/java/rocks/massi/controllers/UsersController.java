@@ -103,9 +103,9 @@ public class UsersController {
                                     @RequestParam("token") final String token,
                                     @Param("redirect") final String redirect,
                                     HttpServletResponse servletResponse) {
-        User ret = trollsJwt.confirmRegistrationTokenForEmail(email, token);
+        User ret = usersRepository.findByEmail(email);
 
-        if (ret == null) {
+        if (!trollsJwt.confirmRegistrationTokenForEmail(email, token) || ret == null) {
             throw new AuthorizationException("Can't go any further.");
         }
 
@@ -237,7 +237,7 @@ public class UsersController {
 
         try {
             if (BCrypt.checkpw(loginInformation.getPassword(), dbUser.getPassword())) {
-                String token = trollsJwt.generateNewTokenForUser(dbUser);
+                String token = trollsJwt.generateOrRetrieveTokenForUser(dbUser);
                 dbUser.setPassword("*");
                 servletResponse.setHeader("Authorization", String.format("Bearer %s", token));
                 return dbUser;

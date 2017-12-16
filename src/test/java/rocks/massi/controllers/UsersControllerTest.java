@@ -107,7 +107,7 @@ public class UsersControllerTest {
         assertEquals(parsedToken.get(ROLE_KEY), Role.ADMIN.toString());
 
         // Check TrollsJwt
-        assertTrue(trollsJwt.checkTokenForUser(user.getBggNick()));
+        assertTrue(trollsJwt.checkTokenForUser(user.getEmail()));
 
         usersRepository.deleteByBggNick("new_bgg");
     }
