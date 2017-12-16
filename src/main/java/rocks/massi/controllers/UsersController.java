@@ -89,7 +89,7 @@ public class UsersController {
         LinkedList<User> ret = new LinkedList<>();
 
         // Do not send passwords back.
-        usersRepository.findAll().forEach(user -> {
+        usersRepository.findByAuthenticationTypeNot(AuthenticationType.NONE).forEach(user -> {
             user.setPassword("*");
             ret.add(user);
         });
@@ -128,11 +128,6 @@ public class UsersController {
                                 @Param("redirect") String redirect,
                                 HttpServletResponse servletResponse) {
 
-        // Check that the user exists on bgg, if it exists, start crawling it right now
-        if (user.isBggHandled() && !collectionCrawler.checkUserExists(user)) {
-            throw new UserNotFoundException("User not found on BGG.");
-        }
-
         // Check that the user doesn't already exist
         if (usersRepository.findByEmail(user.getEmail()) != null || usersRepository.findByBggNick(user.getBggNick()) != null) {
             throw new AuthorizationException("User already exist. Please ask for a password reset.");
@@ -145,12 +140,21 @@ public class UsersController {
         // Encrypt password
         user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
 
+        // Save the user in the DB
+        usersRepository.save(user);
+
+        // Check that the user exists on bgg, if it exists, start crawling it right now
+        if (user.isBggHandled() && !collectionCrawler.checkUserExists(user)) {
+            throw new UserNotFoundException("User not found on BGG.");
+        }
+
+
         // Generate a OT token for user
-        String host = System.getenv("VIRTUAL_HOST");
         String token = trollsJwt.generateRegistrationTokenForUser(user);
 
         servletResponse.addHeader("X-Token-Validation", token);
 
+        String host = System.getenv("VIRTUAL_HOST");
         // Send email asking user to verify their email address
         SimpleMailMessage mailMessage = new SimpleMailMessage();
         mailMessage.setFrom("Trolls De Jeux <noreply@massi.rocks>");

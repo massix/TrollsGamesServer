@@ -161,12 +161,14 @@ public class TrollsJwt {
         token.setTokenValue(generatedToken);
         token.setTokenKey(key);
 
+        tokensRepository.save(token);
+
         return generatedToken;
     }
 
     public boolean confirmRegistrationTokenForEmail(final String email, final String token) {
         Token tokenDb = tokensRepository.findByUserEmail(email);
-        if (tokenDb != null) {
+        if (tokenDb != null && tokenDb.getTokenType() == TokenType.REGISTRATION) {
             String decodedEmail = (String) Jwts.parser().setSigningKey(tokenDb.getTokenKey()).parseClaimsJws(token).getBody().get("EMAIL");
             if (decodedEmail.equalsIgnoreCase(tokenDb.getUserEmail())) {
                 tokensRepository.delete(tokenDb);
