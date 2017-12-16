@@ -126,8 +126,8 @@ public class GamesController {
     public List<Game> searchGame(@RequestHeader("User-Agent") String userAgent,
                                  @RequestParam("q") final String query,
                                  @Param("user") final String user) {
-
         statsLogger.logStat("games/search - " + query, userAgent);
-        return gamesRepository.findByNameContainingIgnoreCase(query);
+        String normalizedQuery = query.replaceAll("[^A-z0-9]", "%").trim();
+        return gamesRepository.findByNameContainingIgnoreCase(normalizedQuery);
     }
 }
