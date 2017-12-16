@@ -11,6 +11,9 @@ function build_backoffice() {
         develop)
             BUILD_ENV="preprod"
             ;;
+        master)
+            BUILD_ENV="prod"
+            ;;
         *)
             BUILD_ENV="dev"
             ;;
