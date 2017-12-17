@@ -2,8 +2,12 @@ package rocks.massi.controllers;
 
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import me.xdrop.fuzzywuzzy.FuzzySearch;
+import me.xdrop.fuzzywuzzy.model.ExtractedResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.repository.query.Param;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import rocks.massi.authentication.Role;
 import rocks.massi.authentication.TrollsJwt;
@@ -16,8 +20,10 @@ import rocks.massi.exceptions.UserNotFoundException;
 import rocks.massi.utils.StatsLogger;
 
 import javax.servlet.http.HttpServletResponse;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static rocks.massi.utils.DBUtils.getUser;
 
@@ -139,5 +145,31 @@ public class CollectionController {
         }
 
         ownershipsRepository.delete(ownership);
+    }
+
+    @CrossOrigin(allowedHeaders = {"Authorization"})
+    @GetMapping("/search")
+    public List<Game> searchGameInCollection(@RequestHeader("Authorization") String authorization,
+                                             @RequestParam("query") String query,
+                                             @Param("user") String user) {
+        TrollsJwt.UserInformation userInformation = trollsJwt.getUserInformationFromToken(authorization);
+
+        // TODO: filter for groups here when groups will be a thing
+
+        String calculatedUser = StringUtils.isEmpty(user) ? userInformation.getUser() : user;
+        User u = usersRepository.findByBggNick(calculatedUser);
+        List<Game> games = u.getCollection();
+
+        // Calculate fuzzy search and get all the results with a score of 50% or more
+        List<String> gamesNames = new LinkedList<>();
+        games.forEach(g -> gamesNames.add(g.getName()));
+
+        // Heck. Is there a better way to do this?
+        //noinspection ConstantConditions
+        return FuzzySearch.extractAll(query, gamesNames, 50).stream()
+                .sorted(Comparator.comparingInt(ExtractedResult::getScore).reversed())
+                .map(er -> games.stream().filter(
+                        g -> g.getName().equals(er.getString())).findFirst().get())
+                .collect(Collectors.toList());
     }
 }
