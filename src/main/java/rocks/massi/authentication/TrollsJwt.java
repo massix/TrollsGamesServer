@@ -1,9 +1,6 @@
 package rocks.massi.authentication;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.SignatureException;
+import io.jsonwebtoken.*;
 import lombok.Data;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -54,7 +51,7 @@ public class TrollsJwt {
     @Bean
     @Primary
     public static TrollsJwt makeTokenCreator(@Value("${token.key.retrieval}") final String retrieval,
-                                             @Value("${token.key.iterations}") final Integer iterations) throws Exception {
+                                             @Value("${token.key.iterations}") final Integer iterations) {
         TrollsJwt token = new TrollsJwt();
         token.keys = new LinkedList<>();
         log.info("Create new TrollsJwt using method {} with {} iterations", retrieval, iterations);
@@ -91,8 +88,8 @@ public class TrollsJwt {
                 log.error("User mismatch while verifying token for user {}", userEmail);
                 return false;
             }
-        } catch (SignatureException exception) {
-            log.error("Signature exception {}", exception.getMessage());
+        } catch (SignatureException | ExpiredJwtException exception) {
+            log.error("Token exception {}", exception.getMessage());
             return false;
         }
 
@@ -102,7 +99,7 @@ public class TrollsJwt {
     public UserInformation getUserInformationFromToken(final String header) {
         String tokenHeader = header.replace("Bearer ", "");
         Token token = tokensRepository.findByTokenValue(tokenHeader);
-        if (token == null) {
+        if (token == null || !checkTokenForUser(token.getUserEmail())) {
             throw new TokenNotFoundException();
         }
 
@@ -117,8 +114,10 @@ public class TrollsJwt {
     public String generateOrRetrieveTokenForUser(final User user) {
 
         Token existingToken = tokensRepository.findByUserEmail(user.getEmail());
-        if (existingToken != null) {
+        if (existingToken != null && checkTokenForUser(user.getEmail())) {
             return existingToken.getTokenValue();
+        } else if (existingToken != null) {
+            tokensRepository.delete(existingToken);
         }
 
         // Get a random key to sign our token
