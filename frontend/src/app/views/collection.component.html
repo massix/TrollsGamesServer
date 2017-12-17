@@ -33,6 +33,14 @@
                 </button>
             </span>
       </div>
+      <div class="input-group col-md-12">
+        <input type="text" name="filter" class="form-control input-sm" placeholder="Filter" [(ngModel)]="filter" />
+        <span class="input-group-btn" (click)="startFilter()">
+          <button type="button" class="btn btn-info btn-sm">
+            <i class="glyphicon glyphicon-search"></i>
+          </button>
+        </span>
+      </div>
       <div *ngIf="searchResult" class="row">
         <button class="btn btn-lg fa fa-eye" (click)="searchResult = null"></button>
         <div *ngFor="let game of searchResult" class="row searchresult">
@@ -65,6 +73,6 @@
                 </tr>
             </tbody>
         </table>
-        <pagination-controls (pageChange)="pageChange($event)"></pagination-controls>
+        <pagination-controls *ngIf="!filter" (pageChange)="pageChange($event)"></pagination-controls>
     </div>
 </div>
