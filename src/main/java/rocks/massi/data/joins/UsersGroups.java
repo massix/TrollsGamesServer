@@ -38,5 +38,6 @@ public class UsersGroups {
     private Integer groupId;
 
     @Column
+    @Enumerated(EnumType.STRING)
     private UserRole role;
 }
