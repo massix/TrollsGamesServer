@@ -16,7 +16,8 @@ public class ExceptionsHandler extends ResponseEntityExceptionHandler {
             UserNotFoundException.class,
             GameNotFoundException.class,
             EventNotFoundException.class,
-            TableNotFoundException.class
+            TableNotFoundException.class,
+            GroupDoesNotExist.class
     })
     protected ResponseEntity<Object> handleResourceNotFound(RuntimeException exception, WebRequest request) {
         return handleExceptionInternal(exception, null, null, HttpStatus.NOT_FOUND, request);
@@ -39,7 +40,8 @@ public class ExceptionsHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(value = {
             UserNotCrawlableException.class,
-            UserAlreadyExistsException.class
+            UserAlreadyExistsException.class,
+            GroupAlreadyExists.class
     })
     protected ResponseEntity<Object> handleUserNotCrawlable(RuntimeException exception, WebRequest request) {
         return handleExceptionInternal(exception, exception.getMessage(), null, HttpStatus.CONFLICT, request);
