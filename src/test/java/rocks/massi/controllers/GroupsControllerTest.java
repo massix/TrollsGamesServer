@@ -14,6 +14,8 @@ import org.springframework.test.context.junit4.SpringRunner;
 import rocks.massi.controllers.utils.AuthorizationHandler;
 import rocks.massi.data.Group;
 import rocks.massi.data.GroupsRepository;
+import rocks.massi.data.User;
+import rocks.massi.data.UsersRepository;
 import rocks.massi.data.joins.UsersGroups;
 import rocks.massi.data.joins.UsersGroupsRepository;
 
@@ -30,6 +32,9 @@ public class GroupsControllerTest {
 
     @Autowired
     private UsersGroupsRepository usersGroupsRepository;
+
+    @Autowired
+    private UsersRepository usersRepository;
 
     @Autowired
     private TestRestTemplate restTemplate;
@@ -159,6 +164,10 @@ public class GroupsControllerTest {
         subscriptionFail = restTemplate.postForEntity("/v1/groups/subscribe/3", null, Void.class);
         assertEquals(403, subscriptionFail.getStatusCodeValue());
 
+        // Subscription to a non-existing group should fail with 404 NOT FOUND
+        subscriptionFail = restTemplate.postForEntity("/v1/groups/subscribe/1024", null, Void.class);
+        assertEquals(404, subscriptionFail.getStatusCodeValue());
+
         // Subscription to an open group should not fail
         ResponseEntity<UsersGroups> subscription = restTemplate.postForEntity("/v1/groups/subscribe/1", null, UsersGroups.class);
         assertEquals(200, subscription.getStatusCodeValue());
@@ -169,6 +178,31 @@ public class GroupsControllerTest {
         UsersGroups ug = usersGroupsRepository.findOne(new UsersGroups.UsersGroupsKey(subscription.getBody().getUserId(), subscription.getBody().getGroupId()));
         assertEquals(UsersGroups.UserRole.MEMBER, ug.getRole());
 
+        // Subsequent subscriptions to the same group should fail with 409 CONFLICT
+        subscriptionFail = restTemplate.postForEntity("/v1/groups/subscribe/1", null, Void.class);
+        assertEquals(409, subscriptionFail.getStatusCodeValue());
+
+        // Clean DB
         usersGroupsRepository.deleteAll();
+    }
+
+    @Test
+    public void addMemberToGroup() {
+        usersRepository.save(new User("dadaumpa", "Alfred", "alfred@massi.rocks"));
+
+        // Add user to group
+        ResponseEntity<UsersGroups> ug = restTemplate.postForEntity("/v1/groups/2/add", new UsersGroups("dadaumpa", 2, UsersGroups.UserRole.MEMBER), UsersGroups.class);
+        assertEquals(200, ug.getStatusCodeValue());
+        assertEquals(UsersGroups.UserRole.MEMBER, ug.getBody().getRole());
+
+        // Non existing group in URL should fail with 404 NOT FOUND
+        ResponseEntity<Void> fail = restTemplate.postForEntity("/v1/groups/2014/add", new UsersGroups("dadaumpa", 2, UsersGroups.UserRole.MEMBER), Void.class);
+        assertEquals(404, fail.getStatusCodeValue());
+
+        // Mismatch between group in URL and group in object should fail with 409 CONFLICT
+        fail = restTemplate.postForEntity("/v1/groups/2/add", new UsersGroups("dadaumpa", 3, UsersGroups.UserRole.MEMBER), Void.class);
+        assertEquals(409, fail.getStatusCodeValue());
+
+        usersRepository.deleteByBggNick("dadaumpa");
     }
 }

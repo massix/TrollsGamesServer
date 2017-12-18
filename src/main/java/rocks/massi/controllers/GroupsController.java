@@ -6,12 +6,11 @@ import rocks.massi.authentication.Role;
 import rocks.massi.authentication.TrollsJwt;
 import rocks.massi.data.Group;
 import rocks.massi.data.GroupsRepository;
+import rocks.massi.data.User;
+import rocks.massi.data.UsersRepository;
 import rocks.massi.data.joins.UsersGroups;
 import rocks.massi.data.joins.UsersGroupsRepository;
-import rocks.massi.exceptions.AlreadySubscribedToGroup;
-import rocks.massi.exceptions.AuthorizationException;
-import rocks.massi.exceptions.GroupAlreadyExists;
-import rocks.massi.exceptions.GroupDoesNotExist;
+import rocks.massi.exceptions.*;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -24,6 +23,7 @@ import java.util.stream.Collectors;
  */
 @RestController
 @RequestMapping("/v1/groups")
+@CrossOrigin(allowedHeaders = {"Authorization", "Content-Type"})
 public class GroupsController {
 
     @Autowired
@@ -31,6 +31,9 @@ public class GroupsController {
 
     @Autowired
     private UsersGroupsRepository usersGroupsRepository;
+
+    @Autowired
+    private UsersRepository usersRepository;
 
     @Autowired
     private TrollsJwt trollsJwt;
@@ -212,5 +215,46 @@ public class GroupsController {
 
         // An user by default is a member of the group
         return usersGroupsRepository.save(new UsersGroups(userInformation.getUser(), id, UsersGroups.UserRole.MEMBER));
+    }
+
+    /**
+     * Add member to group.
+     *
+     * @param authorization the authorization
+     * @param id            the id
+     * @param usersGroups   the users->groups relation
+     * @return the updated/created users->groups relation
+     */
+    @PostMapping("/{id}/add")
+    public UsersGroups addMemberToGroup(@RequestHeader("Authorization") String authorization,
+                                        @PathVariable("id") Integer id,
+                                        @RequestBody UsersGroups usersGroups) {
+        TrollsJwt.UserInformation userInformation = trollsJwt.getUserInformationFromToken(authorization);
+        UsersGroups ug = usersGroupsRepository.findOne(new UsersGroups.UsersGroupsKey(userInformation.getUser(), id));
+
+        // Whoever made the request is either an admin of the service or an admin of the group
+        if (userInformation.getRole() != Role.ADMIN && (ug == null || ug.getRole() != UsersGroups.UserRole.ADMINISTRATOR)) {
+            throw new AuthorizationException("User not authorized.");
+        }
+
+        // Check that the group exists
+        Group g = groupsRepository.findOne(id);
+        if (g == null) {
+            throw new GroupDoesNotExist("Group " + id + " does not exist");
+        }
+
+        // Check that the user exists
+        User u = usersRepository.findOne(usersGroups.getUserId());
+        if (u == null) {
+            throw new UserNotFoundException("User " + usersGroups.getUserId() + " does not exist.");
+        }
+
+        // Check that the UsersGroups' group matches the one in the URL
+        if (!id.equals(usersGroups.getGroupId())) {
+            throw new GroupMismatch("Url and Group in object do not match");
+        }
+
+        // Update or add new relation
+        return usersGroupsRepository.save(usersGroups);
     }
 }
