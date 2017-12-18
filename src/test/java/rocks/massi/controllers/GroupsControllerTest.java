@@ -148,4 +148,27 @@ public class GroupsControllerTest {
 
         usersGroupsRepository.deleteAll();
     }
+
+    @Test
+    public void subscribeToGroup() {
+        // Subscribe to a INVITE_ONLY group should fail with 403
+        ResponseEntity<Void> subscriptionFail = restTemplate.postForEntity("/v1/groups/subscribe/2", null, Void.class);
+        assertEquals(403, subscriptionFail.getStatusCodeValue());
+
+        // Same for CLOSED groups
+        subscriptionFail = restTemplate.postForEntity("/v1/groups/subscribe/3", null, Void.class);
+        assertEquals(403, subscriptionFail.getStatusCodeValue());
+
+        // Subscription to an open group should not fail
+        ResponseEntity<UsersGroups> subscription = restTemplate.postForEntity("/v1/groups/subscribe/1", null, UsersGroups.class);
+        assertEquals(200, subscription.getStatusCodeValue());
+        assertEquals("massi_x", subscription.getBody().getUserId());
+        assertEquals((Integer) 1, subscription.getBody().getGroupId());
+
+        // Check that the user is now a member of the group
+        UsersGroups ug = usersGroupsRepository.findOne(new UsersGroups.UsersGroupsKey(subscription.getBody().getUserId(), subscription.getBody().getGroupId()));
+        assertEquals(UsersGroups.UserRole.MEMBER, ug.getRole());
+
+        usersGroupsRepository.deleteAll();
+    }
 }

@@ -8,6 +8,7 @@ import rocks.massi.data.Group;
 import rocks.massi.data.GroupsRepository;
 import rocks.massi.data.joins.UsersGroups;
 import rocks.massi.data.joins.UsersGroupsRepository;
+import rocks.massi.exceptions.AlreadySubscribedToGroup;
 import rocks.massi.exceptions.AuthorizationException;
 import rocks.massi.exceptions.GroupAlreadyExists;
 import rocks.massi.exceptions.GroupDoesNotExist;
@@ -165,15 +166,51 @@ public class GroupsController {
     @DeleteMapping("/delete/{id}")
     public void deleteGroupForId(@RequestHeader("Authorization") String authorization, @PathVariable("id") Integer id) {
         TrollsJwt.UserInformation userInformation = trollsJwt.getUserInformationFromToken(authorization);
+        UsersGroups usersGroups = usersGroupsRepository.findOne(new UsersGroups.UsersGroupsKey(userInformation.getUser(), id));
 
-        // TODO: make sure the user has the rights to delete the group
+        if (userInformation.getRole() != Role.ADMIN && (usersGroups == null || usersGroups.getRole() != UsersGroups.UserRole.ADMINISTRATOR)) {
+            throw new AuthorizationException("User not authorized");
+        }
 
         Group inDb = groupsRepository.findOne(id);
         if (inDb == null) {
             throw new GroupDoesNotExist("Group " + id + " does not exist in DB.");
         }
 
-        // TODO: cascade delete all the groups -> users relations
+        // Cascade delete all the users->group relations
+        usersGroupsRepository.deleteByGroupId(id);
         groupsRepository.delete(id);
+    }
+
+    /**
+     * Subscribes user to group.
+     *
+     * @param authorization the authorization
+     * @param id            the id of the group
+     * @return the users->groups relation
+     */
+    @PostMapping("/subscribe/{id}")
+    public UsersGroups subscribeToGroup(@RequestHeader("Authorization") String authorization, @PathVariable("id") Integer id) {
+        TrollsJwt.UserInformation userInformation = trollsJwt.getUserInformationFromToken(authorization);
+
+        // Check that the user is not already subscribed to that group
+        UsersGroups ug = usersGroupsRepository.findOne(new UsersGroups.UsersGroupsKey(userInformation.getUser(), id));
+        if (ug != null) {
+            throw new AlreadySubscribedToGroup("User " + userInformation.getUser() + " is already a member of the group.");
+        }
+
+        // Check that the group exists
+        Group group = groupsRepository.findOne(id);
+        if (group == null) {
+            throw new GroupDoesNotExist("Group with id " + id + " does not exist");
+        }
+
+        // Check that the group is a public one
+        if (group.getStatus() != Group.GroupStatus.PUBLIC) {
+            throw new AuthorizationException("User not authorized.");
+        }
+
+        // An user by default is a member of the group
+        return usersGroupsRepository.save(new UsersGroups(userInformation.getUser(), id, UsersGroups.UserRole.MEMBER));
     }
 }
