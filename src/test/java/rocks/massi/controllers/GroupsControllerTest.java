@@ -205,4 +205,23 @@ public class GroupsControllerTest {
 
         usersRepository.deleteByBggNick("dadaumpa");
     }
+
+    @Test
+    public void getMembersForGroup() {
+        usersRepository.save(new User("dadaumpa", "Alfred", "alfred@massi.rocks"));
+        usersGroupsRepository.save(new UsersGroups("dadaumpa", 1, UsersGroups.UserRole.MEMBER));
+        usersGroupsRepository.save(new UsersGroups("massi_x", 1, UsersGroups.UserRole.ADMINISTRATOR));
+
+        // 2 members should be part of the group with id 1
+        ResponseEntity<User[]> users = restTemplate.getForEntity("/v1/groups/1/members", User[].class);
+        assertEquals(200, users.getStatusCodeValue());
+        assertEquals(2, users.getBody().length);
+
+        // Getting members of a non-existing group should throw a 404 NOT FOUND
+        ResponseEntity<Void> fail = restTemplate.getForEntity("/v1/groups/1024/members", Void.class);
+        assertEquals(404, fail.getStatusCodeValue());
+
+        usersGroupsRepository.deleteAll();
+        usersRepository.deleteByBggNick("dadaumpa");
+    }
 }

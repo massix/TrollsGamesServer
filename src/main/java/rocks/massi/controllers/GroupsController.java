@@ -218,6 +218,36 @@ public class GroupsController {
     }
 
     /**
+     * Gets members for group.
+     *
+     * @param authorization the authorization
+     * @param id            the id of the group
+     * @return the members for group
+     */
+    @GetMapping("/{id}/members")
+    public List<User> getMembersForGroup(@RequestHeader("Authorization") String authorization, @PathVariable("id") Integer id) {
+        TrollsJwt.UserInformation userInformation = trollsJwt.getUserInformationFromToken(authorization);
+        UsersGroups usersGroups = usersGroupsRepository.findOne(new UsersGroups.UsersGroupsKey(userInformation.getUser(), id));
+
+        // The user is either an admin of the service or a member of the group
+        if (userInformation.getRole() != Role.ADMIN && usersGroups == null) {
+            throw new AuthorizationException("User not authorized.");
+        }
+
+        // Check that the group exists
+        Group g = groupsRepository.findOne(id);
+        if (g == null) {
+            throw new GroupDoesNotExist("Group " + id + " does not exist.");
+        }
+
+        List<UsersGroups> usersGroupsList = usersGroupsRepository.findByGroupId(id);
+        List<User> ret = new LinkedList<>();
+
+        usersGroupsList.forEach(ug -> ret.add(usersRepository.findOne(ug.getUserId())));
+        return ret;
+    }
+
+    /**
      * Add member to group.
      *
      * @param authorization the authorization
