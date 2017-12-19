@@ -225,7 +225,7 @@ public class GroupsController {
      * @return the members for group
      */
     @GetMapping("/{id}/members")
-    public List<User> getMembersForGroup(@RequestHeader("Authorization") String authorization, @PathVariable("id") Integer id) {
+    public List<UsersGroups> getMembersForGroup(@RequestHeader("Authorization") String authorization, @PathVariable("id") Integer id) {
         TrollsJwt.UserInformation userInformation = trollsJwt.getUserInformationFromToken(authorization);
         UsersGroups usersGroups = usersGroupsRepository.findOne(new UsersGroups.UsersGroupsKey(userInformation.getUser(), id));
 
@@ -240,11 +240,7 @@ public class GroupsController {
             throw new GroupDoesNotExist("Group " + id + " does not exist.");
         }
 
-        List<UsersGroups> usersGroupsList = usersGroupsRepository.findByGroupId(id);
-        List<User> ret = new LinkedList<>();
-
-        usersGroupsList.forEach(ug -> ret.add(usersRepository.findOne(ug.getUserId())));
-        return ret;
+        return usersGroupsRepository.findByGroupId(id);
     }
 
     /**

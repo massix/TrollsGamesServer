@@ -213,7 +213,7 @@ public class GroupsControllerTest {
         usersGroupsRepository.save(new UsersGroups("massi_x", 1, UsersGroups.UserRole.ADMINISTRATOR));
 
         // 2 members should be part of the group with id 1
-        ResponseEntity<User[]> users = restTemplate.getForEntity("/v1/groups/1/members", User[].class);
+        ResponseEntity<UsersGroups[]> users = restTemplate.getForEntity("/v1/groups/1/members", UsersGroups[].class);
         assertEquals(200, users.getStatusCodeValue());
         assertEquals(2, users.getBody().length);
 
