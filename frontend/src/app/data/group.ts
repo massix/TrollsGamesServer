@@ -11,5 +11,5 @@ export class Group {
   name: string;
   description: string;
   status = 'PUBLIC';
-  members: User[] = [];
+  members: UsersGroups[];
 }
