@@ -33,5 +33,9 @@ export class GroupsService {
     return this.httpClient.patch<Group>(`${environment.apiBase}/v1/groups/modify`, group, { headers: this.headers });
   }
 
+  removeGroup(group: Group) {
+    return this.httpClient.delete(`${environment.apiBase}/v1/groups/delete/${group.id}`, { headers: this.headers });
+  }
+
   constructor(private httpClient: HttpClient) {}
 }

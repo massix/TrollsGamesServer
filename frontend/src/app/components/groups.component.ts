@@ -23,6 +23,7 @@ import { UsersService } from '../services/users.service';
         </form>
       </div>
       <div class="group" [ngClass]="{'active': selectedGroup === group}" *ngFor="let group of groups" (click)="selectedGroup = group">
+        <span class="fa fa-remove group-remove" (click)="removeGroup(group)"></span>
         <span class="group-name">({{ group.id }}) {{ group.name }}</span><br />
         <span class="group-description">{{ group.description }}</span><br />
         <span class="group-members-count" *ngIf="group.members">{{ group.members.length }} members<br /></span>
@@ -109,7 +110,7 @@ import { UsersService } from '../services/users.service';
       padding-left: 5em;
     }
 
-    .control {
+    .control, .group-remove {
       cursor: pointer;
     }
 
@@ -182,6 +183,11 @@ export class GroupsComponent implements OnInit {
     modifyGroup() {
       console.log(`set name ${this.selectedGroup.name} for ${this.selectedGroup.id}`);
       this.groupsService.modifyGroup(this.selectedGroup).subscribe(d => this.getAllGroups());
+    }
+
+    removeGroup(group: Group) {
+      console.log(`removing group ${group.id}`);
+      this.groupsService.removeGroup(group).subscribe(d => this.getAllGroups(), e => this.getAllGroups());
     }
 
     constructor(private alert: AlertService, private groupsService: GroupsService, private usersService: UsersService) {}
