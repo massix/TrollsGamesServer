@@ -154,6 +154,9 @@ export class GroupsComponent implements OnInit {
 
     removeMember(member: UsersGroups) {
       console.log(`Removing member ${member.userId} from ${member.groupId}`);
+      this.groupsService.removeMember(member.groupId, member.userId).subscribe(d => {}, d => {
+        this.groupsService.getMembers(this.selectedGroup).subscribe(members => this.selectedGroup.members = members);
+      });
     }
 
     saveMember(member: UsersGroups) {

@@ -37,5 +37,9 @@ export class GroupsService {
     return this.httpClient.delete(`${environment.apiBase}/v1/groups/delete/${group.id}`, { headers: this.headers });
   }
 
+  removeMember(group: number, member: string) {
+    return this.httpClient.delete(`${environment.apiBase}/v1/groups/${group}/remove/${member}`, { headers: this.headers });
+  }
+
   constructor(private httpClient: HttpClient) {}
 }
