@@ -218,6 +218,25 @@ public class GroupsController {
     }
 
     /**
+     * Unsubscribe from group.
+     *
+     * @param authorization the authorization
+     * @param id            the id
+     */
+    @DeleteMapping("/unsubscribe/{id}")
+    public void unsubscribeFromGroup(@RequestHeader("Authorization") String authorization, @PathVariable("id") Integer id) {
+        TrollsJwt.UserInformation userInformation = trollsJwt.getUserInformationFromToken(authorization);
+
+        // The user must be subscribed to the group before leaving it
+        UsersGroups ug = usersGroupsRepository.findOne(new UsersGroups.UsersGroupsKey(userInformation.getUser(), id));
+        if (ug == null) {
+            throw new AlreadySubscribedToGroup("User " + userInformation.getUser() + " is not a member of the group.");
+        }
+
+        usersGroupsRepository.delete(ug);
+    }
+
+    /**
      * Gets members for group.
      *
      * @param authorization the authorization
@@ -282,5 +301,33 @@ public class GroupsController {
 
         // Update or add new relation
         return usersGroupsRepository.save(usersGroups);
+    }
+
+    /**
+     * Remove member from group.
+     *
+     * @param authorization the authorization
+     * @param groupId       the group id
+     * @param user          the user
+     */
+    @DeleteMapping("{id}/remove/{nick}")
+    public void removeMemberFromGroup(@RequestHeader("Authorization") String authorization,
+                                      @PathVariable("id") Integer groupId,
+                                      @PathVariable("nick") String user) {
+        TrollsJwt.UserInformation userInformation = trollsJwt.getUserInformationFromToken(authorization);
+
+        // The user is: either an administrator of the service or an administration of the group itself
+        UsersGroups ug = usersGroupsRepository.findOne(new UsersGroups.UsersGroupsKey(userInformation.getUser(), groupId));
+        if (userInformation.getRole() != Role.ADMIN && ug.getRole() != UsersGroups.UserRole.ADMINISTRATOR) {
+            throw new AuthorizationException("User not authorized.");
+        }
+
+        // Check that the user they are kicking from the group is part of the group itself
+        UsersGroups kickedUser = usersGroupsRepository.findOne(new UsersGroups.UsersGroupsKey(user, groupId));
+        if (kickedUser == null) {
+            throw new UserNotFoundException("User " + user + " isn't part of the group " + groupId + ".");
+        }
+
+        usersGroupsRepository.delete(kickedUser);
     }
 }

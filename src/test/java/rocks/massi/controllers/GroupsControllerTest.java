@@ -7,6 +7,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
@@ -223,5 +224,29 @@ public class GroupsControllerTest {
 
         usersGroupsRepository.deleteAll();
         usersRepository.deleteByBggNick("dadaumpa");
+    }
+
+    @Test
+    public void unsubscribeFromGroup() {
+        usersGroupsRepository.save(new UsersGroups("massi_x", 1, UsersGroups.UserRole.MEMBER));
+        ResponseEntity<Void> delete = restTemplate.exchange("/v1/groups/unsubscribe/2", HttpMethod.DELETE, null, Void.class);
+        assertEquals(409, delete.getStatusCodeValue());
+
+        delete = restTemplate.exchange("/v1/groups/unsubscribe/1", HttpMethod.DELETE, null, Void.class);
+        assertEquals(200, delete.getStatusCodeValue());
+        assertNull(usersGroupsRepository.findOne(new UsersGroups.UsersGroupsKey("massi_x", 1)));
+    }
+
+    @Test
+    public void removeMemberFromGroup() {
+        usersRepository.save(new User("dadaumpa", "Alfred", "alfred@massi.rocks"));
+        usersGroupsRepository.save(new UsersGroups("dadaumpa", 2, UsersGroups.UserRole.MEMBER));
+
+        ResponseEntity<Void> delete = restTemplate.exchange("/v1/groups/1/remove/dadaumpa", HttpMethod.DELETE, null, Void.class);
+        assertEquals(404, delete.getStatusCodeValue());
+
+        delete = restTemplate.exchange("/v1/groups/2/remove/dadaumpa", HttpMethod.DELETE, null, Void.class);
+        assertEquals(200, delete.getStatusCodeValue());
+        assertNull(usersGroupsRepository.findOne(new UsersGroups.UsersGroupsKey("dadaumpa", 2)));
     }
 }
