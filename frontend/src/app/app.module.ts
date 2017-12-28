@@ -45,6 +45,8 @@ import { TableDetailsComponent } from './components/table_details.component';
 import { AutocompleteModule } from 'ng2-input-autocomplete';
 import { RegisterComponent } from './components/register.component';
 import { ConfirmComponent } from './components/confirm.component';
+import { GroupsComponent } from './components/groups.component';
+import { GroupsService } from './services/groups.service';
 
 @NgModule({
   declarations: [
@@ -67,6 +69,7 @@ import { ConfirmComponent } from './components/confirm.component';
     TableDetailsComponent,
     RegisterComponent,
     ConfirmComponent,
+    GroupsComponent,
     QuotesComponent
   ],
   imports: [
@@ -156,6 +159,12 @@ import { ConfirmComponent } from './components/confirm.component';
             canActivate: [AuthGuard]
           },
           {
+            path: 'groups',
+            component: GroupsComponent,
+            outlet: 'adminoutlet',
+            canActivate: [AuthGuard]
+          },
+          {
             path: 'information',
             component: InformationComponent,
             outlet: 'adminoutlet',
@@ -171,10 +180,10 @@ import { ConfirmComponent } from './components/confirm.component';
     ])
   ],
   providers: [
-    LoginService, 
-    AlertService, 
-    UsersService, 
-    GamesService, 
+    LoginService,
+    AlertService,
+    UsersService,
+    GamesService,
     CrawlService,
     CacheService,
     CollectionService,
@@ -183,6 +192,7 @@ import { ConfirmComponent } from './components/confirm.component';
     EventsService,
     TablesService,
     AuthGuard,
+    GroupsService,
     SimpleTimer
   ],
   bootstrap: [AppComponent]
