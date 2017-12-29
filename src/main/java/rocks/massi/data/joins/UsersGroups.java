@@ -20,7 +20,7 @@ public class UsersGroups {
     @NoArgsConstructor
     public static class UsersGroupsKey implements Serializable {
         private String userId;
-        private Integer groupId;
+        private Long groupId;
     }
 
     public enum UserRole {
@@ -35,7 +35,7 @@ public class UsersGroups {
 
     @Id
     @Column
-    private Integer groupId;
+    private Long groupId;
 
     @Column
     @Enumerated(EnumType.STRING)

@@ -88,7 +88,7 @@ public class GroupsController {
      * @return the group for id
      */
     @GetMapping("/get/{id}")
-    public Group getGroupForId(@RequestHeader("Authorization") String authorization, @PathVariable("id") Integer id) {
+    public Group getGroupForId(@RequestHeader("Authorization") String authorization, @PathVariable("id") Long id) {
         TrollsJwt.UserInformation userInformation = trollsJwt.getUserInformationFromToken(authorization);
         UsersGroups usersGroups = usersGroupsRepository.findOne(new UsersGroups.UsersGroupsKey(userInformation.getUser(), id));
 
@@ -167,7 +167,7 @@ public class GroupsController {
      * @param id            the id
      */
     @DeleteMapping("/delete/{id}")
-    public void deleteGroupForId(@RequestHeader("Authorization") String authorization, @PathVariable("id") Integer id) {
+    public void deleteGroupForId(@RequestHeader("Authorization") String authorization, @PathVariable("id") Long id) {
         TrollsJwt.UserInformation userInformation = trollsJwt.getUserInformationFromToken(authorization);
         UsersGroups usersGroups = usersGroupsRepository.findOne(new UsersGroups.UsersGroupsKey(userInformation.getUser(), id));
 
@@ -193,7 +193,7 @@ public class GroupsController {
      * @return the users->groups relation
      */
     @PostMapping("/subscribe/{id}")
-    public UsersGroups subscribeToGroup(@RequestHeader("Authorization") String authorization, @PathVariable("id") Integer id) {
+    public UsersGroups subscribeToGroup(@RequestHeader("Authorization") String authorization, @PathVariable("id") Long id) {
         TrollsJwt.UserInformation userInformation = trollsJwt.getUserInformationFromToken(authorization);
 
         // Check that the user is not already subscribed to that group
@@ -224,7 +224,7 @@ public class GroupsController {
      * @param id            the id
      */
     @DeleteMapping("/unsubscribe/{id}")
-    public void unsubscribeFromGroup(@RequestHeader("Authorization") String authorization, @PathVariable("id") Integer id) {
+    public void unsubscribeFromGroup(@RequestHeader("Authorization") String authorization, @PathVariable("id") Long id) {
         TrollsJwt.UserInformation userInformation = trollsJwt.getUserInformationFromToken(authorization);
 
         // The user must be subscribed to the group before leaving it
@@ -244,7 +244,7 @@ public class GroupsController {
      * @return the members for group
      */
     @GetMapping("/{id}/members")
-    public List<UsersGroups> getMembersForGroup(@RequestHeader("Authorization") String authorization, @PathVariable("id") Integer id) {
+    public List<UsersGroups> getMembersForGroup(@RequestHeader("Authorization") String authorization, @PathVariable("id") Long id) {
         TrollsJwt.UserInformation userInformation = trollsJwt.getUserInformationFromToken(authorization);
         UsersGroups usersGroups = usersGroupsRepository.findOne(new UsersGroups.UsersGroupsKey(userInformation.getUser(), id));
 
@@ -272,7 +272,7 @@ public class GroupsController {
      */
     @PostMapping("/{id}/add")
     public UsersGroups addMemberToGroup(@RequestHeader("Authorization") String authorization,
-                                        @PathVariable("id") Integer id,
+                                        @PathVariable("id") Long id,
                                         @RequestBody UsersGroups usersGroups) {
         TrollsJwt.UserInformation userInformation = trollsJwt.getUserInformationFromToken(authorization);
         UsersGroups ug = usersGroupsRepository.findOne(new UsersGroups.UsersGroupsKey(userInformation.getUser(), id));
@@ -312,7 +312,7 @@ public class GroupsController {
      */
     @DeleteMapping("{id}/remove/{nick}")
     public void removeMemberFromGroup(@RequestHeader("Authorization") String authorization,
-                                      @PathVariable("id") Integer groupId,
+                                      @PathVariable("id") Long groupId,
                                       @PathVariable("nick") String user) {
         TrollsJwt.UserInformation userInformation = trollsJwt.getUserInformationFromToken(authorization);
 
