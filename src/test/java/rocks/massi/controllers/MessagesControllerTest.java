@@ -82,9 +82,10 @@ public class MessagesControllerTest {
         assertEquals(10, messages.getBody().length);
 
         // check that the order is right
-        Message previous = null;
+        Message previous = messages.getBody()[0];
         for (Message current : messages.getBody()) {
-            if (previous != null) assertTrue(current.getDateTime().before(previous.getDateTime()));
+            assertTrue(current.getDateTime().before(previous.getDateTime()) ||
+                    current.getDateTime().equals(previous.getDateTime()));
             previous = current;
         }
 
