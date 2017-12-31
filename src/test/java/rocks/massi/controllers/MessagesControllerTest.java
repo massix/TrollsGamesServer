@@ -98,4 +98,28 @@ public class MessagesControllerTest {
 
         messagesRepository.deleteAll();
     }
+
+    @Test
+    public void getMessagesForGroup() {
+
+        // 2 messages for 10 different groups
+        for (int i = 0; i < 10; i++) {
+            for (int j = 0; j < 2; j++) {
+                messagesRepository.save(new Message(
+                        null,
+                        "Message #" + j + " for group" + i,
+                        "massi_x",
+                        (long) i, null, null, null, null,
+                        new Timestamp(new Date().getTime())
+                ));
+            }
+        }
+
+        // Get messages for group 4
+        ResponseEntity<Message[]> messages = restTemplate.getForEntity("/v1/messages/group/4", Message[].class);
+        assertEquals(200, messages.getStatusCodeValue());
+        assertEquals(2, messages.getBody().length);
+
+        messagesRepository.deleteAll();
+    }
 }

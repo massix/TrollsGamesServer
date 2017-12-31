@@ -3,6 +3,7 @@ package rocks.massi.controllers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import rocks.massi.authentication.AuthenticationType;
+import rocks.massi.authentication.Role;
 import rocks.massi.authentication.TrollsJwt;
 import rocks.massi.data.Message;
 import rocks.massi.data.MessagesRepository;
@@ -92,5 +93,27 @@ public class MessagesController {
         // TODO: pagination, maybe?
 
         return messagesRepository.findAllForHomepage();
+    }
+
+    @GetMapping("/group/{id}")
+    public List<Message> getMessagesForGroup(@RequestHeader("Authorization") String authorization,
+                                             @PathVariable("id") Long groupId) {
+        TrollsJwt.UserInformation userInformation = trollsJwt.getUserInformationFromToken(authorization);
+
+        // Only users subscribed to the group may see its messages
+        UsersGroups usersGroups = usersGroupsRepository.findOne(
+                new UsersGroups.UsersGroupsKey(userInformation.getUser(), groupId));
+        if (usersGroups == null && userInformation.getRole() != Role.ADMIN) {
+            throw new AuthorizationException("User not authorized.");
+        }
+
+        return messagesRepository.findByGroupIdOrderByDateTimeDesc(groupId);
+    }
+
+    @GetMapping("/game/{id}")
+    public List<Message> getMessagesForGame(@RequestHeader("Authorization") String authorization,
+                                            @PathVariable("id") Long gameId) {
+        // All users, even unregistered ones, may see messages for games
+        return messagesRepository.findByGameIdOrderByDateTimeDesc(gameId);
     }
 }
