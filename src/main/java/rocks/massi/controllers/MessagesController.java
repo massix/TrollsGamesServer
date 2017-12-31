@@ -12,7 +12,10 @@ import rocks.massi.exceptions.AuthorizationException;
 import rocks.massi.exceptions.InvalidMessageException;
 
 import java.sql.Timestamp;
-import java.util.*;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @RestController
@@ -30,7 +33,7 @@ public class MessagesController {
     private TrollsJwt trollsJwt;
 
     private boolean messageIsValid(final Message m) {
-        Set<Long> fields = new HashSet<>();
+        List<Long> fields = new LinkedList<>();
         fields.add(m.getEventId());
         fields.add(m.getGameId());
         fields.add(m.getGroupId());

@@ -51,6 +51,13 @@ public class MessagesControllerTest {
         assertEquals("massi_x", message.getBody().getAuthor());
         assertNotSame(0L, message.getBody().getMessageId());
 
+        // Invalid message
+        ResponseEntity<Void> invalid = restTemplate.postForEntity("/v1/messages/create",
+                new Message(0L, "An invalid message", "me",
+                        1L, 1L, null, null, null,
+                        new Timestamp(new Date().getTime())), Void.class);
+        assertEquals(409, invalid.getStatusCodeValue());
+
         messagesRepository.deleteAll();
     }
 
