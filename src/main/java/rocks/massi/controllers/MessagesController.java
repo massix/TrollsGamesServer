@@ -111,9 +111,21 @@ public class MessagesController {
     }
 
     @GetMapping("/game/{id}")
-    public List<Message> getMessagesForGame(@RequestHeader("Authorization") String authorization,
-                                            @PathVariable("id") Long gameId) {
+    public List<Message> getMessagesForGame(@PathVariable("id") Long gameId) {
         // All users, even unregistered ones, may see messages for games
         return messagesRepository.findByGameIdOrderByDateTimeDesc(gameId);
+    }
+
+    @GetMapping("/message/{id}")
+    public List<Message> getMessagesForMessage(@RequestHeader("Authorization") String authorization,
+                                               @PathVariable("id") Long messageId) {
+        TrollsJwt.UserInformation userInformation = trollsJwt.getUserInformationFromToken(authorization);
+
+        // Only subscribed users can see the messages
+        if (userInformation.getAuthenticationType() != AuthenticationType.JWT) {
+            throw new AuthorizationException("User not authorized.");
+        }
+
+        return messagesRepository.findByMessageIdOrderByDateTimeDesc(messageId);
     }
 }
