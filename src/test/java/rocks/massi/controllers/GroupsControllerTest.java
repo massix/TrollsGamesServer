@@ -84,12 +84,12 @@ public class GroupsControllerTest {
         assertEquals(allGroups.getBody()[3].getName(), "New group");
 
         // Check that a relation has been created and that the user is the admin of the group
-        UsersGroups ug = usersGroupsRepository.findOne(new UsersGroups.UsersGroupsKey("massi_x", 4));
+        UsersGroups ug = usersGroupsRepository.findOne(new UsersGroups.UsersGroupsKey("massi_x", 4L));
         assertNotNull(ug);
         assertEquals(ug.getRole(), UsersGroups.UserRole.ADMINISTRATOR);
 
         // Forcing ID should not work
-        createdGroup = restTemplate.postForEntity("/v1/groups/create", new Group(1, "Reuse ID", "Description", Group.GroupStatus.PUBLIC), Group.class);
+        createdGroup = restTemplate.postForEntity("/v1/groups/create", new Group(1L, "Reuse ID", "Description", Group.GroupStatus.PUBLIC), Group.class);
         assertEquals(200, createdGroup.getStatusCodeValue());
 
         // Get all groups again, we should have one more than before
@@ -101,11 +101,11 @@ public class GroupsControllerTest {
     @Test
     public void modifyGroup() {
         // Group does not exist, should receive 404 NOT FOUND
-        Group notExists = restTemplate.patchForObject("/v1/groups/modify", new Group(1024, "Does not exist", "Dadaumpa", Group.GroupStatus.PUBLIC), Group.class);
+        Group notExists = restTemplate.patchForObject("/v1/groups/modify", new Group(1024L, "Does not exist", "Dadaumpa", Group.GroupStatus.PUBLIC), Group.class);
         assertNull(notExists);
 
         // Group does exist, should receive modified group
-        Group exists = restTemplate.patchForObject("/v1/groups/modify", new Group(1, "Trollzzz Jeuxz", "New group", Group.GroupStatus.INVITE_ONLY), Group.class);
+        Group exists = restTemplate.patchForObject("/v1/groups/modify", new Group(1L, "Trollzzz Jeuxz", "New group", Group.GroupStatus.INVITE_ONLY), Group.class);
         assertNotNull(exists);
         assertEquals(exists.getName(), "Trollzzz Jeuxz");
         assertEquals(exists.getStatus(), Group.GroupStatus.INVITE_ONLY);
@@ -146,7 +146,7 @@ public class GroupsControllerTest {
         assertEquals("Trolls de jeux", groups.getBody()[0].getName());
 
         // Subscribe to a private group and check if we now have it as the first element
-        usersGroupsRepository.save(new UsersGroups("massi_x", 3, UsersGroups.UserRole.MEMBER));
+        usersGroupsRepository.save(new UsersGroups("massi_x", 3L, UsersGroups.UserRole.MEMBER));
         groups = restTemplate.getForEntity("/v1/groups/get", Group[].class);
         assertEquals(200, groups.getStatusCodeValue());
         assertEquals(2, groups.getBody().length);
@@ -173,7 +173,7 @@ public class GroupsControllerTest {
         ResponseEntity<UsersGroups> subscription = restTemplate.postForEntity("/v1/groups/subscribe/1", null, UsersGroups.class);
         assertEquals(200, subscription.getStatusCodeValue());
         assertEquals("massi_x", subscription.getBody().getUserId());
-        assertEquals((Integer) 1, subscription.getBody().getGroupId());
+        assertEquals((Long) 1L, subscription.getBody().getGroupId());
 
         // Check that the user is now a member of the group
         UsersGroups ug = usersGroupsRepository.findOne(new UsersGroups.UsersGroupsKey(subscription.getBody().getUserId(), subscription.getBody().getGroupId()));
@@ -192,16 +192,16 @@ public class GroupsControllerTest {
         usersRepository.save(new User("dadaumpa", "Alfred", "alfred@massi.rocks"));
 
         // Add user to group
-        ResponseEntity<UsersGroups> ug = restTemplate.postForEntity("/v1/groups/2/add", new UsersGroups("dadaumpa", 2, UsersGroups.UserRole.MEMBER), UsersGroups.class);
+        ResponseEntity<UsersGroups> ug = restTemplate.postForEntity("/v1/groups/2/add", new UsersGroups("dadaumpa", 2L, UsersGroups.UserRole.MEMBER), UsersGroups.class);
         assertEquals(200, ug.getStatusCodeValue());
         assertEquals(UsersGroups.UserRole.MEMBER, ug.getBody().getRole());
 
         // Non existing group in URL should fail with 404 NOT FOUND
-        ResponseEntity<Void> fail = restTemplate.postForEntity("/v1/groups/2014/add", new UsersGroups("dadaumpa", 2, UsersGroups.UserRole.MEMBER), Void.class);
+        ResponseEntity<Void> fail = restTemplate.postForEntity("/v1/groups/2014/add", new UsersGroups("dadaumpa", 2L, UsersGroups.UserRole.MEMBER), Void.class);
         assertEquals(404, fail.getStatusCodeValue());
 
         // Mismatch between group in URL and group in object should fail with 409 CONFLICT
-        fail = restTemplate.postForEntity("/v1/groups/2/add", new UsersGroups("dadaumpa", 3, UsersGroups.UserRole.MEMBER), Void.class);
+        fail = restTemplate.postForEntity("/v1/groups/2/add", new UsersGroups("dadaumpa", 3L, UsersGroups.UserRole.MEMBER), Void.class);
         assertEquals(409, fail.getStatusCodeValue());
 
         usersRepository.deleteByBggNick("dadaumpa");
@@ -210,8 +210,8 @@ public class GroupsControllerTest {
     @Test
     public void getMembersForGroup() {
         usersRepository.save(new User("dadaumpa", "Alfred", "alfred@massi.rocks"));
-        usersGroupsRepository.save(new UsersGroups("dadaumpa", 1, UsersGroups.UserRole.MEMBER));
-        usersGroupsRepository.save(new UsersGroups("massi_x", 1, UsersGroups.UserRole.ADMINISTRATOR));
+        usersGroupsRepository.save(new UsersGroups("dadaumpa", 1L, UsersGroups.UserRole.MEMBER));
+        usersGroupsRepository.save(new UsersGroups("massi_x", 1L, UsersGroups.UserRole.ADMINISTRATOR));
 
         // 2 members should be part of the group with id 1
         ResponseEntity<UsersGroups[]> users = restTemplate.getForEntity("/v1/groups/1/members", UsersGroups[].class);
@@ -228,25 +228,25 @@ public class GroupsControllerTest {
 
     @Test
     public void unsubscribeFromGroup() {
-        usersGroupsRepository.save(new UsersGroups("massi_x", 1, UsersGroups.UserRole.MEMBER));
+        usersGroupsRepository.save(new UsersGroups("massi_x", 1L, UsersGroups.UserRole.MEMBER));
         ResponseEntity<Void> delete = restTemplate.exchange("/v1/groups/unsubscribe/2", HttpMethod.DELETE, null, Void.class);
         assertEquals(409, delete.getStatusCodeValue());
 
         delete = restTemplate.exchange("/v1/groups/unsubscribe/1", HttpMethod.DELETE, null, Void.class);
         assertEquals(200, delete.getStatusCodeValue());
-        assertNull(usersGroupsRepository.findOne(new UsersGroups.UsersGroupsKey("massi_x", 1)));
+        assertNull(usersGroupsRepository.findOne(new UsersGroups.UsersGroupsKey("massi_x", 1L)));
     }
 
     @Test
     public void removeMemberFromGroup() {
         usersRepository.save(new User("dadaumpa", "Alfred", "alfred@massi.rocks"));
-        usersGroupsRepository.save(new UsersGroups("dadaumpa", 2, UsersGroups.UserRole.MEMBER));
+        usersGroupsRepository.save(new UsersGroups("dadaumpa", 2L, UsersGroups.UserRole.MEMBER));
 
         ResponseEntity<Void> delete = restTemplate.exchange("/v1/groups/1/remove/dadaumpa", HttpMethod.DELETE, null, Void.class);
         assertEquals(404, delete.getStatusCodeValue());
 
         delete = restTemplate.exchange("/v1/groups/2/remove/dadaumpa", HttpMethod.DELETE, null, Void.class);
         assertEquals(200, delete.getStatusCodeValue());
-        assertNull(usersGroupsRepository.findOne(new UsersGroups.UsersGroupsKey("dadaumpa", 2)));
+        assertNull(usersGroupsRepository.findOne(new UsersGroups.UsersGroupsKey("dadaumpa", 2L)));
     }
 }

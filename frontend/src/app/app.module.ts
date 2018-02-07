@@ -35,7 +35,7 @@ import { QuotesService } from './services/quotes.service';
 import { InlineEditorModule } from 'ng2-inline-editor';
 import { EventsService } from './services/events.service';
 import { EventsComponent } from './components/events.component';
-import { DateTimePickerModule } from 'ng-pick-datetime';
+import { OwlDateTimeModule, OwlNativeDateTimeModule } from 'ng-pick-datetime';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { TablesComponent } from './components/tables.component';
 import { TablesService } from './services/tables.service';
@@ -78,7 +78,8 @@ import { GroupsService } from './services/groups.service';
     FormsModule,
     HttpClientModule,
     InlineEditorModule,
-    DateTimePickerModule,
+    OwlDateTimeModule,
+    OwlNativeDateTimeModule,
     BrowserModule,
     BrowserAnimationsModule,
     AutocompleteModule.forRoot(),

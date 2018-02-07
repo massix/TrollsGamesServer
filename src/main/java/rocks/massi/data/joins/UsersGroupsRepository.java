@@ -10,8 +10,10 @@ import java.util.List;
 public interface UsersGroupsRepository extends JpaRepository<UsersGroups, UsersGroups.UsersGroupsKey> {
     List<UsersGroups> findByUserId(String userId);
 
-    List<UsersGroups> findByGroupId(Integer groupId);
+    List<UsersGroups> findByGroupId(Long groupId);
+
+    UsersGroups findByUserIdAndGroupId(String userId, Long groupId);
 
     @Transactional
-    void deleteByGroupId(Integer groupId);
+    void deleteByGroupId(Long groupId);
 }
