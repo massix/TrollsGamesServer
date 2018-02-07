@@ -17,9 +17,9 @@ import rocks.massi.data.MessagesRepository;
 import java.sql.Timestamp;
 import java.util.Date;
 
+import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertNotSame;
+import static junit.framework.TestCase.*;
 
 @ActiveProfiles("dev")
 @RunWith(SpringRunner.class)
@@ -121,5 +121,21 @@ public class MessagesControllerTest {
         assertEquals(2, messages.getBody().length);
 
         messagesRepository.deleteAll();
+    }
+
+    @Test
+    public void deleteMessage() {
+        // 1 for a group
+        messagesRepository.save(new Message(
+                null,
+                "This is a message for a group",
+                "massi_x",
+                1L, null, null, null, null,
+                new Timestamp(new Date().getTime())
+        ));
+
+        assertNotNull(messagesRepository.findOne(1L));
+        restTemplate.delete("/v1/messages/delete/1");
+        assertNull(messagesRepository.findOne(1L));
     }
 }

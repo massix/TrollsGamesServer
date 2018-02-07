@@ -44,7 +44,8 @@ public class ExceptionsHandler extends ResponseEntityExceptionHandler {
             GroupAlreadyExists.class,
             AlreadySubscribedToGroup.class,
             GroupMismatch.class,
-            InvalidMessageException.class
+            InvalidMessageException.class,
+            UnknownMessageException.class
     })
     protected ResponseEntity<Object> handleUserNotCrawlable(RuntimeException exception, WebRequest request) {
         return handleExceptionInternal(exception, exception.getMessage(), null, HttpStatus.CONFLICT, request);

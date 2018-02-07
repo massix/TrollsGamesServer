@@ -11,6 +11,7 @@ import rocks.massi.data.joins.UsersGroups;
 import rocks.massi.data.joins.UsersGroupsRepository;
 import rocks.massi.exceptions.AuthorizationException;
 import rocks.massi.exceptions.InvalidMessageException;
+import rocks.massi.exceptions.UnknownMessageException;
 
 import java.sql.Timestamp;
 import java.util.Date;
@@ -79,6 +80,41 @@ public class MessagesController {
         // TODO: same check should exist for events!
 
         return messagesRepository.save(message);
+    }
+
+    @DeleteMapping("/delete/{id}")
+    public Message deleteMessage(@RequestHeader("Authorization") String authorization, @PathVariable("id") Long id) {
+        TrollsJwt.UserInformation userInformation = trollsJwt.getUserInformationFromToken(authorization);
+
+        /**
+         * A message can only be deleted if:
+         *   - it belongs to the user or
+         *   - an admin deletes it or
+         *   - the admin of the group the message has been posted to deletes it
+         **/
+        Message dbMessage = messagesRepository.findOne(id);
+        if (Objects.isNull(dbMessage)) {
+            throw new UnknownMessageException();
+        }
+
+        if (userInformation.getRole() == Role.ADMIN) {
+            messagesRepository.delete(dbMessage);
+        } else if (dbMessage.getAuthor().equals(userInformation.getUser())) {
+            messagesRepository.delete(dbMessage);
+        } else if (!Objects.isNull(dbMessage.getGroupId())) {
+            UsersGroups usersGroups = usersGroupsRepository.findByUserIdAndGroupId(dbMessage.getAuthor(), dbMessage.getGroupId());
+            if (usersGroups.getRole() == UsersGroups.UserRole.ADMINISTRATOR) {
+                messagesRepository.delete(dbMessage);
+            } else {
+                throw new AuthorizationException("Not authorized.");
+            }
+        }
+
+        // FIXME: this might not be enough! But will suffice for the time being.
+        // Cascade delete all the messages related to this one
+        List<Message> related = messagesRepository.findByMessageIdOrderByDateTimeDesc(dbMessage.getMessageId());
+        related.forEach(messagesRepository::delete);
+        return dbMessage;
     }
 
     @GetMapping("/homepage")
