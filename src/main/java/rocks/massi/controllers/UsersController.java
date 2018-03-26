@@ -2,6 +2,7 @@ package rocks.massi.controllers;
 
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import me.xdrop.fuzzywuzzy.FuzzySearch;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.repository.query.Param;
@@ -28,11 +29,13 @@ import rocks.massi.utils.DBUtils;
 import javax.servlet.http.HttpServletResponse;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static rocks.massi.utils.DBUtils.getUser;
 
 @Slf4j
 @RestController
+@CrossOrigin(allowedHeaders = {"Authorization", "Content-Type"})
 @RequestMapping("/v1/users")
 public class UsersController {
 
@@ -57,7 +60,6 @@ public class UsersController {
     @Value("${users-controller.default-role}")
     private Role defaultRole;
 
-    @CrossOrigin
     @GetMapping("/get/{nick}")
     public User getUserByNick(@PathVariable("nick") String nick) {
         User user = getUser(usersRepository, nick);
@@ -70,7 +72,6 @@ public class UsersController {
         return user;
     }
 
-    @CrossOrigin(allowedHeaders = {"Authorization"})
     @GetMapping("/get/{nick}/information")
     public TrollsJwt.UserInformation getUserInformation(@RequestHeader("Authorization") String authorization,
                                                         @PathVariable("nick") String user) {
@@ -83,7 +84,6 @@ public class UsersController {
         return userInformation;
     }
 
-    @CrossOrigin
     @GetMapping("/get")
     public List<User> getAllUsers() {
         LinkedList<User> ret = new LinkedList<>();
@@ -97,7 +97,21 @@ public class UsersController {
         return ret;
     }
 
-    @CrossOrigin
+    @GetMapping("/search")
+    public List<User> searchForUser(@Param("query") String query) {
+        List<User> users = usersRepository.findAll();
+        List<User> result = new LinkedList<>();
+
+        List<String> userNames = new LinkedList<>();
+        users.forEach(u -> userNames.add(u.getBggNick()));
+
+        FuzzySearch.extractAll(query, userNames, 75).forEach(username -> {
+            result.add(users.stream().filter(u -> u.getBggNick().equals(username.getString())).collect(Collectors.toList()).get(0));
+        });
+
+        return result;
+    }
+
     @GetMapping(value = "/confirm")
     public User confirmRegistration(@RequestParam("email") final String email,
                                     @RequestParam("token") final String token,
@@ -122,7 +136,6 @@ public class UsersController {
         return usersRepository.findByEmail(email);
     }
 
-    @CrossOrigin(allowedHeaders = {"Content-Type"})
     @PostMapping(value = "/register")
     public User registerNewUser(@RequestBody User user,
                                 @Param("redirect") String redirect,
@@ -170,7 +183,6 @@ public class UsersController {
         return user;
     }
 
-    @CrossOrigin(allowedHeaders = {"Authorization", "Content-Type"})
     @PostMapping(value = "/add")
     public User addUser(@RequestHeader("Authorization") String authorization, @RequestBody User user) {
         log.info("Got user {}", user.getBggNick());
@@ -196,7 +208,6 @@ public class UsersController {
         return DBUtils.getUser(usersRepository, user.getBggNick());
     }
 
-    @CrossOrigin(allowedHeaders = {"Authorization", "Content-Type"})
     @PatchMapping("/modify")
     public User modifyUser(@RequestHeader("Authorization") String authorization, @RequestBody User user) {
         log.info("Modifying user {}", user.getBggNick());
@@ -253,7 +264,6 @@ public class UsersController {
         throw new AuthorizationException("Username or password are WRONG");
     }
 
-    @CrossOrigin(allowedHeaders = {"Authorization"})
     @DeleteMapping("/remove/{nick}")
     public User removeUser(@RequestHeader("Authorization") final String authorization,
                            @PathVariable("nick") String nick) {
