@@ -2,6 +2,7 @@ package rocks.massi.controllers;
 
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import me.xdrop.fuzzywuzzy.FuzzySearch;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.repository.query.Param;
@@ -28,11 +29,13 @@ import rocks.massi.utils.DBUtils;
 import javax.servlet.http.HttpServletResponse;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static rocks.massi.utils.DBUtils.getUser;
 
 @Slf4j
 @RestController
+@CrossOrigin(allowedHeaders = {"Authorization", "Content-Type"})
 @RequestMapping("/v1/users")
 public class UsersController {
 
@@ -57,7 +60,6 @@ public class UsersController {
     @Value("${users-controller.default-role}")
     private Role defaultRole;
 
-    @CrossOrigin
     @GetMapping("/get/{nick}")
     public User getUserByNick(@PathVariable("nick") String nick) {
         User user = getUser(usersRepository, nick);
@@ -70,7 +72,6 @@ public class UsersController {
         return user;
     }
 
-    @CrossOrigin(allowedHeaders = {"Authorization"})
     @GetMapping("/get/{nick}/information")
     public TrollsJwt.UserInformation getUserInformation(@RequestHeader("Authorization") String authorization,
                                                         @PathVariable("nick") String user) {
@@ -83,13 +84,12 @@ public class UsersController {
         return userInformation;
     }
 
-    @CrossOrigin
     @GetMapping("/get")
     public List<User> getAllUsers() {
         LinkedList<User> ret = new LinkedList<>();
 
         // Do not send passwords back.
-        usersRepository.findAll().forEach(user -> {
+        usersRepository.findByAuthenticationTypeNot(AuthenticationType.NONE).forEach(user -> {
             user.setPassword("*");
             ret.add(user);
         });
@@ -97,15 +97,29 @@ public class UsersController {
         return ret;
     }
 
-    @CrossOrigin
+    @GetMapping("/search")
+    public List<User> searchForUser(@Param("query") String query) {
+        List<User> users = usersRepository.findAll();
+        List<User> result = new LinkedList<>();
+
+        List<String> userNames = new LinkedList<>();
+        users.forEach(u -> userNames.add(u.getBggNick()));
+
+        FuzzySearch.extractAll(query, userNames, 75).forEach(username -> {
+            result.add(users.stream().filter(u -> u.getBggNick().equals(username.getString())).collect(Collectors.toList()).get(0));
+        });
+
+        return result;
+    }
+
     @GetMapping(value = "/confirm")
     public User confirmRegistration(@RequestParam("email") final String email,
                                     @RequestParam("token") final String token,
                                     @Param("redirect") final String redirect,
                                     HttpServletResponse servletResponse) {
-        User ret = trollsJwt.confirmRegistrationTokenForEmail(email, token);
+        User ret = usersRepository.findByEmail(email);
 
-        if (ret == null) {
+        if (!trollsJwt.confirmRegistrationTokenForEmail(email, token) || ret == null) {
             throw new AuthorizationException("Can't go any further.");
         }
 
@@ -122,16 +136,10 @@ public class UsersController {
         return usersRepository.findByEmail(email);
     }
 
-    @CrossOrigin(allowedHeaders = {"Content-Type"})
     @PostMapping(value = "/register")
     public User registerNewUser(@RequestBody User user,
                                 @Param("redirect") String redirect,
                                 HttpServletResponse servletResponse) {
-
-        // Check that the user exists on bgg, if it exists, start crawling it right now
-        if (user.isBggHandled() && !collectionCrawler.checkUserExists(user)) {
-            throw new UserNotFoundException("User not found on BGG.");
-        }
 
         // Check that the user doesn't already exist
         if (usersRepository.findByEmail(user.getEmail()) != null || usersRepository.findByBggNick(user.getBggNick()) != null) {
@@ -145,12 +153,21 @@ public class UsersController {
         // Encrypt password
         user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
 
+        // Save the user in the DB
+        usersRepository.save(user);
+
+        // Check that the user exists on bgg, if it exists, start crawling it right now
+        if (user.isBggHandled() && !collectionCrawler.checkUserExists(user)) {
+            throw new UserNotFoundException("User not found on BGG.");
+        }
+
+
         // Generate a OT token for user
-        String host = System.getenv("VIRTUAL_HOST");
         String token = trollsJwt.generateRegistrationTokenForUser(user);
 
         servletResponse.addHeader("X-Token-Validation", token);
 
+        String host = System.getenv("VIRTUAL_HOST");
         // Send email asking user to verify their email address
         SimpleMailMessage mailMessage = new SimpleMailMessage();
         mailMessage.setFrom("Trolls De Jeux <noreply@massi.rocks>");
@@ -166,7 +183,6 @@ public class UsersController {
         return user;
     }
 
-    @CrossOrigin(allowedHeaders = {"Authorization", "Content-Type"})
     @PostMapping(value = "/add")
     public User addUser(@RequestHeader("Authorization") String authorization, @RequestBody User user) {
         log.info("Got user {}", user.getBggNick());
@@ -192,7 +208,6 @@ public class UsersController {
         return DBUtils.getUser(usersRepository, user.getBggNick());
     }
 
-    @CrossOrigin(allowedHeaders = {"Authorization", "Content-Type"})
     @PatchMapping("/modify")
     public User modifyUser(@RequestHeader("Authorization") String authorization, @RequestBody User user) {
         log.info("Modifying user {}", user.getBggNick());
@@ -237,7 +252,7 @@ public class UsersController {
 
         try {
             if (BCrypt.checkpw(loginInformation.getPassword(), dbUser.getPassword())) {
-                String token = trollsJwt.generateNewTokenForUser(dbUser);
+                String token = trollsJwt.generateOrRetrieveTokenForUser(dbUser);
                 dbUser.setPassword("*");
                 servletResponse.setHeader("Authorization", String.format("Bearer %s", token));
                 return dbUser;
@@ -249,7 +264,6 @@ public class UsersController {
         throw new AuthorizationException("Username or password are WRONG");
     }
 
-    @CrossOrigin(allowedHeaders = {"Authorization"})
     @DeleteMapping("/remove/{nick}")
     public User removeUser(@RequestHeader("Authorization") final String authorization,
                            @PathVariable("nick") String nick) {

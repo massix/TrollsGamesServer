@@ -107,7 +107,7 @@ public class UsersControllerTest {
         assertEquals(parsedToken.get(ROLE_KEY), Role.ADMIN.toString());
 
         // Check TrollsJwt
-        assertTrue(trollsJwt.checkTokenForUser(user.getBggNick()));
+        assertTrue(trollsJwt.checkTokenForUser(user.getEmail()));
 
         usersRepository.deleteByBggNick("new_bgg");
     }
@@ -197,4 +197,16 @@ public class UsersControllerTest {
         usersRepository.deleteByBggNick("unauthorized_user");
     }
 
+    @Test
+    public void test10_searchForUser() {
+        User dbUser = new User("test_search", "test_search", "email@massi.rocks");
+        usersRepository.save(dbUser);
+
+        ResponseEntity<User[]> re = restTemplate.getForEntity("/v1/users/search?query=test", User[].class);
+        assertTrue(re.getStatusCode().is2xxSuccessful());
+        assertTrue(re.getBody().length == 1);
+        assertTrue(re.getBody()[0].getBggNick().equals("test_search"));
+
+        usersRepository.delete(dbUser);
+    }
 }

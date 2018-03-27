@@ -49,8 +49,14 @@
                         <a [routerLink]="['/admin', {outlets: {adminoutlet: 'rdv'}}]"
                         (click)="setActiveRoute('rdv')"
                         [ngClass]="{ 'active': this.activeRoute === 'rdv'}">RDV</a>
-                    </li>
-  
+                  </li>
+
+                  <li>
+                    <a [routerLink]="['/admin', {outlets: {adminoutlet: 'groups'}}]"
+                        (click)="setActiveRoute('groups')"
+                        [ngClass]="{ 'active': this.activeRoute === 'groups'}">Groups</a>
+                  </li>
+
                   <li>
                     <a [routerLink]="['/admin', {outlets: {adminoutlet: 'information'}}]"
                        (click)="setActiveRoute('information')"

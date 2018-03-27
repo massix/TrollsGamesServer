@@ -22,7 +22,7 @@ export class CacheComponent implements OnInit {
     }
 
     focusGame(gameId: number) {
-        if (this.focusedGame != null && this.focusedGame.id == gameId) {
+        if (this.focusedGame != null && this.focusedGame.id === gameId) {
             this.focusedGame = null;
         } else {
             this.gamesService.getGame(gameId).subscribe(game => this.focusedGame = game);
@@ -39,7 +39,7 @@ export class CacheComponent implements OnInit {
                     this.alertService.error('Error occured ' + operation.error);
                 }
             }
-        )
+        );
     }
 
     purgeAll() {
@@ -50,10 +50,10 @@ export class CacheComponent implements OnInit {
                     this.getMemoryCache();
                 }
             }
-        )
+        );
     }
 
-    constructor(private cacheService: CacheService, 
+    constructor(private cacheService: CacheService,
         private gamesService: GamesService,
         private alertService: AlertService) {}
 }

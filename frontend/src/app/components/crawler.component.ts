@@ -41,8 +41,8 @@ export class CrawlerComponent implements OnInit {
         }
     }
 
-    constructor(private crawlService: CrawlService, 
-        private alertService: AlertService, 
+    constructor(private crawlService: CrawlService,
+        private alertService: AlertService,
         private timerService: SimpleTimer,
         private router: Router) {}
 }

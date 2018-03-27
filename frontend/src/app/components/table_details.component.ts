@@ -22,15 +22,15 @@ import { Game } from '../data/game';
             <button class="btn btn-sm fa fa-plus" (click)="addGameToTable()"></button>
             <input autocomplete
                    [config]="{'placeholder' : 'search for game', 'sourceField': ['name']}"
-                   [items]="searchResult" 
-                   (inputChangedEvent)="searchGame($event)" 
+                   [items]="searchResult"
+                   (inputChangedEvent)="searchGame($event)"
                    (selectEvent)="selectGame($event)"
-                   type="text" 
+                   type="text"
                    placeholder="game to add" />
         </form>
         <ul class="list-group">
             <li *ngFor="let user of users" class="list-group-item">
-                <span class="fa fa-user"></span> 
+                <span class="fa fa-user"></span>
                 {{user.bggNick}}
                 <button class="btn btn-sm fa fa-remove pull-right" (click)="removeUserFromTable(user)"></button>
             </li>
@@ -65,9 +65,9 @@ export class TableDetailsComponent implements OnInit {
     }
 
     constructor(
-        private tablesService: TablesService, 
-        private usersService: UsersService, 
-        private gamesService: GamesService) 
+        private tablesService: TablesService,
+        private usersService: UsersService,
+        private gamesService: GamesService)
         {}
 
     refresh() {
@@ -110,5 +110,5 @@ export class TableDetailsComponent implements OnInit {
     selectGame(event: Game) {
         this.gameToAdd = event;
     }
-    
+
 }

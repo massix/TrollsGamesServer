@@ -8,82 +8,96 @@ import { AlertService } from '../services/alert.service';
 import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
-    templateUrl: '../views/collection.component.html',
-    styleUrls: ['../styles/collection.component.css']
+  templateUrl: '../views/collection.component.html',
+  styleUrls: ['../styles/collection.component.css']
 })
 export class CollectionComponent implements OnInit {
-    users: User[];
-    shownGames: Game[];
-    selectedUser: User;
-    totalItems: number;
-    currentPage: number = 0;
-    focusedGame: Game;
-    searchTerm: string;
-    searchResult: Game[];
+  users: User[];
+  shownGames: Game[];
+  selectedUser: User;
+  totalItems: number;
+  currentPage = 0;
+  focusedGame: Game;
+  searchTerm: string;
+  searchResult: Game[];
+  filter: string;
 
-    constructor(private usersService: UsersService, 
-        private gamesService: GamesService, 
-        private alertService: AlertService,
-        private collectionService: CollectionService) {}
+  constructor(private usersService: UsersService,
+    private gamesService: GamesService,
+    private alertService: AlertService,
+    private collectionService: CollectionService) { }
 
-    ngOnInit() {
-        this.usersService.getAllUsers().subscribe(data => {
-            this.users = data;
-            this.users.forEach(user => {
-                this.collectionService.getTotalGamesForUser(user.bggNick).subscribe(data => user.collectionSize = data.totalGames);
-            });
-        });
+  ngOnInit() {
+    this.usersService.getAllUsers().subscribe(data => {
+      this.users = data;
+      this.users.forEach(user => {
+        this.collectionService.getTotalGamesForUser(user.bggNick)
+          .subscribe(innerData => user.collectionSize = innerData.totalGames);
+      });
+    });
+  }
+
+  selectUser(user: User) {
+    this.selectedUser = user;
+    this.collectionService.getPagesForUser(user.bggNick).subscribe(data => this.totalItems = data.pageSize * data.totalPages);
+    this.collectionService.getPageForUser(user.bggNick, 0).subscribe(data => this.shownGames = data);
+    this.searchResult = null;
+  }
+
+  pageChange(newPage: number) {
+    this.collectionService.getPageForUser(this.selectedUser.bggNick, newPage - 1).subscribe(data => this.shownGames = data);
+    this.currentPage = newPage;
+  }
+
+  removeGame(game: Game) {
+    this.collectionService.removeGameForUser(this.selectedUser.bggNick, game.id).subscribe(
+      data => {
+        this.alertService.success('Removed game ' + data.game + ' for user ' + data.user);
+        this.collectionService.getPageForUser(this.selectedUser.bggNick, this.currentPage - 1)
+          .subscribe(innerData => this.shownGames = innerData);
+        this.collectionService.getTotalGamesForUser(this.selectedUser.bggNick)
+          .subscribe(innerData => this.selectedUser.collectionSize = innerData.totalGames);
+      },
+      (err: HttpErrorResponse) => {
+        if (err.status === 200) {
+          this.alertService.success('Removed game ' + game.id + ' for user ' + this.selectedUser.bggNick);
+          this.collectionService.getPageForUser(this.selectedUser.bggNick, this.currentPage)
+            .subscribe(data => this.shownGames = data);
+          this.collectionService.getTotalGamesForUser(this.selectedUser.bggNick)
+            .subscribe(data => this.selectedUser.collectionSize = data.totalGames);
+        } else {
+          this.alertService.error('Can\'t remove game (' + err.status + ')');
+        }
+      }
+    );
+  }
+
+  startSearch() {
+    this.collectionService.searchGame(this.searchTerm).subscribe(data => this.searchResult = data);
+  }
+
+  startFilter() {
+    if (this.filter !== '') {
+      this.collectionService.filterCollection(this.filter, this.selectedUser.bggNick).subscribe(
+        data => this.shownGames = data
+      );
     }
+  }
 
-    selectUser(user: User) {
-        this.selectedUser = user;
-        this.collectionService.getPagesForUser(user.bggNick).subscribe(data => this.totalItems = data.pageSize * data.totalPages);
-        this.collectionService.getPageForUser(user.bggNick, 0).subscribe(data => this.shownGames = data);
-        this.searchResult = null;
-    }
+  addGame(game: Game) {
+    this.collectionService.addGameForUser(this.selectedUser.bggNick, game.id).subscribe(
+      data => { },
+      error => {
+        console.log(error);
+        if (error.status === 202) {
+          this.alertService.success('queued game for user');
+        }
+      }
+    );
+  }
 
-    pageChange(newPage: number) {
-        this.collectionService.getPageForUser(this.selectedUser.bggNick, newPage - 1).subscribe(data => this.shownGames = data);
-        this.currentPage = newPage;
-    }
-
-    removeGame(game: Game) {
-        this.collectionService.removeGameForUser(this.selectedUser.bggNick, game.id).subscribe(
-            data => {
-                this.alertService.success('Removed game ' + data.game + ' for user ' + data.user);
-                this.collectionService.getPageForUser(this.selectedUser.bggNick, this.currentPage - 1).subscribe(data => this.shownGames = data);
-                this.collectionService.getTotalGamesForUser(this.selectedUser.bggNick).subscribe(data => this.selectedUser.collectionSize = data.totalGames);
-            },
-            (err: HttpErrorResponse) => {
-                if (err.status == 200) {
-                    this.alertService.success('Removed game ' + game.id + ' for user ' + this.selectedUser.bggNick);
-                    this.collectionService.getPageForUser(this.selectedUser.bggNick, this.currentPage).subscribe(data => this.shownGames = data);
-                    this.collectionService.getTotalGamesForUser(this.selectedUser.bggNick).subscribe(data => this.selectedUser.collectionSize = data.totalGames);
-                } else {
-                    this.alertService.error('Can\'t remove game (' + err.status + ')');
-                }
-            }
-        );
-    }
-
-    startSearch() {
-        this.collectionService.searchGame(this.searchTerm).subscribe(data => this.searchResult = data);
-    }
-
-    addGame(game: Game) {
-        this.collectionService.addGameForUser(this.selectedUser.bggNick, game.id).subscribe(
-            data => {},
-            error => {
-                console.log(error);
-                if (error.status == 202) {
-                    this.alertService.success('queued game for user');
-                }
-            }
-        )
-    }
-
-    reloadUser(user: User) {
-        this.selectUser(user);
-        this.collectionService.getTotalGamesForUser(user.bggNick).subscribe(data => user.collectionSize = data.totalGames);
-    }
+  reloadUser(user: User) {
+    this.selectUser(user);
+    this.collectionService.getTotalGamesForUser(user.bggNick).subscribe(data => user.collectionSize = data.totalGames);
+  }
 }
